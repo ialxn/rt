@@ -1,0 +1,16 @@
+#CCOPTIONS= -g -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
+CCOPTIONS= -g -O0 -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs
+#CCOPTIONS= -pg -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
+
+SRCS= main.c
+
+
+OBJ= main.o
+
+LIBS= -lgsl -lgslcblas -lconfig -lm
+LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
+
+AllTarget(rt rt-semistatic)
+NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))
+NormalProgramTarget(rt-semistatic,$(OBJ),NullParameter,NullParameter, $(LIBS-SEMISTATIC))
+DependTarget()
