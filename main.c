@@ -9,6 +9,7 @@
  */
 
 #include <getopt.h>
+#include <libconfig.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -31,6 +32,7 @@ static void help(void)
 
 int main(int argc, char **argv)
 {
+    config_t cfg;
 
     while (1) {
 	int c;
@@ -76,6 +78,34 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
 
     }
+
+    config_init(&cfg);
+
+    /*
+     * parse input file
+     * on error, report it and exit.
+     */
+    if (!config_read(&cfg, stdin)) {
+	const char *fname = config_error_file(&cfg);
+	const char *text = config_error_text(&cfg);
+	const int line_nr = config_error_line(&cfg);
+
+	fprintf(stderr, "%s found during parsing of ", text);
+
+	if (fname)
+	    fprintf(stderr, "%s ", fname);
+	else
+	    fprintf(stderr, "stdin, ");
+
+	fprintf(stderr, "line %d\n", line_nr);
+
+	config_destroy(&cfg);
+	return (EXIT_FAILURE);
+    }
+    
+    config_write(&cfg, stdout);
+
+    config_destroy(&cfg);
 
     return EXIT_SUCCESS;
 }
