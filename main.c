@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "sources.h"
 #include "version.h"
 
 
@@ -56,7 +57,12 @@ static int parse_input(config_t * cfg)
 	return (EXIT_FAILURE);
     }
 
-    return EXIT_SUCCESS;
+    if (!check_sources(cfg))
+	return EXIT_SUCCESS;
+    else {
+	config_destroy(cfg);
+	return EXIT_FAILURE;
+    }
 
 }
 
@@ -112,7 +118,7 @@ int main(int argc, char **argv)
     }
 
     if (parse_input(&cfg))
-	return (EXIT_FAILURE);
+	exit(EXIT_FAILURE);
 
     config_write(&cfg, stdout);
 
