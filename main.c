@@ -17,16 +17,31 @@
 #include "targets.h"
 #include "version.h"
 
+#define CHECK_CONFIG 0
+#define PRINT_GEOMETRY 1
+#define RUN 2
 
+
+static void run_simulation(config_t * cfg)
+{
+}
+
+static void output_geometry(config_t * cfg)
+{
+}
 
 static void help(void)
 {
     fprintf(stdout, "\nrt Version %s (AI52)\n\n", VERSION);
     fprintf(stdout, "Usage: rt\n");
+    fprintf(stdout, "       --mode, -m        select run mode [0].\n");
     fprintf(stdout,
-	    "       --Version, -V          Print version number\n");
+	    "                         0: check and print input.\n");
     fprintf(stdout,
-	    "       --help, -h             Print this help message\n");
+	    "                         1: output geometry (OFF files).\n");
+    fprintf(stdout, "                         2: run simulation.\n");
+    fprintf(stdout, "       --Version, -V     Print version number\n");
+    fprintf(stdout, "       --help, -h        Print this help message\n");
     fprintf(stdout, "\n");
 }
 
@@ -76,25 +91,34 @@ static int parse_input(config_t * cfg)
 int main(int argc, char **argv)
 {
     config_t cfg;
+    int mode = CHECK_CONFIG;
 
     while (1) {
 	int c;
 	int option_index = 0;
 	static struct option long_options[] = {
+	    {"mode", required_argument, 0, 'm'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "Vh", long_options, &option_index);
+	c = getopt_long(argc, argv, "m:Vh", long_options, &option_index);
 
 	if (c == -1)
 	    break;
 
 	switch (c) {
 
+	case 'm':
+	    mode = atoi(optarg);
+	    if ((mode > RUN) || (mode < CHECK_CONFIG)) {
+		fprintf(stderr, "unknown 'mode' (%d) given.\n", mode);
+		exit(EXIT_FAILURE);
+	    }
+	    break;
 	case 'V':
-	    fprintf(stdout, "rt Version %s (AI52)\n", VERSION);
+	    fprintf(stdout, " rt Version %s (AI52)\n", VERSION);
 	    exit(EXIT_SUCCESS);
 	    break;
 
@@ -111,10 +135,10 @@ int main(int argc, char **argv)
 
     if (optind < argc) {
 
-	fprintf(stderr, "ERROR: non-option ARGV-elements: ");
+	fprintf(stderr, "ERROR: non-option ARGV-elements:");
 
 	while (optind < argc)
-	    fprintf(stderr, "%s ", argv[optind++]);
+	    fprintf(stderr, "%s", argv[optind++]);
 
 	putc('\n', stderr);
 
@@ -122,12 +146,34 @@ int main(int argc, char **argv)
 
     }
 
+    /*
+     * parse and initialize input. input is checked for syntax and completness.
+     * errors are reported on stderr.
+     */
     if (parse_input(&cfg))
 	exit(EXIT_FAILURE);
 
-    config_write(&cfg, stdout);
+    switch (mode) {
 
-    config_destroy(&cfg);
+    case CHECK_CONFIG:		/* print parsed input */
+	config_write(&cfg, stdout);
+	config_destroy(&cfg);
+	exit(EXIT_SUCCESS);
+	break;
+
+    case PRINT_GEOMETRY:	/* print geometry files */
+	output_geometry(&cfg);
+	config_destroy(&cfg);
+	exit(EXIT_SUCCESS);
+	break;
+
+    case RUN:			/* do the simulation */
+	run_simulation(&cfg);
+	config_destroy(&cfg);
+    default:
+	break;
+
+    }
 
     return EXIT_SUCCESS;
 }
