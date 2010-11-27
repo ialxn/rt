@@ -14,6 +14,7 @@
 #include <stdio.h>
 
 #include "sources.h"
+#include "targets.h"
 #include "version.h"
 
 
@@ -57,12 +58,16 @@ static int parse_input(config_t * cfg)
 	return (EXIT_FAILURE);
     }
 
-    if (!check_sources(cfg))
-	return EXIT_SUCCESS;
-    else {
+    if (check_sources(cfg)) {
 	config_destroy(cfg);
 	return EXIT_FAILURE;
     }
+    if (check_targets(cfg)) {
+	config_destroy(cfg);
+	return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
+
 
 }
 

@@ -3,11 +3,13 @@ CCOPTIONS= -g -O0 -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -W
 #CCOPTIONS= -pg -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
 
 SRCS= main.c \
-      sources.c
+      sources.c \
+      targets.c
 
 
 OBJ= main.o \
-     sources.o
+     sources.o \
+     targets.o
 
 LIBS= -lgsl -lgslcblas -lconfig -lm
 LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
