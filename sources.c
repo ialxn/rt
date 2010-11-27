@@ -19,8 +19,8 @@ int check_sources(config_t * cfg)
     const config_setting_t *s = config_lookup(cfg, "sources");
 
     if (s != NULL) {
-	const unsigned int count = config_setting_length(s);
-	unsigned int i;
+	const int count = config_setting_length(s);
+	int i;
 
 	if (count == 0) {
 	    fprintf(stderr, "empty 'sources' section\n");
@@ -28,7 +28,8 @@ int check_sources(config_t * cfg)
 	}
 
 	for (i = 0; i < count; ++i) {
-	    config_setting_t *this_s = config_setting_get_elem(s, i);
+	    config_setting_t *this_s =
+		config_setting_get_elem(s, (unsigned int) i);
 
 	    const char *S, *type;
 	    double F;
