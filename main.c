@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "obj_lists.h"
 #include "sources.h"
 #include "targets.h"
 #include "version.h"
@@ -22,11 +23,13 @@
 #define RUN 2
 
 
-static void run_simulation(config_t * cfg)
+
+static void output_geometry(config_t * cfg)
 {
 }
 
-static void output_geometry(config_t * cfg)
+static void run_simulation(source_list_t * source_list,
+			   target_list_t * target_list)
 {
 }
 
@@ -92,6 +95,8 @@ int main(int argc, char **argv)
 {
     config_t cfg;
     int mode = CHECK_CONFIG;
+    target_list_t *target_list;
+    source_list_t *source_list;
 
     while (1) {
 	int c;
@@ -168,12 +173,17 @@ int main(int argc, char **argv)
 	break;
 
     case RUN:			/* do the simulation */
-	run_simulation(&cfg);
+	source_list = init_sources(&cfg);
+	target_list = init_targets(&cfg);
 	config_destroy(&cfg);
+	run_simulation(source_list, target_list);
+	source_list_free(source_list);
+	target_list_free(target_list);
     default:
 	break;
 
     }
+
 
     return EXIT_SUCCESS;
 }
