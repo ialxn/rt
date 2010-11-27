@@ -7,17 +7,67 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-
+#include <stdlib.h>
 #include "obj_lists.h"
 
 source_list_t *init_sources(config_t * cfg)
 {
-    return NULL;
+    source_list_t *s_list;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+    const int count = config_setting_length(s);
+
+    int i;
+
+    s_list = (source_list_t *) malloc(sizeof(source_list_t));
+    INIT_LIST_HEAD(&(*s_list).list);
+
+    for (i = 0; i < count; ++i) {
+	source_list_t *new_elem;
+	source_t *new_s;
+	config_setting_t *this_s;
+
+	new_s = (source_t *) malloc(sizeof(source_t));
+
+	this_s = config_setting_get_elem(s, (unsigned int) i);
+	config_setting_lookup_string(this_s, "name", &(new_s->name));
+
+	new_elem = (source_list_t *) malloc(sizeof(source_list_t));
+	new_elem->s = new_s;
+	list_add_tail(&(new_elem->list), &(*s_list).list);
+
+    }
+
+    return (s_list);
 }
 
 target_list_t *init_targets(config_t * cfg)
 {
-    return NULL;
+    target_list_t *t_list;
+    const config_setting_t *t = config_lookup(cfg, "targets");
+    const int count = config_setting_length(t);
+
+    int i;
+
+    t_list = (target_list_t *) malloc(sizeof(target_list_t));
+    INIT_LIST_HEAD(&(*t_list).list);
+
+    for (i = 0; i < count; ++i) {
+	target_list_t *new_elem;
+	target_t *new_t;
+	config_setting_t *this_t;
+
+	new_t = (target_t *) malloc(sizeof(target_t));
+
+	this_t = config_setting_get_elem(t, (unsigned int) i);
+	config_setting_lookup_string(this_t, "name", &(new_t->name));
+
+	new_elem = (target_list_t *) malloc(sizeof(target_list_t));
+	new_elem->t = new_t;
+	list_add_tail(&(new_elem->list), &(*t_list).list);
+
+    }
+
+    return (t_list);
 }
 
 void source_list_free(source_list_t * s)
