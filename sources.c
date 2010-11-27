@@ -32,6 +32,7 @@ int check_sources(config_t * cfg)
 
 	    const char *S, *type;
 	    double F;
+	    int I;
 
 	    /*
 	     * keywords common to all sources
@@ -39,6 +40,7 @@ int check_sources(config_t * cfg)
 	     * 'type':  type of source / string
 	     *          - "point_source": uniform point source
 	     * 'power': power [W] of source / double
+	     * 'n_rays': number of rays used for this source / int
 	     */
 	    if (config_setting_lookup_string(this_s, "name", &S) !=
 		CONFIG_TRUE) {
@@ -58,6 +60,13 @@ int check_sources(config_t * cfg)
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'power' keyword in 'sources' section %u\n",
+			i + 1);
+		status = ERR;
+	    }
+	    if (config_setting_lookup_int(this_s, "n_rays", &I) !=
+		CONFIG_TRUE) {
+		fprintf(stderr,
+			"missing 'n_rays' keyword in 'sources' section %u\n",
 			i + 1);
 		status = ERR;
 	    }
