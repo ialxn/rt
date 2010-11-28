@@ -21,7 +21,7 @@ typedef struct source_type_t {
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the source. */
     int (*alloc_state) (void *state);	/* allocate */
-    int (*init_state) (void *state, config_t * cfg, const char *name);	/* initialize internal data 										   from configuration */
+    int (*init_state) (void *state, config_t * cfg, const char *name);	/* initialize internal data                                                                                from configuration */
     void (*free_state) (void *state);	/* free */
     int (*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
 } source_type_t;
