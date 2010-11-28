@@ -8,6 +8,7 @@
  *
  */
 #include <stdlib.h>
+#include <string.h>
 #include "obj_lists.h"
 
 source_list_t *init_sources(config_t * cfg)
@@ -25,12 +26,14 @@ source_list_t *init_sources(config_t * cfg)
 	source_list_t *new_elem;
 	source_t *new_s;
 	config_setting_t *this_s;
+	const char *name;
 
 	new_s = (source_t *) malloc(sizeof(source_t));
 
 	this_s = config_setting_get_elem(s, (unsigned int) i);
-	config_setting_lookup_string(this_s, "name", &(new_s->name));
+	config_setting_lookup_string(this_s, "name", &(name));
 
+	new_s->name = strdup(name);
 	new_elem = (source_list_t *) malloc(sizeof(source_list_t));
 	new_elem->s = new_s;
 	list_add_tail(&(new_elem->list), &(*s_list).list);
@@ -55,12 +58,14 @@ target_list_t *init_targets(config_t * cfg)
 	target_list_t *new_elem;
 	target_t *new_t;
 	config_setting_t *this_t;
+	const char *name;
 
 	new_t = (target_t *) malloc(sizeof(target_t));
 
 	this_t = config_setting_get_elem(t, (unsigned int) i);
-	config_setting_lookup_string(this_t, "name", &(new_t->name));
+	config_setting_lookup_string(this_t, "name", &(name));
 
+	new_t->name = strdup(name);
 	new_elem = (target_list_t *) malloc(sizeof(target_list_t));
 	new_elem->t = new_t;
 	list_add_tail(&(new_elem->list), &(*t_list).list);
@@ -72,8 +77,33 @@ target_list_t *init_targets(config_t * cfg)
 
 void source_list_free(source_list_t * s)
 {
+    struct list_head *pos, *pos_t;
+
+    list_for_each_safe(pos, pos_t, &(*s).list) {
+	source_list_t *this = list_entry(pos, source_list_t, list);
+
+	free(this->s->name);
+	free(this->s);
+	list_del(pos);
+
+	free(this);
+
+    }
 }
+
 
 void target_list_free(target_list_t * t)
 {
+    struct list_head *pos, *pos_t;
+
+    list_for_each_safe(pos, pos_t, &(*t).list) {
+	target_list_t *this = list_entry(pos, target_list_t, list);
+
+	free(this->t->name);
+	free(this->t);
+	list_del(pos);
+
+	free(this);
+
+    }
 }

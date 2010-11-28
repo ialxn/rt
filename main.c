@@ -179,6 +179,8 @@ int main(int argc, char **argv)
 	run_simulation(source_list, target_list);
 	source_list_free(source_list);
 	target_list_free(target_list);
+	free(source_list);
+	free(target_list);
     default:
 	break;
 
