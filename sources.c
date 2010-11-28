@@ -12,6 +12,67 @@
 
 #include "sources.h"
 
+source_t *source_alloc(const source_type_t * T, config_t * cfg,
+		       const char *name)
+{
+/*
+ * generic part
+ */
+
+    source_t *S;
+
+    if ((S = (source_t *) malloc(sizeof(source_t))) == NULL) {
+	fprintf(stderr, "failed to allocate space for property struct\n");
+	return NULL;
+    }
+
+    if ((S->state = malloc(T->size)) == NULL) {
+	free(S);
+	fprintf(stderr, "failed to allocate space for source state\n");
+	return NULL;
+    };
+
+    S->type = T;
+
+    /*
+     * specific part
+     */
+    if ((S->type->alloc_state) (S->state) == ERR) {
+	fprintf(stderr,
+		"failed to allocate space for source state content\n");
+	free(S->state);
+	free(S);
+	return NULL;
+    }
+
+    (S->type->init_state) (S->state, cfg, name);
+
+    return S;
+
+}
+
+void source_free(source_t * S)
+{
+/*
+ * free specific internal data (prevent leaks).
+ */
+
+    (S->type->free_state) (S->state);
+    free(S->state);
+    free(S);
+
+}
+
+int new_ray(const source_t * S, const gsl_rng * r)
+{
+    int ray;
+
+    ray = (S->type->get_new_ray) (S->state, r);
+    return ray;
+}
+
+
+
 int check_sources(config_t * cfg)
 {
     int status = NO_ERR;

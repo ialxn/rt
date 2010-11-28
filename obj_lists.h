@@ -14,11 +14,7 @@
 #include <libconfig.h>
 
 #include "list.h"
-
-typedef struct source_t {
-    const char *name;
-    int type;
-} source_t;
+#include "sources.h"
 
 typedef struct source_list_t {
     struct list_head list;

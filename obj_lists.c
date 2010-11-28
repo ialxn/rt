@@ -33,7 +33,6 @@ source_list_t *init_sources(config_t * cfg)
 	this_s = config_setting_get_elem(s, (unsigned int) i);
 	config_setting_lookup_string(this_s, "name", &(name));
 
-	new_s->name = strdup(name);
 	new_elem = (source_list_t *) malloc(sizeof(source_list_t));
 	new_elem->s = new_s;
 	list_add_tail(&(new_elem->list), &(*s_list).list);
@@ -82,7 +81,6 @@ void source_list_free(source_list_t * s)
     list_for_each_safe(pos, pos_t, &(*s).list) {
 	source_list_t *this = list_entry(pos, source_list_t, list);
 
-	free(this->s->name);
 	free(this->s);
 	list_del(pos);
 
