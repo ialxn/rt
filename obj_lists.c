@@ -28,10 +28,10 @@ source_list_t *init_sources(config_t * cfg)
 	config_setting_t *this_s;
 	const char *name;
 
-	new_s = (source_t *) malloc(sizeof(source_t));
-
 	this_s = config_setting_get_elem(s, (unsigned int) i);
 	config_setting_lookup_string(this_s, "name", &(name));
+
+	new_s = source_alloc(source_uniform_point_source, cfg, name);
 
 	new_elem = (source_list_t *) malloc(sizeof(source_list_t));
 	new_elem->s = new_s;
