@@ -63,9 +63,9 @@ void source_free(source_t * S)
 
 }
 
-int new_ray(const source_t * S, const gsl_rng * r)
+ray_t *new_ray(const source_t * S, const gsl_rng * r)
 {
-    int ray;
+    ray_t *ray;
 
     ray = (S->type->get_new_ray) (S->state, r);
     return ray;

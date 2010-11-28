@@ -8,13 +8,17 @@
  *
  */
 
+#include <gsl/gsl_rng.h>
+#include <math.h>
 #include <string.h>
 
+#include "ray.h"
 #include "sources.h"
 
 typedef struct ups_state_t {
     const char *name;
     const char *type;
+    double origin[3];
     int n_rays;
     double power;
     double ppr;
@@ -71,16 +75,38 @@ static void ups_free_state(void *vstate)
     free(state->type);
 }
 
-static int ups_get_new_ray(void *vstate, const gsl_rng * r)
+static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
+    ray_t *ray = NULL;
 
     if (state->n_rays) {
+	double t;
+	double theta, sin_theta, phi;
+
+	ray = (ray_t *) malloc(sizeof(ray_t));
+
+	t = gsl_rng_uniform(r);
+	theta = acos(1.0 - 2.0 * t);
+	sin_theta = sin(theta);
+
+	t = gsl_rng_uniform(r);
+	phi = 2.0 * M_PI * t;
+
+	ray->direction.x = sin_theta * cos(phi);
+	ray->direction.y = sin_theta * sin(phi);
+	ray->direction.z = cos(theta);
+
+	ray->origin.x = state->origin[0];
+	ray->origin.y = state->origin[1];
+	ray->origin.z = state->origin[2];
+
+	ray->power = state->ppr;
+
 	state->n_rays--;
-	return 1;
     }
 
-    return 0;
+    return ray;
 }
 
 
