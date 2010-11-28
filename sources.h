@@ -38,7 +38,7 @@ typedef struct source_t {
 /*
  * list of all define sources found in individual files (source_*.c)
  */
-const struct source_type_t *source_uniform_point_source;
+const source_type_t *source_uniform_point_source;
 
 /*
  *  publicfunctions to access/manipulate the sources (found in sources.c)

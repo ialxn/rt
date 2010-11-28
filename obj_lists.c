@@ -81,7 +81,7 @@ void source_list_free(source_list_t * s)
     list_for_each_safe(pos, pos_t, &(*s).list) {
 	source_list_t *this = list_entry(pos, source_list_t, list);
 
-	free(this->s);
+	source_free(this->s);
 	list_del(pos);
 
 	free(this);

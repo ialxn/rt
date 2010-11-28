@@ -6,14 +6,14 @@ SRCS= main.c \
       obj_lists.c \
       sources.c \
       targets.c \
-      source_uniform_pointsource.c
+      source_uniform_point_source.c
 
 
 OBJ= main.o \
      obj_lists.o \
      sources.o \
      targets.o \
-     source_uniform_pointsource.o
+     source_uniform_point_source.o
 
 LIBS= -lgsl -lgslcblas -lconfig -lm
 LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm

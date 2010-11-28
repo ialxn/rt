@@ -30,7 +30,7 @@ static int ups_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ups_state_t *state = (ups_state_t *) vstate;
     state->name = strdup(name);
-
+    state->type = strdup(name);	/* place holder */
     return NO_ERR;
 }
 
@@ -56,11 +56,12 @@ static int ups_get_new_ray(void *vstate, const gsl_rng * r)
 
 
 
-static const source_type_t ups_type_t = {
+static const source_type_t ups_t = {
     sizeof(struct ups_state_t),
     &ups_alloc_state,
     &ups_init_state,
-    &ups_free_state, &ups_get_new_ray
+    &ups_free_state,
+    &ups_get_new_ray
 };
 
-const source_type_t *source_uniform_pointsource = &ups_type_t;
+const source_type_t *source_uniform_point_source = &ups_t;
