@@ -26,27 +26,56 @@ static int ups_alloc_state(void *vstate)
 }
 
 
-static int ups_init_state(void *vstate, config_t * cfg, const char *name)
+static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ups_state_t *state = (ups_state_t *) vstate;
+
+    unsigned int i = 0;
+    const char *S;
+    int I;
+    double F;
+
+    config_setting_t *this_s;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+
     state->name = strdup(name);
-    state->type = strdup(name);	/* place holder */
-    return NO_ERR;
+
+    while (1) {			/* find setting for source 'name' */
+	this_s = config_setting_get_elem(s, i);
+
+	config_setting_lookup_string(this_s, "name", &S);
+	if (strstr(S, name))
+	    break;
+
+	i++;
+    }
+
+    config_setting_lookup_string(this_s, "type", &S);
+    state->type = strdup(S);
+
+    config_setting_lookup_int(this_s, "n_rays", &I);
+    state->n_rays = I;
+
+    config_setting_lookup_float(this_s, "power", &F);
+    state->power = F;
+
+    state->ppr = F / I;
+
 }
 
-static void ups_free_state(void *vstate)
+static void ups_free_state(void
+			   *vstate)
 {
     ups_state_t *state = (ups_state_t *) vstate;
-
     free(state->name);
     free(state->type);
 }
 
 
-static int ups_get_new_ray(void *vstate, const gsl_rng * r)
+static int ups_get_new_ray(void
+			   *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
-
     if (state->n_rays) {
 	state->n_rays--;
 	return 1;
