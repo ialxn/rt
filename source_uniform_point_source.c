@@ -39,7 +39,7 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
     int I;
     double F;
 
-    config_setting_t *this_s;
+    config_setting_t *this_s, *origin;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
     state->name = strdup(name);
@@ -65,6 +65,14 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
     state->ppr = F / I;
 
+    origin = config_setting_get_member(this_s, "origin");
+
+    config_setting_lookup_float(origin, "x", &F);
+    state->origin[0] = F;
+    config_setting_lookup_float(origin, "y", &F);
+    state->origin[1] = F;
+    config_setting_lookup_float(origin, "z", &F);
+    state->origin[2] = F;
 }
 
 static void ups_free_state(void *vstate)
