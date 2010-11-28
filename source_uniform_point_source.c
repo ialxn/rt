@@ -9,6 +9,7 @@
  */
 
 #include <string.h>
+
 #include "sources.h"
 
 typedef struct ups_state_t {
@@ -24,7 +25,6 @@ static int ups_alloc_state(void *vstate)
 {
     return NO_ERR;
 }
-
 
 static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 {
@@ -63,23 +63,23 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
 }
 
-static void ups_free_state(void
-			   *vstate)
+static void ups_free_state(void *vstate)
 {
     ups_state_t *state = (ups_state_t *) vstate;
+
     free(state->name);
     free(state->type);
 }
 
-
-static int ups_get_new_ray(void
-			   *vstate, const gsl_rng * r)
+static int ups_get_new_ray(void *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
+
     if (state->n_rays) {
 	state->n_rays--;
 	return 1;
     }
+
     return 0;
 }
 
