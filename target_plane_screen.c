@@ -91,6 +91,7 @@ static void ps_free_state(void *vstate)
     double *data = state->data;
     int i;
 
+    /* first write data to file */
     for (i = 0; i < n; i++) {
 	const int idx = 3 * i;
 
@@ -112,6 +113,7 @@ static vec_t *ps_get_intercept(void *vstate, ray_t * in_ray,
 	if (state->n_data) {	/* we have not yet dumped our data */
 	    const int n = state->n_data;
 	    double *data = state->data;
+	    double *t;
 	    int i;
 
 	    for (i = 0; i < n; i++) {
@@ -121,8 +123,13 @@ static vec_t *ps_get_intercept(void *vstate, ray_t * in_ray,
 			data[idx + 1], data[idx + 2]);
 	    }
 
-	    free(state->data);
-	    ps_alloc_state(vstate);
+	    /* shrink memory to minimum (BLOCK) */
+	    t = (double *) realloc(&(state->data),
+				   3 * BLOCK * sizeof(double));
+	    state->data = t;
+	    state->n_data = 0;
+	    state->n_alloc = BLOCK;
+
 	} else			/* we have allready dumped our data. mark cycle complete */
 	    *dump_flag = 0;
 
@@ -161,6 +168,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
 	    const int m = state->n_data;
 	    double *data = state->data;
+	    double *tmp;
 	    int i;
 
 	    for (i = 0; i < m; i++) {
@@ -170,8 +178,13 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 			data[idx + 1], data[idx + 2]);
 	    }
 
-	    free(state->data);
-	    ps_alloc_state(vstate);
+	    /* shrink memory to minimum (BLOCK) */
+	    tmp = (double *) realloc(&(state->data),
+				     3 * BLOCK * sizeof(double));
+	    state->data = tmp;
+	    state->n_data = 0;
+	    state->n_alloc = BLOCK;
+
 	    *dump_flag = 1;
 	}
     } else
