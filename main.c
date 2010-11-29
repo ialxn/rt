@@ -50,9 +50,9 @@ static void run_simulation(source_list_t * source_list,
 	fprintf(stdout, "%s\n", S->type->type);
 
 	while (ray) {
-	    ray = new_ray(S, r);
 	    fprintf(stdout, "%d ", i++);
 	    free(ray);
+	    ray = new_ray(S, r);
 	}
 
     }

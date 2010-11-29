@@ -100,7 +100,7 @@ int check_sources(config_t * cfg)
 	     * keywords common to all sources
 	     * 'name':  identifier / string
 	     * 'type':  type of source / string
-	     *          - "point_source": uniform point source
+	     *          - "uniform point_source": uniform point source
 	     * 'power': power [W] of source / double
 	     * 'n_rays': number of rays used for this source / int
 	     */
@@ -142,7 +142,7 @@ int check_sources(config_t * cfg)
 	     *  - group 'origin'
 	     *          'x', 'y', 'z': coordinates / double
 	     */
-	    if (strstr(type, "point_source") == type) {
+	    if (strstr(type, "uniform point_source") == type) {
 		config_setting_t *origin;
 
 		if ((origin =

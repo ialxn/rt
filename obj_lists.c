@@ -14,32 +14,45 @@
 source_list_t *init_sources(config_t * cfg)
 {
     source_list_t *s_list;
-    const config_setting_t *s = config_lookup(cfg, "sources");
-    const int count = config_setting_length(s);
+    const config_setting_t *sources = config_lookup(cfg, "sources");
+    const int count = config_setting_length(sources);
 
     int i;
 
     s_list = (source_list_t *) malloc(sizeof(source_list_t));
-    INIT_LIST_HEAD(&(*s_list).list);
+    INIT_LIST_HEAD(&(s_list->list));
 
-    for (i = 0; i < count; ++i) {
-	source_list_t *new_elem;
-	source_t *new_s;
-	config_setting_t *this_s;
+    for (i = 0; i < count; ++i) {	/* iterate through all sources */
+	source_list_t *new_entry;
+	source_t *new_source;
+	config_setting_t *this_source;
 	const char *name;
+	const char *type;
 
-	this_s = config_setting_get_elem(s, (unsigned int) i);
-	config_setting_lookup_string(this_s, "name", &(name));
+	this_source = config_setting_get_elem(sources, (unsigned int) i);
+	config_setting_lookup_string(this_source, "name", &name);
 
-	new_s = source_alloc(source_uniform_point_source, cfg, name);
+	/*
+	 * allocate the correct source type
+	 */
+	config_setting_lookup_string(this_source, "type", &type);
+	if (strstr(type, "uniform point source"))
+	    new_source =
+		source_alloc(source_uniform_point_source, cfg, name);
+	else {
+	    fprintf(stderr,
+		    "Unknown source type (%s) found. Ignoring source %s\n",
+		    type, name);
+	    continue;
+	}
 
-	new_elem = (source_list_t *) malloc(sizeof(source_list_t));
-	new_elem->s = new_s;
-	list_add_tail(&(new_elem->list), &(*s_list).list);
+	new_entry = (source_list_t *) malloc(sizeof(source_list_t));
+	new_entry->s = new_source;
+	list_add_tail(&(new_entry->list), &(s_list->list));
 
     }
 
-    return (s_list);
+    return s_list;
 }
 
 target_list_t *init_targets(config_t * cfg)
