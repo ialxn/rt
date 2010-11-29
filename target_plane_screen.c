@@ -100,7 +100,17 @@ static vec_t *ps_get_intercept(void *vstate, ray_t * in_ray,
 
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
-	    /* dump */
+	    const int n = state->n_data;
+	    double *data = state->data;
+	    int i;
+
+	    for (i = 0; i < n; i++) {
+		const int idx = 3 * i;
+
+		fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
+			data[idx + 1], data[idx + 2]);
+	    }
+
 	    free(state->data);
 	    ps_alloc_state(vstate);
 	} else			/* we have allready dumped our data. mark cycle complete */
@@ -139,7 +149,17 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	    state->data = t;
 	    state->n_data = n_data;
 	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
-	    /* dump */
+	    const int m = state->n_data;
+	    double *data = state->data;
+	    int i;
+
+	    for (i = 0; i < m; i++) {
+		const int idx = 3 * i;
+
+		fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
+			data[idx + 1], data[idx + 2]);
+	    }
+
 	    free(state->data);
 	    ps_alloc_state(vstate);
 	    *dump_flag = 1;
