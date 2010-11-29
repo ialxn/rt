@@ -17,9 +17,9 @@
 
 typedef struct ps_state_t {
     const char *name;
+    FILE *dump_file;
     double point[3];
     double normal[3];
-    double intercept[3];
     int n_alloc;
     int n_data;
     double *data;
@@ -45,11 +45,15 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     unsigned int i = 0;
     const char *S;
     double F;
+    char f_name[256];
 
     config_setting_t *this_target, *point, *normal;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
+
+    snprintf(f_name, 256, "%s.dat", name);
+    state->dump_file = fopen(f_name, "w");
 
     while (1) {			/* find setting for target 'name' */
 	this_target = config_setting_get_elem(targets, i);
@@ -84,6 +88,7 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
+    fclose(state->dump_file);
     free(state->name);
     free(state->data);
 }
