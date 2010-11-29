@@ -9,6 +9,7 @@
  */
 
 #include <getopt.h>
+#include <gsl/gsl_rng.h>
 #include <libconfig.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -29,8 +30,16 @@ static void output_geometry(config_t * cfg)
 }
 
 static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list)
+			   target_list_t * target_list, int seed)
 {
+    const gsl_rng_type *T;
+    gsl_rng *r;
+
+    T = gsl_rng_default;
+    r = gsl_rng_alloc(T);
+    gsl_rng_set(r, (unsigned long int) abs(seed));
+
+    gsl_rng_free(r);
 }
 
 static void help(void)
@@ -95,8 +104,6 @@ int main(int argc, char **argv)
 {
     config_t cfg;
     int mode = CHECK_CONFIG;
-    target_list_t *target_list;
-    source_list_t *source_list;
 
     while (1) {
 	int c;
@@ -159,6 +166,9 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
 
     switch (mode) {
+	int seed;
+	target_list_t *target_list;
+	source_list_t *source_list;
 
     case CHECK_CONFIG:		/* print parsed input */
 	config_write(&cfg, stdout);
@@ -175,8 +185,12 @@ int main(int argc, char **argv)
     case RUN:			/* do the simulation */
 	source_list = init_sources(&cfg);
 	target_list = init_targets(&cfg);
+
+	config_lookup_int(&cfg, "seed", &seed);
 	config_destroy(&cfg);
-	run_simulation(source_list, target_list);
+
+	run_simulation(source_list, target_list, seed);
+
 	source_list_free(source_list);
 	target_list_free(target_list);
 	free(source_list);
