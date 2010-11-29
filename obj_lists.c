@@ -58,29 +58,40 @@ source_list_t *init_sources(config_t * cfg)
 target_list_t *init_targets(config_t * cfg)
 {
     target_list_t *t_list;
-    const config_setting_t *t = config_lookup(cfg, "targets");
-    const int count = config_setting_length(t);
+    const config_setting_t *targets = config_lookup(cfg, "targets");
+    const int count = config_setting_length(targets);
 
     int i;
 
     t_list = (target_list_t *) malloc(sizeof(target_list_t));
-    INIT_LIST_HEAD(&(*t_list).list);
+    INIT_LIST_HEAD(&(t_list->list));
 
-    for (i = 0; i < count; ++i) {
-	target_list_t *new_elem;
-	target_t *new_t;
-	config_setting_t *this_t;
+    for (i = 0; i < count; ++i) {	/* iterate through all sources */
+	target_list_t *new_entry;
+	target_t *new_target;
+	config_setting_t *this_target;
 	const char *name;
+	const char *type;
 
-	new_t = (target_t *) malloc(sizeof(target_t));
+	this_target = config_setting_get_elem(targets, (unsigned int) i);
+	config_setting_lookup_string(this_target, "name", &name);
 
-	this_t = config_setting_get_elem(t, (unsigned int) i);
-	config_setting_lookup_string(this_t, "name", &(name));
+	/*
+	 * allocate the correct target type
+	 */
+	config_setting_lookup_string(this_target, "type", &type);
+	if (strstr(type, "plane screen"))
+	    new_target = target_alloc(target_plane_screen, cfg, name);
+	else {
+	    fprintf(stderr,
+		    "Unknown target type (%s) found. Ignoring target %s\n",
+		    type, name);
+	    continue;
+	}
 
-	new_t->name = strdup(name);
-	new_elem = (target_list_t *) malloc(sizeof(target_list_t));
-	new_elem->t = new_t;
-	list_add_tail(&(new_elem->list), &(*t_list).list);
+	new_entry = (target_list_t *) malloc(sizeof(target_list_t));
+	new_entry->t = new_target;
+	list_add_tail(&(new_entry->list), &(t_list->list));
 
     }
 
@@ -107,11 +118,10 @@ void target_list_free(target_list_t * t)
 {
     struct list_head *pos, *pos_t;
 
-    list_for_each_safe(pos, pos_t, &(*t).list) {
+    list_for_each_safe(pos, pos_t, &(t->list)) {
 	target_list_t *this = list_entry(pos, target_list_t, list);
 
-	free(this->t->name);
-	free(this->t);
+	target_free(this->t);
 	list_del(pos);
 
 	free(this);

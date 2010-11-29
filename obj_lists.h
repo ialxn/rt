@@ -15,16 +15,12 @@
 
 #include "list.h"
 #include "sources.h"
+#include "targets.h"
 
 typedef struct source_list_t {
     struct list_head list;
     source_t *s;
 } source_list_t;
-
-typedef struct target_t {
-    const char *name;
-    int type;
-} target_t;
 
 typedef struct target_list_t {
     struct list_head list;

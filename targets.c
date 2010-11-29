@@ -9,8 +9,72 @@
  */
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "targets.h"
+
+target_t *target_alloc(const target_type_t * type, config_t * cfg,
+		       const char *name)
+{
+/*
+ * generic part
+ */
+
+    target_t *T;
+
+    if ((T = (target_t *) malloc(sizeof(target_t))) == NULL) {
+	fprintf(stderr, "failed to allocate space for target\n");
+	return NULL;
+    }
+
+    if ((T->state = malloc(type->size)) == NULL) {
+	free(T);
+	fprintf(stderr,
+		"failed to allocate space for target internal state\n");
+	return NULL;
+    };
+
+    T->type = type;
+
+    /*
+     * specific part
+     */
+    if ((T->type->alloc_state) (T->state) == ERR) {
+	fprintf(stderr,
+		"failed to allocate space for target state content\n");
+	free(T->state);
+	free(T);
+	return NULL;
+    }
+
+    (T->type->init_state) (T->state, cfg, name);
+
+    return T;
+
+}
+
+void target_free(target_t * T)
+{
+/*
+ * free specific internal data (prevent leaks).
+ */
+
+    (T->type->free_state) (T->state);
+    free(T->state);
+    free(T);
+
+}
+
+vec_t *intercept(const target_t * T, ray_t * in_ray, int *dump_flag)
+{
+    return (T->type->get_intercept) (T->state, in_ray, dump_flag);
+}
+
+ray_t *out_ray(const target_t * T, ray_t * in_ray, vec_t * hit,
+	       int *dump_flag)
+{
+    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag);
+}
 
 int check_targets(config_t * cfg)
 {
@@ -60,13 +124,13 @@ int check_targets(config_t * cfg)
 	     */
 
 	    /*
-	     * plane_screen:
+	     * plane screen:
 	     *  - group 'point' (point on plane)
 	     *          'x', 'y', 'z': coordinates / double
 	     *  - group 'normal' (normal vector of plane)
 	     *          'x', 'y', 'z': coordinates / double
 	     */
-	    if (strstr(type, "plane_screen") == type) {
+	    if (strstr(type, "plane screen") == type) {
 		config_setting_t *point, *normal;
 
 		if ((point =
