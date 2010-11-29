@@ -17,7 +17,7 @@
 
 typedef struct ups_state_t {
     const char *name;
-    const char *type;
+
     double origin[3];
     int n_rays;
     double power;
@@ -54,9 +54,6 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 	i++;
     }
 
-    config_setting_lookup_string(this_s, "type", &S);
-    state->type = strdup(S);
-
     config_setting_lookup_int(this_s, "n_rays", &I);
     state->n_rays = I;
 
@@ -80,7 +77,6 @@ static void ups_free_state(void *vstate)
     ups_state_t *state = (ups_state_t *) vstate;
 
     free(state->name);
-    free(state->type);
 }
 
 static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
@@ -120,6 +116,7 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 
 
 static const source_type_t ups_t = {
+    "uniform point source",
     sizeof(struct ups_state_t),
     &ups_alloc_state,
     &ups_init_state,
