@@ -32,12 +32,31 @@ static void output_geometry(config_t * cfg)
 static void run_simulation(source_list_t * source_list,
 			   target_list_t * target_list, int seed)
 {
-    const gsl_rng_type *T;
-    gsl_rng *r;
+    struct list_head *pos;
 
-    T = gsl_rng_default;
-    r = gsl_rng_alloc(T);
+    const gsl_rng_type *T = gsl_rng_default;
+    gsl_rng *r = gsl_rng_alloc(T);
+
     gsl_rng_set(r, (unsigned long int) abs(seed));
+
+    list_for_each(pos, &(source_list->list)) {
+	source_list_t *this_s = list_entry(pos, source_list_t, list);
+	source_t *S = this_s->s;
+
+	ray_t *ray = new_ray(S, r);
+
+	int i = 0;
+
+	fprintf(stdout, "%s\n", S->type->type);
+
+	while (ray) {
+	    ray = new_ray(S, r);
+	    fprintf(stdout, "%d ", i++);
+	    free(ray);
+	}
+
+    }
+
 
     gsl_rng_free(r);
 }
