@@ -91,13 +91,70 @@ static void ps_free_state(void *vstate)
 static vec_t *ps_get_intercept(void *vstate, ray_t * in_ray,
 			       int *dump_flag)
 {
-    return NULL;
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    if (*dump_flag) {
+	if (state->n_data) {	/* we have not yet dumped our data */
+	    /* dump */
+	    free(state->data);
+	    ps_alloc_state(vstate);
+	} else			/* we have allready dumped our data. mark cycle complete */
+	    *dump_flag = 0;
+
+    }
+
+    /* calculate point of interception */
+
+    return NULL;		/* no interception found */
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
-			     vec_t * intercpt, int *dump_flag)
+			     vec_t * hit, int *dump_flag)
 {
-    return NULL;
+    ps_state_t *state = (ps_state_t *) vstate;
+    const int n = 3 * state->n_data;
+    ray_t *out;
+
+    out = (ray_t *) malloc(sizeof(ray_t));
+
+    /*
+     * store hit
+     */
+    state->data[n] = hit->x;
+    state->data[n + 1] = hit->y;
+    state->data[n + 2] = hit->z;
+
+    if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
+	const int n_data = 3 * (state->n_data + BLOCK);
+	double *t;
+
+	t = (double *) realloc(&(state->data),
+			       3 * n_data * sizeof(double));
+	if (t) {		/* success, update state */
+	    state->data = t;
+	    state->n_data = n_data;
+	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
+	    /* dump */
+	    free(state->data);
+	    ps_alloc_state(vstate);
+	    *dump_flag = 1;
+	}
+    } else
+	state->n_data++;
+
+    /*
+     * out going ray only needs origin updated
+     */
+    out->origin.x = hit->x;
+    out->origin.y = hit->y;
+    out->origin.z = hit->z;
+    out->direction.x = in_ray->direction.x;
+    out->direction.y = in_ray->direction.y;
+    out->direction.z = in_ray->direction.z;
+    out->power = in_ray->power;
+
+    return out;
+
 }
 
 
