@@ -87,6 +87,16 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
 static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
+    const int n = state->n_data;
+    double *data = state->data;
+    int i;
+
+    for (i = 0; i < n; i++) {
+	const int idx = 3 * i;
+
+	fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
+		data[idx + 1], data[idx + 2]);
+    }
 
     fclose(state->dump_file);
     free(state->name);
