@@ -140,7 +140,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 	} else			/* we have allready dumped our data. mark cycle complete */
 	    *dump_flag = 0;
 
-    }	
+    }
 
     /*
      * calculate point of interception d
@@ -203,7 +203,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 
     ray_t *out = (ray_t *) malloc(sizeof(ray_t));
 
-    memcpy(state->data, hit, 3 * sizeof(double));	/* store hit */
+    memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store hit */
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
 	const size_t n = state->n_data + BLOCK_SIZE;
