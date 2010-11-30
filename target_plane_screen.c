@@ -131,7 +131,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 	    }
 
 	    /* shrink memory to minimum (BLOCK) */
-	    t = (double *) realloc(&(state->data),
+	    t = (double *) realloc(state->data,
 				   3 * BLOCK_SIZE * sizeof(double));
 	    state->data = t;
 	    state->n_data = 0;
@@ -140,7 +140,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 	} else			/* we have allready dumped our data. mark cycle complete */
 	    *dump_flag = 0;
 
-    }
+    }	
 
     /*
      * calculate point of interception d
@@ -209,7 +209,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	const size_t n = state->n_data + BLOCK_SIZE;
 	double *t;
 
-	t = (double *) realloc(&(state->data), 3 * n * sizeof(double));
+	t = (double *) realloc(state->data, 3 * n * sizeof(double));
 	if (t) {		/* success, update state */
 	    state->data = t;
 	    state->n_data = n;
@@ -226,8 +226,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 			data[idx + 1], data[idx + 2]);
 	    }
 
-	    /* shrink memory to minimum (BLOCK) */
-	    t = (double *) realloc(&(state->data),
+	    /* shrink memory to minimum (BLOCK_SIZE) */
+	    t = (double *) realloc(state->data,
 				   3 * BLOCK_SIZE * sizeof(double));
 	    state->data = t;
 	    state->n_data = 0;
