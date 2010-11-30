@@ -70,19 +70,21 @@ static void run_simulation(source_list_t * source_list,
 
 		    current_intercept =
 			interception(current_target, ray, &dump_flag);
+		    if (current_intercept) {	/* interception found */
+			for (i = 0; i < 3; i++) {
+			    const double t =
+				current_intercept[i] - ray->origin[i];
+			    dist += t;
+			}
+			dist = sqrt(dist);
 
-		    for (i = 0; i < 3; i++) {
-			const double t =
-			    current_intercept[i] - ray->origin[i];
-			dist += t;
-		    }
-		    dist = sqrt(dist);
+			if (dist < min_dist) {	/* new nearest target identified */
+			    nearest_target = current_target;
+			    memcpy(&nearest_intercept, current_intercept,
+				   3 * sizeof(double));
+			    free(current_intercept);
+			}
 
-		    if (dist < min_dist) {	/* new nearest target identified */
-			nearest_target = current_target;
-			memcpy(&nearest_intercept, current_intercept,
-			       3 * sizeof(double));
-			free(current_intercept);
 		    }
 
 		}		/* all targets tried */
