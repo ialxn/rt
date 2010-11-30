@@ -167,10 +167,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     gsl_blas_ddot(&L.vector, &N.vector, &t1);	/* l dot n */
 
     if (t1) {			/* line not parallel to plane */
-
 	double t2[3], t3;
-	double d;
-	double *intercept = (double *) malloc(3 * sizeof(double));
 
 	gsl_vector_view T2;
 
@@ -181,16 +178,22 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
 	gsl_blas_ddot(&T2.vector, &N.vector, &t3);	/* (p_0 - l_0) dot N */
 
-	d = t3 / t1;
+	if (t3) {		/* line does not start in plane */
+	    double d;
+	    double *intercept = (double *) malloc(3 * sizeof(double));
 
-	intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
-	intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
-	intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
+	    d = t3 / t1;
 
-	return intercept;
+	    intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
+	    intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
+	    intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
 
-    } else
-	return NULL;		/* no interception found */
+	    return intercept;
+	}
+
+    }
+
+    return NULL;		/* no interception found */
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
