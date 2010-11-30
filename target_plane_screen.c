@@ -200,7 +200,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 
     ray_t *out = (ray_t *) malloc(sizeof(ray_t));
 
-    memcpy(state->data, hit, 3);	/* store hit */
+    memcpy(state->data, hit, 3 * sizeof(double));	/* store hit */
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
 	const size_t n = state->n_data + BLOCK_SIZE;
@@ -235,8 +235,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     } else
 	state->n_data++;
 
-    memcpy(out->origin, hit, 3);	/* update origin */
-    memcpy(out->direction, in_ray->direction, 3);	/* copy direction */
+    memcpy(out->origin, hit, 3 * sizeof(double));	/* update origin */
+    memcpy(out->direction, in_ray->direction, 3 * sizeof(double));	/* copy direction */
     out->power = in_ray->power;
 
     return out;

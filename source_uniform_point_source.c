@@ -101,7 +101,7 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 	ray->direction[1] = sin_theta * sin(phi);
 	ray->direction[2] = cos(theta);
 
-	memcpy(ray->origin, state->origin, 3);
+	memcpy(ray->origin, state->origin, 3 * sizeof(double));
 
 	ray->power = state->ppr;
 
