@@ -65,12 +65,12 @@ void target_free(target_t * T)
 
 }
 
-vec_t *intercept(const target_t * T, ray_t * in_ray, int *dump_flag)
+double *intercept(const target_t * T, ray_t * in_ray, int *dump_flag)
 {
     return (T->type->get_intercept) (T->state, in_ray, dump_flag);
 }
 
-ray_t *out_ray(const target_t * T, ray_t * in_ray, vec_t * hit,
+ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
 	       int *dump_flag)
 {
     return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag);

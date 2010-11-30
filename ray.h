@@ -11,15 +11,9 @@
 #ifndef __RAY_H__
 #define __RAY_H__
 
-typedef struct vec_t {
-    double x;
-    double y;
-    double z;
-} vec_t;
-
 typedef struct ray_t {
-    vec_t origin;
-    vec_t direction;
+    double origin[3];
+    double direction[3];
     double power;
 } ray_t;
 

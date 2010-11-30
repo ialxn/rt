@@ -16,7 +16,7 @@
 #include "sources.h"
 
 typedef struct ups_state_t {
-    const char *name;
+    char *name;
 
     double origin[3];
     int n_rays;
@@ -97,13 +97,11 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 	t = gsl_rng_uniform(r);
 	phi = 2.0 * M_PI * t;
 
-	ray->direction.x = sin_theta * cos(phi);
-	ray->direction.y = sin_theta * sin(phi);
-	ray->direction.z = cos(theta);
+	ray->direction[0] = sin_theta * cos(phi);
+	ray->direction[1] = sin_theta * sin(phi);
+	ray->direction[2] = cos(theta);
 
-	ray->origin.x = state->origin[0];
-	ray->origin.y = state->origin[1];
-	ray->origin.z = state->origin[2];
+	memcpy(ray->origin, state->origin, 3);
 
 	ray->power = state->ppr;
 

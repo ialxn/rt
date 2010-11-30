@@ -17,7 +17,7 @@
 
 #define NO_ERR 0
 #define ERR 1
-#define BLOCK 32768
+#define BLOCK_SIZE 32768
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
@@ -27,8 +27,8 @@ typedef struct target_type_t {
     void (*init_state) (void *state, config_t * cfg, const char *name);	/* initialize internal data
 									   from configuration */
     void (*free_state) (void *state);	/* free */
-    vec_t *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);
-    ray_t *(*get_out_ray) (void *state, ray_t * in_ray, vec_t * intercept,
+    double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);
+    ray_t *(*get_out_ray) (void *state, ray_t * in_ray, double *hit,
 			   int *dump_flag);
 } target_type_t;
 
@@ -51,10 +51,10 @@ const target_type_t *target_plane_screen;
 extern target_t *target_alloc(const target_type_t * type, config_t * cfg,
 			      const char *name);
 extern void target_free(target_t * T);
-extern vec_t *intercept(const target_t * T, ray_t * in_ray,
-			int *dump_flag);
+extern double *intercept(const target_t * T, ray_t * in_ray,
+			 int *dump_flag);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray,
-		      vec_t * intercept, int *dump_flag);
+		      double *hit, int *dump_flag);
 
 /*
  * utility functions
