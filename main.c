@@ -11,8 +11,10 @@
 #include <getopt.h>
 #include <gsl/gsl_rng.h>
 #include <libconfig.h>
+#include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "obj_lists.h"
 #include "sources.h"
@@ -32,31 +34,71 @@ static void output_geometry(config_t * cfg)
 static void run_simulation(source_list_t * source_list,
 			   target_list_t * target_list, int seed)
 {
-    struct list_head *pos;
+    struct list_head *s_pos;
 
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
 
+    int dump_flag = 0;
+
     gsl_rng_set(r, (unsigned long int) abs(seed));
 
-    list_for_each(pos, &(source_list->list)) {
-	source_list_t *this_s = list_entry(pos, source_list_t, list);
-	source_t *S = this_s->s;
+    list_for_each(s_pos, &(source_list->list)) {
+	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
+	source_t *current_source = this_s->s;
 
-	ray_t *ray = new_ray(S, r);
+	ray_t *ray = new_ray(current_source, r);
 
-	int i = 0;
+	while (ray) {		/* loop until source is exhausted */
 
-	fprintf(stdout, "%s\n", S->type->type);
+	    while (ray) {	/* loop until ray is absorbed */
+		struct list_head *t_pos;
+		target_t *nearest_target;
+		ray_t *new;
+		double nearest_intercept[3];
+		double min_dist = 1e100;
 
-	while (ray) {
-	    fprintf(stdout, "%d ", i++);
-	    free(ray);
-	    ray = new_ray(S, r);
+		list_for_each(t_pos, &(target_list->list)) {	/* find nearest interception */
+		    target_list_t *this_t =
+			list_entry(t_pos, target_list_t, list);
+		    target_t *current_target = this_t->t;
+
+		    double *current_intercept;
+		    double dist = 0;
+
+		    int i;
+
+		    current_intercept =
+			interception(current_target, ray, &dump_flag);
+
+		    for (i = 0; i < 3; i++) {
+			const double t =
+			    current_intercept[i] - ray->origin[i];
+			dist += t;
+		    }
+		    dist = sqrt(dist);
+
+		    if (dist < min_dist) {	/* new nearest target identified */
+			nearest_target = current_target;
+			memcpy(&nearest_intercept, current_intercept,
+			       3 * sizeof(double));
+			free(current_intercept);
+		    }
+
+		}		/* all targets tried */
+
+		new =
+		    out_ray(nearest_target, ray, nearest_intercept,
+			    &dump_flag);
+		free(ray);
+		ray = new;
+
+	    }
+
+	    ray = new_ray(current_source, r);	/* start next ray */
 	}
 
     }
-
 
     gsl_rng_free(r);
 }
