@@ -51,8 +51,8 @@ const target_type_t *target_plane_screen;
 extern target_t *target_alloc(const target_type_t * type, config_t * cfg,
 			      const char *name);
 extern void target_free(target_t * T);
-extern double *intercept(const target_t * T, ray_t * in_ray,
-			 int *dump_flag);
+extern double *interception(const target_t * T, ray_t * in_ray,
+			    int *dump_flag);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray,
 		      double *hit, int *dump_flag);
 

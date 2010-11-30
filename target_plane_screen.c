@@ -9,6 +9,7 @@
  */
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_blas.h>
 #include <math.h>
 #include <string.h>
 
@@ -112,6 +113,9 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
+    double t1;
+    gsl_vector_view N, L;
+
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
 	    double *t;
@@ -138,9 +142,55 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
     }
 
-    /* calculate point of interception */
+    /*
+     * calculate point of interception d
+     *
+     * d = {(\mathbf{p_0}-\mathbf{l_0})\cdot\mathbf{n} \over \mathbf{l}\cdot\mathbf{n}}
+     *
+     * with
+     *       p_0: point on the plane
+     *         n: normal vector of the plane (|n|=1)
+     *       l_0: origin of the line
+     *         l: unit vector in direction of the line
+     *
+     * If the line starts outside the plane and is parallel to the plane, there is no intersection.
+     * In this case, the above denominator will be zero and the numerator will be non-zero. If the
+     * line starts inside the plane and is parallel to the plane, the line intersects the plane
+     * everywhere. In this case, both the numerator and denominator above will be zero. In all other
+     * cases, the line intersects the plane once and d represents the intersection as the distance
+     * along the line from \mathbf{l_0}.
+     */
 
-    return NULL;		/* no interception found */
+    N = gsl_vector_view_array(state->normal, 3);
+    L = gsl_vector_view_array(in_ray->direction, 3);
+
+    gsl_blas_ddot(&L.vector, &N.vector, &t1);	/* l dot n */
+
+    if (t1) {			/* line not parallel to plane */
+
+	double t2[3], t3;
+	double d;
+	double *intercept = (double *) malloc(3 * sizeof(double));
+
+	gsl_vector_view T2;
+
+	t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
+	t2[1] = state->point[1] - in_ray->origin[1];
+	t2[2] = state->point[2] - in_ray->origin[2];
+	T2 = gsl_vector_view_array(t2, 3);
+
+	gsl_blas_ddot(&T2.vector, &N.vector, &t3);	/* (p_0 - l_0) dot N */
+
+	d = t3 / t1;
+
+	intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
+	intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
+	intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
+
+	return intercept;
+
+    } else
+	return NULL;		/* no interception found */
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,

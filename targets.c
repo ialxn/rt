@@ -65,7 +65,7 @@ void target_free(target_t * T)
 
 }
 
-double *intercept(const target_t * T, ray_t * in_ray, int *dump_flag)
+double *interception(const target_t * T, ray_t * in_ray, int *dump_flag)
 {
     return (T->type->get_intercept) (T->state, in_ray, dump_flag);
 }
