@@ -77,7 +77,7 @@ static void run_simulation(source_list_t * source_list,
 			for (i = 0; i < 3; i++) {
 			    const double t =
 				current_intercept[i] - ray->origin[i];
-			    dist += t;
+			    dist += t * t;
 			}
 			dist = sqrt(dist);
 
