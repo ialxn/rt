@@ -47,30 +47,33 @@ static void run_simulation(source_list_t * source_list,
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
 
-	ray_t *ray = new_ray(current_source, r);
+	ray_t *ray = new_ray(current_source, r);	/* get first ray */
 
 	while (ray) {		/* loop until source is exhausted */
-
-	    while (ray) {	/* loop until ray is absorbed */
+	    while (ray) {	/* loop until ray is absorbed or leaves system */
 		struct list_head *t_pos;
 		target_t *nearest_target;
 		ray_t *new;
 		double nearest_intercept[3];
 		double min_dist = 1e100;
+		int hits_target = 0;
 
-		list_for_each(t_pos, &(target_list->list)) {	/* find nearest interception */
+		list_for_each(t_pos, &(target_list->list)) {	/* find closest target intercepted by ray */
 		    target_list_t *this_t =
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 
 		    double *current_intercept;
-		    double dist = 0;
 
 		    int i;
 
 		    current_intercept =
 			interception(current_target, ray, &dump_flag);
+
 		    if (current_intercept) {	/* interception found */
+			double dist = 0;
+
+			hits_target = 1;
 			for (i = 0; i < 3; i++) {
 			    const double t =
 				current_intercept[i] - ray->origin[i];
@@ -89,15 +92,19 @@ static void run_simulation(source_list_t * source_list,
 
 		}		/* all targets tried */
 
-		new =
-		    out_ray(nearest_target, ray, nearest_intercept,
-			    &dump_flag);
-		free(ray);
-		ray = new;
+		if (hits_target) {
+		    new =
+			out_ray(nearest_target, ray, nearest_intercept,
+				&dump_flag);
+		    free(ray);
+		    ray = new;
+		} else		/* no target hit, ray is lost */
+		    free(ray);
+
+		ray = new_ray(current_source, r);	/* start next ray */
 
 	    }
 
-	    ray = new_ray(current_source, r);	/* start next ray */
 	}
 
     }
