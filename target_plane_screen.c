@@ -83,11 +83,11 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->normal[1] = F;
     config_setting_lookup_float(normal, "z", &F);
     state->normal[2] = F;
-    
+
     /* normalize normal vector */
-    N=gsl_vector_view_array(state->normal, 3);
-    norm=gsl_blas_dnrm2(&N.vector);
-    gsl_vector_scale(&N.vector, 1.0/norm);
+    N = gsl_vector_view_array(state->normal, 3);
+    norm = gsl_blas_dnrm2(&N.vector);
+    gsl_vector_scale(&N.vector, 1.0 / norm);
 
     state->n_data = 0;
 }
@@ -119,8 +119,8 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    double t1;
-    gsl_vector_view N, L;
+    double t1[3], t2;
+    gsl_vector_view N, T1;
 
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
@@ -167,28 +167,26 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
      * along the line from \mathbf{l_0}.
      */
 
+    t1[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
+    t1[1] = state->point[1] - in_ray->origin[1];
+    t1[2] = state->point[2] - in_ray->origin[2];
+
+    T1 = gsl_vector_view_array(t1, 3);
     N = gsl_vector_view_array(state->normal, 3);
-    L = gsl_vector_view_array(in_ray->direction, 3);
 
-    gsl_blas_ddot(&L.vector, &N.vector, &t1);	/* l dot n */
+    gsl_blas_ddot(&T1.vector, &N.vector, &t2);	/* (p_0 - l_0) dot N */
 
-    if (t1) {			/* line not parallel to plane */
-	double t2[3], t3;
+    if (t2) {			/* line does not start in plane */
+	gsl_vector_view L = gsl_vector_view_array(in_ray->direction, 3);
+	double t3;
 
-	gsl_vector_view T2;
+	gsl_blas_ddot(&L.vector, &N.vector, &t3);	/* l dot n */
 
-	t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
-	t2[1] = state->point[1] - in_ray->origin[1];
-	t2[2] = state->point[2] - in_ray->origin[2];
-	T2 = gsl_vector_view_array(t2, 3);
-
-	gsl_blas_ddot(&T2.vector, &N.vector, &t3);	/* (p_0 - l_0) dot N */
-
-	if (t3) {		/* line does not start in plane */
+	if (t3) {		/* line not parallel to plane */
 	    double d;
 	    double *intercept = (double *) malloc(3 * sizeof(double));
 
-	    d = t3 / t1;
+	    d = t2 / t3;
 
 	    intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
 	    intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
