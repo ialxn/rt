@@ -46,8 +46,9 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
 
     unsigned int i = 0;
     const char *S;
-    double F;
+    double F, norm;
     char f_name[256];
+    gsl_vector_view N;
 
     config_setting_t *this_target, *point, *normal;
     const config_setting_t *targets = config_lookup(cfg, "targets");
@@ -82,6 +83,11 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->normal[1] = F;
     config_setting_lookup_float(normal, "z", &F);
     state->normal[2] = F;
+    
+    /* normalize normal vector */
+    N=gsl_vector_view_array(state->normal, 3);
+    norm=gsl_blas_dnrm2(&N.vector);
+    gsl_vector_scale(&N.vector, 1.0/norm);
 
     state->n_data = 0;
 }
