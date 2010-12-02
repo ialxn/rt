@@ -52,9 +52,8 @@ static void run_simulation(source_list_t * source_list,
 	while (ray) {		/* loop until source is exhausted */
 	    while (ray) {	/* loop until ray is absorbed or leaves system */
 		struct list_head *t_pos;
-		ray_t *new;
 		target_t *nearest_target;
-		double *nearest_intercept;
+		double *nearest_intercept = NULL;
 		double min_dist = 1e100;
 		int hits_target = 0;
 
@@ -82,21 +81,26 @@ static void run_simulation(source_list_t * source_list,
 			dist = sqrt(dist);
 
 			if (dist < min_dist) {	/* new nearest target identified */
+
 			    nearest_target = current_target;
+			    if (nearest_intercept)
+				free(nearest_intercept);
+
 			    nearest_intercept = current_intercept;
+
 			} else	/* hit on far target. not used */
 			    free(current_intercept);
+
 		    }
 
 		}		/* all targets tried */
 
 		if (hits_target) {
-		    new =
+		    ray =
 			out_ray(nearest_target, ray, nearest_intercept,
 				&dump_flag);
-		    free(ray);
 		    free(nearest_intercept);
-		    ray = new;
+		    nearest_intercept = NULL;
 		} else {	/* no target hit, ray is lost */
 		    free(ray);
 		    ray = NULL;	/* mark as absorbed */

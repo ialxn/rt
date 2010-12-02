@@ -205,7 +205,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ray_t *out = (ray_t *) malloc(sizeof(ray_t));
+    ray_t *out;
 
     memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store hit */
 
@@ -241,11 +241,13 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	}
     } else
 	state->n_data++;
+    out = (ray_t *) malloc(sizeof(ray_t));
 
     memcpy(out->origin, hit, 3 * sizeof(double));	/* update origin */
     memcpy(out->direction, in_ray->direction, 3 * sizeof(double));	/* copy direction */
     out->power = in_ray->power;
 
+    free(in_ray);
     return out;
 
 }
