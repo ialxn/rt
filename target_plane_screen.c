@@ -96,18 +96,8 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    size_t i;
-
-    const size_t n = state->n_data;
-    double *data = state->data;
-
     /* first write data to file */
-    for (i = 0; i < n; i++) {
-	const size_t idx = 3 * i;
-
-	fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
-		data[idx + 1], data[idx + 2]);
-    }
+    dump_data(state->dump_file, state->data, state->n_data, 3);
 
     fclose(state->dump_file);
     free(state->name);
@@ -125,16 +115,8 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
 	    double *t;
-	    size_t i;
-	    const size_t n = state->n_data;
-	    double *data = state->data;
 
-	    for (i = 0; i < n; i++) {
-		const size_t idx = 3 * i;
-
-		fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
-			data[idx + 1], data[idx + 2]);
-	    }
+	    dump_data(state->dump_file, state->data, state->n_data, 3);
 
 	    /* shrink memory to minimum (BLOCK) */
 	    t = (double *) realloc(state->data,
@@ -218,17 +200,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	    state->data = t;
 	    state->n_data = n;
 	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
-	    const size_t m = state->n_data;
-	    double *data = state->data;
 
-	    size_t i;
-
-	    for (i = 0; i < m; i++) {
-		const size_t idx = 3 * i;
-
-		fprintf(state->dump_file, "%g\t%g\t%g\n", data[idx],
-			data[idx + 1], data[idx + 2]);
-	    }
+	    dump_data(state->dump_file, state->data, state->n_data, 3);
 
 	    /* shrink memory to minimum (BLOCK_SIZE) */
 	    t = (double *) realloc(state->data,
@@ -248,6 +221,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     out->power = in_ray->power;
 
     free(in_ray);
+
     return out;
 
 }

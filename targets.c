@@ -213,3 +213,24 @@ int check_targets(config_t * cfg)
 
     return status;
 }
+
+void dump_data(FILE * f, double *data, const size_t n_data,
+	       const size_t n_items)
+{
+    size_t i, j;
+
+    for (i = 0; i < n_data; i++) {
+	const size_t N = i * n_items;
+
+	for (j = 0; j < n_items; j++) {
+
+	    fprintf(f, "%g", data[N + j]);
+
+	    if (j == n_items - 1)
+		fprintf(f, "\n");
+	    else
+		fprintf(f, "\t");
+
+	}
+    }
+}
