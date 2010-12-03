@@ -165,18 +165,21 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 	gsl_blas_ddot(&L.vector, &N.vector, &t3);	/* l dot n */
 
 	if (t3) {		/* line not parallel to plane */
-	    double d;
-	    double *intercept = (double *) malloc(3 * sizeof(double));
+	    const double d = t2 / t3;
 
-	    d = t2 / t3;
+	    if (d > 0.0) {	/* intercepts target in front */
+		double *intercept = (double *) malloc(3 * sizeof(double));
 
-	    intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
-	    intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
-	    intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
+		intercept[0] =
+		    in_ray->origin[0] + d * in_ray->direction[0];
+		intercept[1] =
+		    in_ray->origin[1] + d * in_ray->direction[1];
+		intercept[2] =
+		    in_ray->origin[2] + d * in_ray->direction[2];
 
-	    return intercept;
+		return intercept;
+	    }
 	}
-
     }
 
     return NULL;		/* no interception found */
@@ -190,6 +193,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     ray_t *out;
 
     memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store hit */
+    state->n_data++;
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
 	const size_t n = state->n_data + BLOCK_SIZE;
@@ -198,7 +202,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	t = (double *) realloc(state->data, 3 * n * sizeof(double));
 	if (t) {		/* success, update state */
 	    state->data = t;
-	    state->n_data = n;
+	    state->n_alloc = n;
 	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
 
 	    dump_data(state->dump_file, state->data, state->n_data, 3);
@@ -212,8 +216,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 
 	    *dump_flag = 1;
 	}
-    } else
-	state->n_data++;
+    }
+
     out = (ray_t *) malloc(sizeof(ray_t));
 
     memcpy(out->origin, hit, 3 * sizeof(double));	/* update origin */
