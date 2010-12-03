@@ -62,14 +62,11 @@ static void run_simulation(source_list_t * source_list,
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 
-		    double *current_intercept;
-
-		    int i;
-
-		    current_intercept =
+		    double *current_intercept =
 			interception(current_target, ray, &dump_flag);
 
 		    if (current_intercept) {	/* interception found */
+			int i;
 			double dist = 0;
 
 			hits_target = 1;
