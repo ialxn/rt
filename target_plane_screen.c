@@ -19,6 +19,7 @@
 
 typedef struct ps_state_t {
     char *name;
+    char last_was_hit;
     FILE *dump_file;
     double point[3];
     double normal[3];
@@ -55,6 +56,8 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
+
+    state->last_was_hit = 0;
 
     snprintf(f_name, 256, "%s.dat", name);
     state->dump_file = fopen(f_name, "w");
@@ -126,9 +129,14 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 	    state->n_data = 0;
 	    state->n_alloc = BLOCK_SIZE;
 
-	} else			/* we have allready dumped our data. mark cycle complete */
+	} else			/* we have already dumped our data. mark cycle complete */
 	    *dump_flag = 0;
 
+    }
+
+    if (state->last_was_hit) {	/* ray starts on target, definitely no hit */
+	state->last_was_hit = 0;
+	return NULL;
     }
 
     /*
@@ -195,6 +203,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 
     memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store hit */
     state->n_data++;
+    state->last_was_hit = 1;	/* mark as hit */
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
 	const size_t n = state->n_data + BLOCK_SIZE;
