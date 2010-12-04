@@ -8,11 +8,12 @@
  *
  */
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_blas.h>
-#include <gsl/gsl_math.h>
 #include <math.h>
 #include <string.h>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_cblas.h>
 
 #include "ray.h"
 #include "targets.h"
@@ -49,7 +50,6 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     const char *S;
     double F, norm;
     char f_name[256];
-    gsl_vector_view N;
 
     config_setting_t *this_target, *point, *normal;
     const config_setting_t *targets = config_lookup(cfg, "targets");
@@ -86,9 +86,9 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->normal[2] = F;
 
     /* normalize normal vector */
-    N = gsl_vector_view_array(state->normal, 3);
-    norm = gsl_blas_dnrm2(&N.vector);
-    gsl_vector_scale(&N.vector, 1.0 / norm);
+    norm = cblas_dnrm2(3, state->normal, 1);
+    for (i = 0; i < 3; i++)
+	state->normal[i] /= norm;
 
     state->n_data = 0;
 }
@@ -111,7 +111,6 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     ps_state_t *state = (ps_state_t *) vstate;
 
     double t1[3], t2;
-    gsl_vector_view N, T1;
 
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
@@ -154,16 +153,12 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     t1[1] = state->point[1] - in_ray->origin[1];
     t1[2] = state->point[2] - in_ray->origin[2];
 
-    T1 = gsl_vector_view_array(t1, 3);
-    N = gsl_vector_view_array(state->normal, 3);
-
-    gsl_blas_ddot(&T1.vector, &N.vector, &t2);	/* (p_0 - l_0) dot N */
+    t2 = cblas_ddot(3, t1, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
 
     if (t2 > GSL_SQRT_DBL_EPSILON) {	/* line does not start in plane, conservative */
-	gsl_vector_view L = gsl_vector_view_array(in_ray->direction, 3);
 	double t3;
 
-	gsl_blas_ddot(&L.vector, &N.vector, &t3);	/* l dot n */
+	t3 = cblas_ddot(3, in_ray->direction, 1, state->normal, 1);	/* l dot n */
 
 	if (t3 > GSL_SQRT_DBL_EPSILON) {	/* line not parallel to plane, conservative */
 	    const double d = t2 / t3;
