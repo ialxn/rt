@@ -17,7 +17,8 @@ OBJ= main.o \
      source_uniform_point_source.o \
      target_plane_screen.o
 
-LIBS= -lgsl -lgslcblas -lconfig -lm
+#LIBS= -lgsl -lgslcblas -lconfig -lm
+LIBS= -lgsl -lcblas -latlas -lconfig -lm
 LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
 
 AllTarget(rt rt-semistatic)
