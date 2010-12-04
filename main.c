@@ -83,6 +83,7 @@ static void run_simulation(source_list_t * source_list,
 				free(nearest_intercept);
 
 			    nearest_intercept = current_intercept;
+			    min_dist = dist;
 
 			} else	/* hit on far target. not used */
 			    free(current_intercept);
