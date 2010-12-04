@@ -10,6 +10,7 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_math.h>
 #include <math.h>
 #include <string.h>
 
@@ -158,13 +159,13 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
     gsl_blas_ddot(&T1.vector, &N.vector, &t2);	/* (p_0 - l_0) dot N */
 
-    if (t2) {			/* line does not start in plane */
+    if (t2 > GSL_SQRT_DBL_EPSILON) {	/* line does not start in plane, conservative */
 	gsl_vector_view L = gsl_vector_view_array(in_ray->direction, 3);
 	double t3;
 
 	gsl_blas_ddot(&L.vector, &N.vector, &t3);	/* l dot n */
 
-	if (t3) {		/* line not parallel to plane */
+	if (t3 > GSL_SQRT_DBL_EPSILON) {	/* line not parallel to plane, conservative */
 	    const double d = t2 / t3;
 
 	    if (d > 0.0) {	/* intercepts target in front */
