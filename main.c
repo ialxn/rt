@@ -9,12 +9,15 @@
  */
 
 #include <getopt.h>
-#include <gsl/gsl_rng.h>
-#include <libconfig.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include <libconfig.h>
+
+#include <gsl/gsl_machine.h>
+#include <gsl/gsl_rng.h>
 
 #include "obj_lists.h"
 #include "sources.h"
@@ -35,10 +38,8 @@ static void run_simulation(source_list_t * source_list,
 			   target_list_t * target_list, int seed)
 {
     struct list_head *s_pos;
-
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-
     int dump_flag = 0;
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
@@ -46,7 +47,6 @@ static void run_simulation(source_list_t * source_list,
     list_for_each(s_pos, &(source_list->list)) {
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
-
 	ray_t *ray = new_ray(current_source, r);	/* get first ray */
 
 	while (ray) {		/* loop until source is exhausted */
@@ -54,14 +54,13 @@ static void run_simulation(source_list_t * source_list,
 		struct list_head *t_pos;
 		target_t *nearest_target;
 		double *nearest_intercept = NULL;
-		double min_dist = 1e100;
+		double min_dist = GSL_DBL_MAX;
 		int hits_target = 0;
 
 		list_for_each(t_pos, &(target_list->list)) {	/* find closest target intercepted by ray */
 		    target_list_t *this_t =
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
-
 		    double *current_intercept =
 			interception(current_target, ray, &dump_flag);
 
@@ -75,7 +74,7 @@ static void run_simulation(source_list_t * source_list,
 				current_intercept[i] - ray->origin[i];
 			    dist += t * t;
 			}
-			dist = sqrt(dist);
+			dist = sqrt(dist);	/* absolute distance origin of ray to intercept */
 
 			if (dist < min_dist) {	/* new nearest target identified */
 
@@ -96,6 +95,7 @@ static void run_simulation(source_list_t * source_list,
 		    ray =
 			out_ray(nearest_target, ray, nearest_intercept,
 				&dump_flag);
+		    /* ray=NULL if it is absorbed by target */
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;
 		} else {	/* no target hit, ray is lost */
@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     }
 
     /*
-     * parse and initialize input. input is checked for syntax and completness.
+     * parse and initialize input. input is checked for syntax and completeness.
      * errors are reported on stderr.
      */
     if (parse_input(&cfg))
