@@ -21,6 +21,7 @@
 typedef struct ps_state_t {
     char *name;
     char last_was_hit;
+    char one_sided;
     FILE *dump_file;
     double point[3];
     double normal[3];
@@ -43,7 +44,7 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -58,6 +59,61 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->name = strdup(name);
 
     state->last_was_hit = 0;
+    state->one_sided = 1;
+
+    snprintf(f_name, 256, "%s.dat", name);
+    state->dump_file = fopen(f_name, "w");
+
+    while (1) {			/* find setting for target 'name' */
+	this_target = config_setting_get_elem(targets, i);
+
+	config_setting_lookup_string(this_target, "name", &S);
+	if (strstr(S, name))
+	    break;
+
+	i++;
+    }
+
+    point = config_setting_get_member(this_target, "point");
+    config_setting_lookup_float(point, "x", &F);
+    state->point[0] = F;
+    config_setting_lookup_float(point, "y", &F);
+    state->point[1] = F;
+    config_setting_lookup_float(point, "z", &F);
+    state->point[2] = F;
+
+    normal = config_setting_get_member(this_target, "normal");
+    config_setting_lookup_float(normal, "x", &F);
+    state->normal[0] = F;
+    config_setting_lookup_float(normal, "y", &F);
+    state->normal[1] = F;
+    config_setting_lookup_float(normal, "z", &F);
+    state->normal[2] = F;
+
+    /* normalize normal vector */
+    norm = cblas_dnrm2(3, state->normal, 1);
+    for (i = 0; i < 3; i++)
+	state->normal[i] /= norm;
+
+    state->n_data = 0;
+}
+
+static void ps2_init_state(void *vstate, config_t * cfg, const char *name)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    unsigned int i = 0;
+    const char *S;
+    double F, norm;
+    char f_name[256];
+
+    config_setting_t *this_target, *point, *normal;
+    const config_setting_t *targets = config_lookup(cfg, "targets");
+
+    state->name = strdup(name);
+
+    state->last_was_hit = 0;
+    state->one_sided = 0;
 
     snprintf(f_name, 256, "%s.dat", name);
     state->dump_file = fopen(f_name, "w");
@@ -236,14 +292,25 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 }
 
 
-static const target_type_t ps_t = {
-    "plane screen",
+static const target_type_t ps1_t = {
+    "one-sided plane screen",
     sizeof(struct ps_state_t),
     &ps_alloc_state,
-    &ps_init_state,
+    &ps1_init_state,
     &ps_free_state,
     &ps_get_intercept,
     &ps_get_out_ray
 };
 
-const target_type_t *target_plane_screen = &ps_t;
+static const target_type_t ps2_t = {
+    "two-sided plane screen",
+    sizeof(struct ps_state_t),
+    &ps_alloc_state,
+    &ps2_init_state,
+    &ps_free_state,
+    &ps_get_intercept,
+    &ps_get_out_ray
+};
+
+const target_type_t *target_plane_screen_one_sided = &ps1_t;
+const target_type_t *target_plane_screen_two_sided = &ps2_t;

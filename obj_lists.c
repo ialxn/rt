@@ -80,8 +80,12 @@ target_list_t *init_targets(config_t * cfg)
 	 * allocate the correct target type
 	 */
 	config_setting_lookup_string(this_target, "type", &type);
-	if (strstr(type, "plane screen"))
-	    new_target = target_alloc(target_plane_screen, cfg, name);
+	if (strstr(type, "one-sided plane screen"))
+	    new_target =
+		target_alloc(target_plane_screen_one_sided, cfg, name);
+	else if (strstr(type, "two-sided plane screen"))
+	    new_target =
+		target_alloc(target_plane_screen_two_sided, cfg, name);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

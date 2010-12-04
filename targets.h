@@ -44,7 +44,8 @@ typedef struct target_t {
 /*
  * list of all defined targets found in individual files (target_*.c)
  */
-const target_type_t *target_plane_screen;
+const target_type_t *target_plane_screen_one_sided;
+const target_type_t *target_plane_screen_two_sided;
 /*
  *  publicfunctions to access/manipulate the sources (found in sources.c)
  */
