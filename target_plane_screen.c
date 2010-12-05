@@ -44,7 +44,7 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -59,7 +59,6 @@ static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
     state->name = strdup(name);
 
     state->last_was_hit = 0;
-    state->one_sided = 1;
 
     snprintf(f_name, 256, "%s.dat", name);
     state->dump_file = fopen(f_name, "w");
@@ -98,58 +97,20 @@ static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
     state->n_data = 0;
 }
 
+static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    ps_init_state(vstate, cfg, name);
+    state->one_sided = 1;
+}
+
 static void ps2_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    unsigned int i = 0;
-    const char *S;
-    double F, norm;
-    char f_name[256];
-
-    config_setting_t *this_target, *point, *normal;
-    const config_setting_t *targets = config_lookup(cfg, "targets");
-
-    state->name = strdup(name);
-
-    state->last_was_hit = 0;
+    ps_init_state(vstate, cfg, name);
     state->one_sided = 0;
-
-    snprintf(f_name, 256, "%s.dat", name);
-    state->dump_file = fopen(f_name, "w");
-
-    while (1) {			/* find setting for target 'name' */
-	this_target = config_setting_get_elem(targets, i);
-
-	config_setting_lookup_string(this_target, "name", &S);
-	if (strstr(S, name))
-	    break;
-
-	i++;
-    }
-
-    point = config_setting_get_member(this_target, "point");
-    config_setting_lookup_float(point, "x", &F);
-    state->point[0] = F;
-    config_setting_lookup_float(point, "y", &F);
-    state->point[1] = F;
-    config_setting_lookup_float(point, "z", &F);
-    state->point[2] = F;
-
-    normal = config_setting_get_member(this_target, "normal");
-    config_setting_lookup_float(normal, "x", &F);
-    state->normal[0] = F;
-    config_setting_lookup_float(normal, "y", &F);
-    state->normal[1] = F;
-    config_setting_lookup_float(normal, "z", &F);
-    state->normal[2] = F;
-
-    /* normalize normal vector */
-    norm = cblas_dnrm2(3, state->normal, 1);
-    for (i = 0; i < 3; i++)
-	state->normal[i] /= norm;
-
-    state->n_data = 0;
 }
 
 static void ps_free_state(void *vstate)
