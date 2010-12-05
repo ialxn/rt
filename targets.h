@@ -17,10 +17,8 @@
 
 #define NO_ERR 0
 #define ERR 1
-//#define BLOCK_SIZE 32768
-//#define MAX_BLOCK_SIZE 262144
-#define BLOCK_SIZE 2
-#define MAX_BLOCK_SIZE 4
+#define BLOCK_SIZE 32768
+#define MAX_BLOCK_SIZE 262144
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
