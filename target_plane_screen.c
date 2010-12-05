@@ -208,7 +208,8 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
-			     double *hit, int *dump_flag)
+			     double *hit, int *dump_flag,
+			     const int n_targets)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -231,7 +232,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	    state->n_data = 0;
 	    state->n_alloc = BLOCK_SIZE;
 
-	    *dump_flag = 3;
+	    *dump_flag = n_targets - 1;
 	} else {		/* try to increase buffer */
 	    const size_t n = state->n_data + BLOCK_SIZE;
 
@@ -250,7 +251,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 		state->n_data = 0;
 		state->n_alloc = BLOCK_SIZE;
 
-		*dump_flag = 3;
+		*dump_flag = n_targets - 1;
 	    }
 	}
     }

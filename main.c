@@ -35,12 +35,13 @@ static void output_geometry(config_t * cfg)
 }
 
 static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list, int seed)
+			   target_list_t * target_list, int seed,
+			   const int n_targets)
 {
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    int dump_flag = 3;
+    int dump_flag = n_targets - 1;
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
 
@@ -95,7 +96,7 @@ static void run_simulation(source_list_t * source_list,
 		if (hits_target) {
 		    ray =
 			out_ray(nearest_target, ray, nearest_intercept,
-				&dump_flag);
+				&dump_flag, n_targets);
 		    /* ray=NULL if it is absorbed by target */
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;
@@ -240,6 +241,7 @@ int main(int argc, char **argv)
 
     switch (mode) {
 	int seed;
+	int n_targets;
 	target_list_t *target_list;
 	source_list_t *source_list;
 
@@ -257,12 +259,12 @@ int main(int argc, char **argv)
 
     case RUN:			/* do the simulation */
 	source_list = init_sources(&cfg);
-	target_list = init_targets(&cfg);
+	target_list = init_targets(&cfg, &n_targets);
 
 	config_lookup_int(&cfg, "seed", &seed);
 	config_destroy(&cfg);
 
-	run_simulation(source_list, target_list, seed);
+	run_simulation(source_list, target_list, seed, n_targets);
 
 	source_list_free(source_list);
 	target_list_free(target_list);

@@ -71,9 +71,10 @@ double *interception(const target_t * T, ray_t * in_ray, int *dump_flag)
 }
 
 ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
-	       int *dump_flag)
+	       int *dump_flag, const int n_targets)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag);
+    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag,
+				   n_targets);
 }
 
 int check_targets(config_t * cfg)

@@ -32,7 +32,7 @@ typedef struct target_type_t {
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, double *hit,
-			   int *dump_flag);
+			   int *dump_flag, const int n_targets);
 } target_type_t;
 
 
@@ -58,7 +58,7 @@ extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray,
 			    int *dump_flag);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray,
-		      double *hit, int *dump_flag);
+		      double *hit, int *dump_flag, const int n_targets);
 
 /*
  * utility functions

@@ -55,18 +55,18 @@ source_list_t *init_sources(config_t * cfg)
     return s_list;
 }
 
-target_list_t *init_targets(config_t * cfg)
+target_list_t *init_targets(config_t * cfg, int *n_targets)
 {
     target_list_t *t_list;
     const config_setting_t *targets = config_lookup(cfg, "targets");
-    const int count = config_setting_length(targets);
-
     int i;
+
+    *n_targets = config_setting_length(targets);
 
     t_list = (target_list_t *) malloc(sizeof(target_list_t));
     INIT_LIST_HEAD(&(t_list->list));
 
-    for (i = 0; i < count; ++i) {	/* iterate through all sources */
+    for (i = 0; i < *n_targets; ++i) {	/* iterate through all targets */
 	target_list_t *new_entry;
 	target_t *new_target;
 	config_setting_t *this_target;
