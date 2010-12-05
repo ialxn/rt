@@ -130,7 +130,9 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    double t1[3], t2;
+    double t1, t2[3], t3;
+    double d;
+    double *intercept;
 
     if (*dump_flag) {
 	if (state->n_data) {	/* we have not yet dumped our data */
@@ -150,7 +152,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
     }
 
-    if (state->last_was_hit) {	/* ray starts on target, definitely no hit */
+    if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
 	state->last_was_hit = 0;
 	return NULL;
     }
@@ -174,36 +176,37 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
      * along the line from \mathbf{l_0}.
      */
 
-    t1[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
-    t1[1] = state->point[1] - in_ray->origin[1];
-    t1[2] = state->point[2] - in_ray->origin[2];
+    t1 = cblas_ddot(3, in_ray->direction, 1, state->normal, 1);	/* l dot n */
+    if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
+	return NULL;
+    /*
+     * in case of a one-sided target, check that t1 is positive.
+     * if l and n are anti parallel (dot product is negative),
+     * the intersection does not count
+     */
+    if (state->one_sided && (t1 < 0.0))
+	return NULL;
 
-    t2 = cblas_ddot(3, t1, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
+    t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
+    t2[1] = state->point[1] - in_ray->origin[1];
+    t2[2] = state->point[2] - in_ray->origin[2];
 
-    if (t2 > GSL_SQRT_DBL_EPSILON) {	/* line does not start in plane, conservative */
-	double t3;
+    t3 = cblas_ddot(3, t2, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
+    if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
+	return NULL;
 
-	t3 = cblas_ddot(3, in_ray->direction, 1, state->normal, 1);	/* l dot n */
+    d = t3 / t1;
+    if (d < 0.0)		/* intercepted target is not in front */
+	return NULL;
 
-	if (t3 > GSL_SQRT_DBL_EPSILON) {	/* line not parallel to plane, conservative */
-	    const double d = t2 / t3;
+    intercept = (double *) malloc(3 * sizeof(double));
 
-	    if (d > 0.0) {	/* intercepts target in front */
-		double *intercept = (double *) malloc(3 * sizeof(double));
+    intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
+    intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
+    intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
 
-		intercept[0] =
-		    in_ray->origin[0] + d * in_ray->direction[0];
-		intercept[1] =
-		    in_ray->origin[1] + d * in_ray->direction[1];
-		intercept[2] =
-		    in_ray->origin[2] + d * in_ray->direction[2];
+    return intercept;
 
-		return intercept;
-	    }
-	}
-    }
-
-    return NULL;		/* no interception found */
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
