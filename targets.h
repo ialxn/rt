@@ -68,5 +68,8 @@ extern void dump_data(FILE * f, double *data, const size_t n_data,
 		      const size_t n_items);
 extern void shrink_memory(double **data, size_t * n_data,
 			  size_t * n_alloc);
+extern void try_increase_memory(double **data, size_t * n_data,
+				size_t * n_alloc, FILE * dump_file,
+				int *dump_flag, const int n_targets);
 
 #endif				/* __TARGETS_H__ */

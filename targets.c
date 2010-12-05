@@ -321,3 +321,27 @@ void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
     *n_data = 0;
     *n_alloc = BLOCK_SIZE;
 }
+
+void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
+			 FILE * dump_file, int *dump_flag,
+			 const int n_targets)
+{
+    if (*n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
+	dump_data(dump_file, *data, *n_data, 3);
+	shrink_memory(data, n_data, n_alloc);
+
+	*dump_flag = n_targets - 1;
+    } else {			/* try to increase buffer */
+	const size_t n = *n_data + BLOCK_SIZE;
+	double *t = (double *) realloc(*data, 3 * n * sizeof(double));
+	if (t) {		/* success, update state */
+	    *data = t;
+	    *n_alloc = n;
+	} else {		/* memory exhausted, initiate dump cycle */
+	    dump_data(dump_file, *data, *n_data, 3);
+	    shrink_memory(data, n_data, n_alloc);
+
+	    *dump_flag = n_targets - 1;
+	}
+    }
+}

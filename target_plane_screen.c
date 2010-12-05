@@ -209,30 +209,15 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 
-    if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
-
-	if (state->n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-	    dump_data(state->dump_file, state->data, state->n_data, 3);
-	    shrink_memory(&(state->data), &(state->n_data),
-			  &(state->n_alloc));
-
-	    *dump_flag = n_targets - 1;
-	} else {		/* try to increase buffer */
-	    const size_t n = state->n_data + BLOCK_SIZE;
-	    double *t =
-		(double *) realloc(state->data, 3 * n * sizeof(double));
-	    if (t) {		/* success, update state */
-		state->data = t;
-		state->n_alloc = n;
-	    } else {		/* memory exhausted, initiate dump cycle */
-		dump_data(state->dump_file, state->data, state->n_data, 3);
-		shrink_memory(&(state->data), &(state->n_data),
-			      &(state->n_alloc));
-
-		*dump_flag = n_targets - 1;
-	    }
-	}
-    }
+    /*
+     * increase data size for next hit
+     * or
+     * initiate dump cycle
+     */
+    if (state->n_data == state->n_alloc)
+	try_increase_memory(&(state->data), &(state->n_data),
+			    &(state->n_alloc), state->dump_file, dump_flag,
+			    n_targets);
 
     out = (ray_t *) malloc(sizeof(ray_t));
 
