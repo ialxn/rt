@@ -40,7 +40,7 @@ static void run_simulation(source_list_t * source_list,
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    int dump_flag = 0;
+    int dump_flag = 3;
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
 

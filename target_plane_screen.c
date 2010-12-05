@@ -135,20 +135,18 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double *intercept;
 
     if (*dump_flag) {
-	if (state->n_data) {	/* we have not yet dumped our data */
-	    double *t;
+	double *t;
 
-	    dump_data(state->dump_file, state->data, state->n_data, 3);
+	dump_data(state->dump_file, state->data, state->n_data, 3);
 
-	    /* shrink memory to minimum (BLOCK) */
-	    t = (double *) realloc(state->data,
-				   3 * BLOCK_SIZE * sizeof(double));
-	    state->data = t;
-	    state->n_data = 0;
-	    state->n_alloc = BLOCK_SIZE;
+	/* shrink memory to minimum (BLOCK) */
+	t = (double *) realloc(state->data,
+			       3 * BLOCK_SIZE * sizeof(double));
+	state->data = t;
+	state->n_data = 0;
+	state->n_alloc = BLOCK_SIZE;
 
-	} else			/* we have already dumped our data. mark cycle complete */
-	    *dump_flag = 0;
+	(*dump_flag)--;
 
     }
 
@@ -221,14 +219,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     state->last_was_hit = 1;	/* mark as hit */
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
-	const size_t n = state->n_data + BLOCK_SIZE;
 	double *t;
-
-	t = (double *) realloc(state->data, 3 * n * sizeof(double));
-	if (t) {		/* success, update state */
-	    state->data = t;
-	    state->n_alloc = n;
-	} else {		/* memory exhausted, dump data to file and shrink memory to default size */
+	if (state->n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
 
 	    dump_data(state->dump_file, state->data, state->n_data, 3);
 
@@ -239,7 +231,27 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 	    state->n_data = 0;
 	    state->n_alloc = BLOCK_SIZE;
 
-	    *dump_flag = 1;
+	    *dump_flag = 3;
+	} else {		/* try to increase buffer */
+	    const size_t n = state->n_data + BLOCK_SIZE;
+
+
+	    t = (double *) realloc(state->data, 3 * n * sizeof(double));
+	    if (t) {		/* success, update state */
+		state->data = t;
+		state->n_alloc = n;
+	    } else {		/* memory exhausted, initiate dump cycle */
+
+		dump_data(state->dump_file, state->data, state->n_data, 3);
+		/* shrink memory to minimum (BLOCK_SIZE) */
+		t = (double *) realloc(state->data,
+				       3 * BLOCK_SIZE * sizeof(double));
+		state->data = t;
+		state->n_data = 0;
+		state->n_alloc = BLOCK_SIZE;
+
+		*dump_flag = 3;
+	    }
 	}
     }
 
