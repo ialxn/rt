@@ -66,5 +66,7 @@ extern ray_t *out_ray(const target_t * T, ray_t * in_ray,
 extern int check_targets(config_t * cfg);
 extern void dump_data(FILE * f, double *data, const size_t n_data,
 		      const size_t n_items);
+extern void shrink_memory(double **data, size_t * n_data,
+			  size_t * n_alloc);
 
 #endif				/* __TARGETS_H__ */

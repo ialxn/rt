@@ -135,19 +135,9 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double *intercept;
 
     if (*dump_flag) {
-	double *t;
-
 	dump_data(state->dump_file, state->data, state->n_data, 3);
-
-	/* shrink memory to minimum (BLOCK) */
-	t = (double *) realloc(state->data,
-			       3 * BLOCK_SIZE * sizeof(double));
-	state->data = t;
-	state->n_data = 0;
-	state->n_alloc = BLOCK_SIZE;
-
+	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc));
 	(*dump_flag)--;
-
     }
 
     if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
@@ -220,36 +210,24 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     state->last_was_hit = 1;	/* mark as hit */
 
     if (state->n_data == state->n_alloc) {	/* inc data size for next hit */
-	double *t;
+
 	if (state->n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-
 	    dump_data(state->dump_file, state->data, state->n_data, 3);
-
-	    /* shrink memory to minimum (BLOCK_SIZE) */
-	    t = (double *) realloc(state->data,
-				   3 * BLOCK_SIZE * sizeof(double));
-	    state->data = t;
-	    state->n_data = 0;
-	    state->n_alloc = BLOCK_SIZE;
+	    shrink_memory(&(state->data), &(state->n_data),
+			  &(state->n_alloc));
 
 	    *dump_flag = n_targets - 1;
 	} else {		/* try to increase buffer */
 	    const size_t n = state->n_data + BLOCK_SIZE;
-
-
-	    t = (double *) realloc(state->data, 3 * n * sizeof(double));
+	    double *t =
+		(double *) realloc(state->data, 3 * n * sizeof(double));
 	    if (t) {		/* success, update state */
 		state->data = t;
 		state->n_alloc = n;
 	    } else {		/* memory exhausted, initiate dump cycle */
-
 		dump_data(state->dump_file, state->data, state->n_data, 3);
-		/* shrink memory to minimum (BLOCK_SIZE) */
-		t = (double *) realloc(state->data,
-				       3 * BLOCK_SIZE * sizeof(double));
-		state->data = t;
-		state->n_data = 0;
-		state->n_alloc = BLOCK_SIZE;
+		shrink_memory(&(state->data), &(state->n_data),
+			      &(state->n_alloc));
 
 		*dump_flag = n_targets - 1;
 	    }

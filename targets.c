@@ -311,3 +311,13 @@ void dump_data(FILE * f, double *data, const size_t n_data,
 	}
     }
 }
+
+void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
+{
+    /* shrink memory to minimum (BLOCK_SIZE) */
+    double *t = (double *) realloc(*data, 3 * BLOCK_SIZE * sizeof(double));
+
+    *data = t;
+    *n_data = 0;
+    *n_alloc = BLOCK_SIZE;
+}
