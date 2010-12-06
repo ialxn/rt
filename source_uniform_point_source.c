@@ -1,4 +1,4 @@
-/*	source_uniform_pointsource.c
+/*	source_uniform_point_source.c
  *
  * Copyright (C) 2010 Ivo Alxneit
  *
@@ -8,20 +8,20 @@
  *
  */
 
-#include <gsl/gsl_rng.h>
 #include <math.h>
 #include <string.h>
+
+#include <gsl/gsl_rng.h>
 
 #include "ray.h"
 #include "sources.h"
 
 typedef struct ups_state_t {
-    char *name;
-
+    char *name;			/* name (identifier) of uniform point source */
     double origin[3];
-    int n_rays;
-    double power;
-    double ppr;
+    int n_rays;			/* number of rays remaining until source is exhausted */
+    double power;		/* power of source */
+    double ppr;			/* power allotted to one ray */
 } ups_state_t;
 
 
@@ -30,7 +30,7 @@ static int ups_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ups_init_state(void *vstate, config_t * cfg, const char *name)
+static void ups_init_state(void *vstate, config_t *cfg, const char *name)
 {
     ups_state_t *state = (ups_state_t *) vstate;
 
@@ -38,7 +38,6 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
     const char *S;
     int I;
     double F;
-
     config_setting_t *this_s, *origin;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
@@ -79,7 +78,7 @@ static void ups_free_state(void *vstate)
     free(state->name);
 }
 
-static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
+static ray_t *ups_get_new_ray(void *vstate, const gsl_rng *r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
     ray_t *ray = NULL;

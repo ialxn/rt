@@ -12,6 +12,7 @@
 #define __SOURCES_H__
 
 #include <gsl/gsl_rng.h>
+
 #include <libconfig.h>
 
 #include "ray.h"
@@ -30,31 +31,27 @@ typedef struct source_type_t {
     ray_t *(*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
 } source_type_t;
 
-
 typedef struct source_t {
     const source_type_t *type;
     void *state;
 } source_t;
 
-
-
-
 /*
- * list of all define sources found in individual files (source_*.c)
+ * list of all defined sources found in individual files (source_*.c)
  */
 const source_type_t *source_uniform_point_source;
 
 /*
- *  publicfunctions to access/manipulate the sources (found in sources.c)
+ *  public functions to access / manipulate the sources (found in sources.c)
  */
-extern source_t *source_alloc(const source_type_t * T, config_t * cfg,
+extern source_t *source_alloc(const source_type_t *T, config_t *cfg,
 			      const char *name);
-extern void source_free(source_t * S);
-extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
+extern void source_free(source_t *S);
+extern ray_t *new_ray(const source_t *S, const gsl_rng *r);
 
 /*
  * utility functions
  */
-extern int check_sources(config_t * cfg);
+extern int check_sources(config_t *cfg);
 
 #endif				/* __SOURCES_H__ */

@@ -30,12 +30,12 @@
 
 
 
-static void output_geometry(config_t * cfg)
+static void output_geometry(config_t *cfg)
 {
 }
 
-static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list, int seed,
+static void run_simulation(source_list_t *source_list,
+			   target_list_t *target_list, const int seed,
 			   const int n_targets)
 {
     struct list_head *s_pos;
@@ -48,24 +48,30 @@ static void run_simulation(source_list_t * source_list,
     list_for_each(s_pos, &(source_list->list)) {
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
-	ray_t *ray = new_ray(current_source, r);	/* get first ray */
+	ray_t *ray = new_ray(current_source, r);	/* get first 'ray' of 'current_source' */
 
-	while (ray) {		/* loop until source is exhausted */
-	    while (ray) {	/* loop until ray is absorbed or leaves system */
+	while (ray) {		/* loop until 'current_source' is exhausted */
+
+	    while (ray) {	/* loop until 'ray' is absorbed or leaves system */
 		struct list_head *t_pos;
+		/*
+		 * keep track of nearest target being hit by 'ray'.
+		 * 'nearest_intercept' is used in calculation of
+		 * 'ray' leaving 'nearest_target'.
+		 */
 		target_t *nearest_target;
 		double *nearest_intercept = NULL;
 		double min_dist = GSL_DBL_MAX;
-		int hits_target = 0;
+		int hits_target = 0;	/* flag indicating that 'ray' hits any target */
 
-		list_for_each(t_pos, &(target_list->list)) {	/* find closest target intercepted by ray */
+		list_for_each(t_pos, &(target_list->list)) {	/* find closest target intercepted by 'ray' */
 		    target_list_t *this_t =
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 		    double *current_intercept =
 			interception(current_target, ray, &dump_flag);
 
-		    if (current_intercept) {	/* interception found */
+		    if (current_intercept) {	/* 'ray' hits 'current_target' */
 			int i;
 			double dist = 0;
 
@@ -77,7 +83,7 @@ static void run_simulation(source_list_t * source_list,
 			}
 			dist = sqrt(dist);	/* absolute distance origin of ray to intercept */
 
-			if (dist < min_dist) {	/* new nearest target identified */
+			if (dist < min_dist) {	/* 'current targets' is closest target found until now */
 
 			    nearest_target = current_target;
 			    if (nearest_intercept)
@@ -90,29 +96,23 @@ static void run_simulation(source_list_t * source_list,
 			    free(current_intercept);
 
 		    }
-
+		    /* end 'if(current_intercept)' */
 		}		/* all targets tried */
 
-		if (hits_target) {
-		    ray =
+		if (hits_target) {	/* 'ray' hits 'nearest_target' */
+		    ray =	/* 'out_ray' returns NULL if 'ray' is absorbed by target */
 			out_ray(nearest_target, ray, nearest_intercept,
 				&dump_flag, n_targets);
-		    /* ray=NULL if it is absorbed by target */
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;
-		} else {	/* no target hit, ray is lost */
+		} else {	/* no target hit, 'ray' is lost */
 		    free(ray);
 		    ray = NULL;	/* mark as absorbed */
 		}
-
-	    }			/* ray absorbed or lost */
-
+	    }			/* 'ray' absorbed or lost */
 	    ray = new_ray(current_source, r);	/* start next ray */
-
-	}
-
-    }
-
+	}			/* 'current_source' is exhausted */
+    }				/* all sources exhausted */
     gsl_rng_free(r);
 }
 
@@ -131,9 +131,7 @@ static void help(void)
     fprintf(stdout, "\n");
 }
 
-
-
-static int parse_input(config_t * cfg)
+static int parse_input(config_t *cfg)
 {
     config_init(cfg);
 
@@ -141,7 +139,7 @@ static int parse_input(config_t * cfg)
      * parse input file
      * on error, report it and exit.
      */
-    if (!config_read(cfg, stdin)) {
+    if (!config_read(cfg, stdin)) {	/* grammatically correct? */
 	const char *fname = config_error_file(cfg);
 	const char *text = config_error_text(cfg);
 	const int line_nr = config_error_line(cfg);
@@ -152,13 +150,17 @@ static int parse_input(config_t * cfg)
 	    fprintf(stderr, "%s ", fname);
 	else
 	    fprintf(stderr, "stdin, ");
-
 	fprintf(stderr, "line %d\n", line_nr);
 
 	config_destroy(cfg);
 	return (EXIT_FAILURE);
     }
 
+    /*
+     * check that sources and targets are correctly specified.
+     * additional (unknown) configuration options are silently
+     * ignored.
+     */
     if (check_sources(cfg)) {
 	config_destroy(cfg);
 	return EXIT_FAILURE;
@@ -167,12 +169,9 @@ static int parse_input(config_t * cfg)
 	config_destroy(cfg);
 	return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
-
-
 }
-
-
 
 int main(int argc, char **argv)
 {
@@ -195,7 +194,6 @@ int main(int argc, char **argv)
 	    break;
 
 	switch (c) {
-
 	case 'm':
 	    mode = atoi(optarg);
 	    if ((mode > RUN) || (mode < CHECK_CONFIG)) {
@@ -215,35 +213,31 @@ int main(int argc, char **argv)
 
 	default:
 	    exit(EXIT_FAILURE);
-
-	}
-    }
+	}			/* end 'switch (c)' */
+    }				/* end 'while(1) */
 
     if (optind < argc) {
-
 	fprintf(stderr, "ERROR: non-option ARGV-elements:");
 
 	while (optind < argc)
 	    fprintf(stderr, "%s", argv[optind++]);
-
 	putc('\n', stderr);
 
 	exit(EXIT_FAILURE);
-
     }
 
     /*
-     * parse and initialize input. input is checked for syntax and completeness.
-     * errors are reported on stderr.
+     * parse and initialize configuration. input is checked for syntax
+     * and completeness. errors are reported on stderr.
      */
     if (parse_input(&cfg))
 	exit(EXIT_FAILURE);
 
     switch (mode) {
-	int seed;
-	int n_targets;
-	target_list_t *target_list;
-	source_list_t *source_list;
+	int seed;		/* seed for rng */
+	int n_targets;		/* needed for dump cycle */
+	target_list_t *target_list;	/* list of all sources */
+	source_list_t *source_list;	/* list of all targets */
 
     case CHECK_CONFIG:		/* print parsed input */
 	config_write(&cfg, stdout);
@@ -274,7 +268,5 @@ int main(int argc, char **argv)
 	break;
 
     }
-
-
     return EXIT_SUCCESS;
 }

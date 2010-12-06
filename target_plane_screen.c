@@ -11,23 +11,23 @@
 #include <math.h>
 #include <string.h>
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_math.h>
 #include <gsl/gsl_cblas.h>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_rng.h>
 
 #include "ray.h"
 #include "targets.h"
 
 typedef struct ps_state_t {
-    char *name;
-    char last_was_hit;
-    char one_sided;
+    char *name;			/* name (identifier) of target */
+    char last_was_hit;		/* flag */
+    char one_sided;		/* flag [one-sided|two-sided] */
     FILE *dump_file;
-    double point[3];
-    double normal[3];
-    size_t n_alloc;
-    size_t n_data;
-    double *data;
+    double point[3];		/* point on plane */
+    double normal[3];		/* normal vector of plane */
+    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
+    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
+    double *data;		/* buffer to store hits */
 } ps_state_t;
 
 
@@ -35,6 +35,7 @@ static int ps_alloc_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
+    /* 3 items per data set is hard coded */
     if (!
 	(state->data = (double *) malloc(3 * BLOCK_SIZE * sizeof(double))))
 	return ERR;
@@ -44,7 +45,7 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps_init_state(void *vstate, config_t *cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -97,7 +98,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->n_data = 0;
 }
 
-static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps1_init_state(void *vstate, config_t *cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -105,7 +106,7 @@ static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
     state->one_sided = 1;
 }
 
-static void ps2_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps2_init_state(void *vstate, config_t *cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -117,15 +118,15 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* first write data to file */
+    /* first write remaining data to file. 3 items per data set hard coded */
     dump_data(state->dump_file, state->data, state->n_data, 3);
-
     fclose(state->dump_file);
+
     free(state->name);
     free(state->data);
 }
 
-static double *ps_get_intercept(void *vstate, ray_t * in_ray,
+static double *ps_get_intercept(void *vstate, ray_t *in_ray,
 				int *dump_flag)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -134,7 +135,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double d;
     double *intercept;
 
-    if (*dump_flag) {
+    if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
 	dump_data(state->dump_file, state->data, state->n_data, 3);
 	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc));
 	(*dump_flag)--;
@@ -197,7 +198,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
 }
 
-static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
+static ray_t *ps_get_out_ray(void *vstate, ray_t *in_ray,
 			     double *hit, int *dump_flag,
 			     const int n_targets)
 {
@@ -205,16 +206,17 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 
     ray_t *out;
 
-    memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store hit */
+    /* 3 items per data set hard coded */
+    memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store intercept */
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 
     /*
-     * increase data size for next hit
+     * increase data size for next interception
      * or
      * initiate dump cycle
      */
-    if (state->n_data == state->n_alloc)
+    if (state->n_data == state->n_alloc)	/* buffer full */
 	try_increase_memory(&(state->data), &(state->n_data),
 			    &(state->n_alloc), state->dump_file, dump_flag,
 			    n_targets);
@@ -228,7 +230,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     free(in_ray);
 
     return out;
-
 }
 
 
