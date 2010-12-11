@@ -51,6 +51,7 @@ extern source_t *source_alloc(const source_type_t * T, config_t * cfg,
 extern void source_free(source_t * S);
 extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
 extern double get_ppr(const source_t * S);
+extern const char *get_source_type(const source_t * S);
 extern const char *get_source_name(const source_t * S);
 
 /*
