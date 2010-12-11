@@ -35,9 +35,9 @@ static int ps_alloc_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* 3 items per data set is hard coded */
+    /* 4 items per data set is hard coded */
     if (!
-	(state->data = (double *) malloc(3 * BLOCK_SIZE * sizeof(double))))
+	(state->data = (double *) malloc(4 * BLOCK_SIZE * sizeof(double))))
 	return ERR;
 
     state->n_alloc = BLOCK_SIZE;
@@ -45,7 +45,7 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps_init_state(void *vstate, config_t *cfg, const char *name)
+static void ps_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -98,7 +98,7 @@ static void ps_init_state(void *vstate, config_t *cfg, const char *name)
     state->n_data = 0;
 }
 
-static void ps1_init_state(void *vstate, config_t *cfg, const char *name)
+static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -106,7 +106,7 @@ static void ps1_init_state(void *vstate, config_t *cfg, const char *name)
     state->one_sided = 1;
 }
 
-static void ps2_init_state(void *vstate, config_t *cfg, const char *name)
+static void ps2_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -118,15 +118,15 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* first write remaining data to file. 3 items per data set hard coded */
-    dump_data(state->dump_file, state->data, state->n_data, 3);
+    /* first write remaining data to file. 4 items per data set hard coded */
+    dump_data(state->dump_file, state->data, state->n_data, 4);
     fclose(state->dump_file);
 
     free(state->name);
     free(state->data);
 }
 
-static double *ps_get_intercept(void *vstate, ray_t *in_ray,
+static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 				int *dump_flag)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -136,7 +136,7 @@ static double *ps_get_intercept(void *vstate, ray_t *in_ray,
     double *intercept;
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data, 3);
+	dump_data(state->dump_file, state->data, state->n_data, 4);
 	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc));
 	(*dump_flag)--;
     }
@@ -198,16 +198,17 @@ static double *ps_get_intercept(void *vstate, ray_t *in_ray,
 
 }
 
-static ray_t *ps_get_out_ray(void *vstate, ray_t *in_ray,
-			     double *hit, int *dump_flag,
-			     const int n_targets)
+static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
+			     const double ppr, double *hit,
+			     int *dump_flag, const int n_targets)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     ray_t *out;
 
-    /* 3 items per data set hard coded */
-    memcpy(&(state->data[3 * state->n_data]), hit, 3 * sizeof(double));	/* store intercept */
+    /* 4 items per data set hard coded */
+    memcpy(&(state->data[4 * state->n_data]), hit, 3 * sizeof(double));	/* store intercept */
+    state->data[4 * state->n_data + 3] = ppr;
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 

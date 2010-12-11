@@ -13,7 +13,7 @@
 
 #include "targets.h"
 
-target_t *target_alloc(const target_type_t *type, config_t *cfg,
+target_t *target_alloc(const target_type_t * type, config_t * cfg,
 		       const char *name)
 {
     target_t *T;
@@ -47,26 +47,26 @@ target_t *target_alloc(const target_type_t *type, config_t *cfg,
     return T;
 }
 
-void target_free(target_t *T)
+void target_free(target_t * T)
 {
     (T->type->free_state) (T->state);
     free(T->state);
     free(T);
 }
 
-double *interception(const target_t *T, ray_t *in_ray, int *dump_flag)
+double *interception(const target_t * T, ray_t * in_ray, int *dump_flag)
 {
     return (T->type->get_intercept) (T->state, in_ray, dump_flag);
 }
 
-ray_t *out_ray(const target_t *T, ray_t *in_ray, double *hit,
-	       int *dump_flag, const int n_targets)
+ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
+	       double *hit, int *dump_flag, const int n_targets)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag,
-				   n_targets);
+    return (T->type->get_out_ray) (T->state, in_ray, ppr, hit,
+				   dump_flag, n_targets);
 }
 
-int check_targets(config_t *cfg)
+int check_targets(config_t * cfg)
 {
     int status = NO_ERR;
     const config_setting_t *t = config_lookup(cfg, "targets");
@@ -266,7 +266,7 @@ int check_targets(config_t *cfg)
     return status;
 }
 
-void dump_data(FILE *f, double *data, const size_t n_data,
+void dump_data(FILE * f, double *data, const size_t n_data,
 	       const size_t n_items)
 {
     /*
@@ -292,17 +292,17 @@ void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
 {
     /*
      * shrink memory to minimum (BLOCK_SIZE)
-     * 3 items per data set is hard coded
+     * 4 items per data set is hard coded
      */
-    double *t = (double *) realloc(*data, 3 * BLOCK_SIZE * sizeof(double));
+    double *t = (double *) realloc(*data, 4 * BLOCK_SIZE * sizeof(double));
 
     *data = t;
     *n_data = 0;
     *n_alloc = BLOCK_SIZE;
 }
 
-void try_increase_memory(double **data, size_t *n_data, size_t *n_alloc,
-			 FILE *dump_file, int *dump_flag,
+void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
+			 FILE * dump_file, int *dump_flag,
 			 const int n_targets)
 {
     /*
@@ -317,18 +317,18 @@ void try_increase_memory(double **data, size_t *n_data, size_t *n_alloc,
      * 'run_simulation()'
      */
     if (*n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-	dump_data(dump_file, *data, *n_data, 3);
+	dump_data(dump_file, *data, *n_data, 4);
 	shrink_memory(data, n_data, n_alloc);
 
 	*dump_flag = n_targets - 1;
     } else {			/* try to increase buffer */
 	const size_t n = *n_data + BLOCK_SIZE;
-	double *t = (double *) realloc(*data, 3 * n * sizeof(double));
+	double *t = (double *) realloc(*data, 4 * n * sizeof(double));
 	if (t) {		/* success, update state */
 	    *data = t;
 	    *n_alloc = n;
 	} else {		/* memory exhausted, initiate dump cycle */
-	    dump_data(dump_file, *data, *n_data, 3);
+	    dump_data(dump_file, *data, *n_data, 4);
 	    shrink_memory(data, n_data, n_alloc);
 
 	    *dump_flag = n_targets - 1;

@@ -12,7 +12,7 @@
 
 #include "sources.h"
 
-source_t *source_alloc(const source_type_t *T, config_t *cfg,
+source_t *source_alloc(const source_type_t * T, config_t * cfg,
 		       const char *name)
 {
     source_t *S;
@@ -46,21 +46,26 @@ source_t *source_alloc(const source_type_t *T, config_t *cfg,
     return S;
 }
 
-void source_free(source_t *S)
+void source_free(source_t * S)
 {
     (S->type->free_state) (S->state);
     free(S->state);
     free(S);
 }
 
-ray_t *new_ray(const source_t *S, const gsl_rng *r)
+ray_t *new_ray(const source_t * S, const gsl_rng * r)
 {
     return (S->type->get_new_ray) (S->state, r);
 }
 
+double get_ppr(const source_t * S)
+{
+    return (S->type->get_ppr) (S->state);
+}
 
 
-int check_sources(config_t *cfg)
+
+int check_sources(config_t * cfg)
 {
     int status = NO_ERR;
     const config_setting_t *s = config_lookup(cfg, "sources");

@@ -29,6 +29,7 @@ typedef struct source_type_t {
 									   from configuration */
     void (*free_state) (void *state);	/* free */
     ray_t *(*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
+    double (*get_ppr) (void *state);	/* get power_per_ray of source */
 } source_type_t;
 
 typedef struct source_t {
@@ -44,14 +45,15 @@ const source_type_t *source_uniform_point_source;
 /*
  *  public functions to access / manipulate the sources (found in sources.c)
  */
-extern source_t *source_alloc(const source_type_t *T, config_t *cfg,
+extern source_t *source_alloc(const source_type_t * T, config_t * cfg,
 			      const char *name);
-extern void source_free(source_t *S);
-extern ray_t *new_ray(const source_t *S, const gsl_rng *r);
+extern void source_free(source_t * S);
+extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
+extern double get_ppr(const source_t * S);
 
 /*
  * utility functions
  */
-extern int check_sources(config_t *cfg);
+extern int check_sources(config_t * cfg);
 
 #endif				/* __SOURCES_H__ */

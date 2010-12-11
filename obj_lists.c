@@ -13,7 +13,7 @@
 
 #include "obj_lists.h"
 
-source_list_t *init_sources(config_t *cfg)
+source_list_t *init_sources(config_t * cfg)
 {
     int i;
     source_list_t *s_list;
@@ -59,7 +59,7 @@ source_list_t *init_sources(config_t *cfg)
     return s_list;
 }
 
-target_list_t *init_targets(config_t *cfg, int *n_targets)
+target_list_t *init_targets(config_t * cfg, int *n_targets)
 {
     int i;
     target_list_t *t_list;
@@ -109,7 +109,7 @@ target_list_t *init_targets(config_t *cfg, int *n_targets)
     return t_list;
 }
 
-void source_list_free(source_list_t *s)
+void source_list_free(source_list_t * s)
 {
     struct list_head *pos, *pos_t;
 
@@ -123,7 +123,7 @@ void source_list_free(source_list_t *s)
 }
 
 
-void target_list_free(target_list_t *t)
+void target_list_free(target_list_t * t)
 {
     struct list_head *pos, *pos_t;
 

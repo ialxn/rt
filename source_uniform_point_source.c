@@ -30,7 +30,7 @@ static int ups_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ups_init_state(void *vstate, config_t *cfg, const char *name)
+static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 {
     ups_state_t *state = (ups_state_t *) vstate;
 
@@ -78,7 +78,7 @@ static void ups_free_state(void *vstate)
     free(state->name);
 }
 
-static ray_t *ups_get_new_ray(void *vstate, const gsl_rng *r)
+static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
     ray_t *ray = NULL;
@@ -110,6 +110,12 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng *r)
     return ray;
 }
 
+static double ups_get_ppr(void *vstate)
+{
+    ups_state_t *state = (ups_state_t *) vstate;
+
+    return state->ppr;
+}
 
 
 static const source_type_t ups_t = {
@@ -118,7 +124,8 @@ static const source_type_t ups_t = {
     &ups_alloc_state,
     &ups_init_state,
     &ups_free_state,
-    &ups_get_new_ray
+    &ups_get_new_ray,
+    &ups_get_ppr
 };
 
 const source_type_t *source_uniform_point_source = &ups_t;
