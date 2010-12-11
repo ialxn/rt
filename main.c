@@ -126,6 +126,8 @@ static void help(void)
 {
     fprintf(stdout, "\nrt Version %s (AI52)\n\n", VERSION);
     fprintf(stdout, "Usage: rt\n");
+    fprintf(stdout,
+	    "       --append, -a      append to output files. new seed must be given.\n");
     fprintf(stdout, "       --mode, -m        select run mode [0].\n");
     fprintf(stdout,
 	    "                         0: check and print input.\n");
@@ -183,23 +185,30 @@ int main(int argc, char **argv)
 {
     config_t cfg;
     int mode = CHECK_CONFIG;
+    int seed;			/* seed for rng */
+    char file_mode[2] = "w";	/* default file mode for output per target */
 
     while (1) {
 	int c;
 	int option_index = 0;
 	static struct option long_options[] = {
+	    {"append", required_argument, 0, 'a'},
 	    {"mode", required_argument, 0, 'm'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "m:Vh", long_options, &option_index);
+	c = getopt_long(argc, argv, "a:m:Vh", long_options, &option_index);
 
 	if (c == -1)
 	    break;
 
 	switch (c) {
+	case 'a':
+	    snprintf(file_mode, 2, "a");
+	    seed = atoi(optarg);
+	    break;
 	case 'm':
 	    mode = atoi(optarg);
 	    if ((mode > RUN) || (mode < CHECK_CONFIG)) {
@@ -240,7 +249,6 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
 
     switch (mode) {
-	int seed;		/* seed for rng */
 	int n_targets;		/* needed for dump cycle */
 	int n_sources;
 	target_list_t *target_list;	/* list of all sources */
@@ -263,15 +271,16 @@ int main(int argc, char **argv)
 
 	source_list = init_sources(&cfg, &n_sources);
 	fprintf(stdout, "    %d sources initialized\n", n_sources);
-	target_list = init_targets(&cfg, &n_targets);
+	target_list = init_targets(&cfg, &n_targets, file_mode);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
-	config_lookup_int(&cfg, "seed", &seed);
+	if (file_mode[0] == 'w')	/* use seed from cfg, otherwise from command line */
+	    config_lookup_int(&cfg, "seed", &seed);
 	fprintf(stdout,
 		"    using %d as seed for random number generator\n",
 		seed);
-	config_destroy(&cfg);
 
+	config_destroy(&cfg);
 
 	run_simulation(source_list, target_list, seed, n_targets);
 

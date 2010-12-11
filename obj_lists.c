@@ -13,6 +13,7 @@
 
 #include "obj_lists.h"
 
+
 source_list_t *init_sources(config_t * cfg, int *n_sources)
 {
     int i;
@@ -59,7 +60,8 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
     return s_list;
 }
 
-target_list_t *init_targets(config_t * cfg, int *n_targets)
+target_list_t *init_targets(config_t * cfg, int *n_targets,
+			    const char *file_mode)
 {
     int i;
     target_list_t *t_list;
@@ -90,10 +92,12 @@ target_list_t *init_targets(config_t * cfg, int *n_targets)
 	config_setting_lookup_string(this_target, "type", &type);
 	if (strstr(type, "one-sided plane screen"))
 	    new_target =
-		target_alloc(target_plane_screen_one_sided, cfg, name);
+		target_alloc(target_plane_screen_one_sided, cfg, name,
+			     file_mode);
 	else if (strstr(type, "two-sided plane screen"))
 	    new_target =
-		target_alloc(target_plane_screen_two_sided, cfg, name);
+		target_alloc(target_plane_screen_two_sided, cfg, name,
+			     file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

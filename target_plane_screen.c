@@ -45,7 +45,8 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps_init_state(void *vstate, config_t * cfg, const char *name,
+			  const char *file_mode)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -63,7 +64,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->last_was_hit = 0;
 
     snprintf(f_name, 256, "%s.dat", name);
-    state->dump_file = fopen(f_name, "w");
+    state->dump_file = fopen(f_name, file_mode);
 
     while (1) {			/* find setting for target 'name' */
 	this_target = config_setting_get_elem(targets, i);
@@ -91,19 +92,21 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     state->n_data = 0;
 }
 
-static void ps1_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps1_init_state(void *vstate, config_t * cfg, const char *name,
+			   const char *file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, cfg, name);
+    ps_init_state(vstate, cfg, name, file_name);
     state->one_sided = 1;
 }
 
-static void ps2_init_state(void *vstate, config_t * cfg, const char *name)
+static void ps2_init_state(void *vstate, config_t * cfg, const char *name,
+			   const char *file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, cfg, name);
+    ps_init_state(vstate, cfg, name, file_name);
     state->one_sided = 0;
 }
 

@@ -25,8 +25,7 @@ typedef struct target_type_t {
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
     int (*alloc_state) (void *state);	/* allocate */
-    void (*init_state) (void *state, config_t * cfg, const char *name);	/* initialize internal data
-									   from configuration */
+    void (*init_state) (void *state, config_t * cfg, const char *name, const char *file_mode);	/* initialize internal data from configuration */
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, const double ppr,	/* exit ray */
@@ -50,7 +49,7 @@ const target_type_t *target_plane_screen_two_sided;
  *  public functions to access/manipulate the targets (found in targets.c)
  */
 extern target_t *target_alloc(const target_type_t * type, config_t * cfg,
-			      const char *name);
+			      const char *name, const char *file_mode);
 extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray,
 			    int *dump_flag);
