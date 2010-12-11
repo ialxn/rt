@@ -253,11 +253,19 @@ int main(int argc, char **argv)
 	break;
 
     case RUN:			/* do the simulation */
+	fprintf(stdout, "rt version %s running ...\n", VERSION);
+
 	source_list = init_sources(&cfg);
+	fprintf(stdout, "    sources initialized\n");
 	target_list = init_targets(&cfg, &n_targets);
+	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
 	config_lookup_int(&cfg, "seed", &seed);
+	fprintf(stdout,
+		"    using %d as seed for random number generator\n",
+		seed);
 	config_destroy(&cfg);
+
 
 	run_simulation(source_list, target_list, seed, n_targets);
 
