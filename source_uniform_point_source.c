@@ -117,6 +117,13 @@ static double ups_get_ppr(void *vstate)
     return state->ppr;
 }
 
+static const char *ups_get_source_name(void *vstate)
+{
+    ups_state_t *state = (ups_state_t *) vstate;
+
+    return state->name;
+}
+
 
 static const source_type_t ups_t = {
     "uniform point source",
@@ -125,7 +132,8 @@ static const source_type_t ups_t = {
     &ups_init_state,
     &ups_free_state,
     &ups_get_new_ray,
-    &ups_get_ppr
+    &ups_get_ppr,
+    &ups_get_source_name
 };
 
 const source_type_t *source_uniform_point_source = &ups_t;

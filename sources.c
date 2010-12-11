@@ -63,6 +63,11 @@ double get_ppr(const source_t * S)
     return (S->type->get_ppr) (S->state);
 }
 
+const char *get_source_name(const source_t * S)
+{
+    return (S->type->get_source_name) (S->state);
+}
+
 
 
 int check_sources(config_t * cfg)

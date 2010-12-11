@@ -30,6 +30,7 @@ typedef struct source_type_t {
     void (*free_state) (void *state);	/* free */
     ray_t *(*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
     double (*get_ppr) (void *state);	/* get power_per_ray of source */
+    const char *(*get_source_name) (void *state);	/* get name of source */
 } source_type_t;
 
 typedef struct source_t {
@@ -50,6 +51,7 @@ extern source_t *source_alloc(const source_type_t * T, config_t * cfg,
 extern void source_free(source_t * S);
 extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
 extern double get_ppr(const source_t * S);
+extern const char *get_source_name(const source_t * S);
 
 /*
  * utility functions
