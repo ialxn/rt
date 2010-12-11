@@ -237,6 +237,7 @@ int main(int argc, char **argv)
     switch (mode) {
 	int seed;		/* seed for rng */
 	int n_targets;		/* needed for dump cycle */
+	int n_sources;
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
 
@@ -255,8 +256,8 @@ int main(int argc, char **argv)
     case RUN:			/* do the simulation */
 	fprintf(stdout, "rt version %s running ...\n", VERSION);
 
-	source_list = init_sources(&cfg);
-	fprintf(stdout, "    sources initialized\n");
+	source_list = init_sources(&cfg, &n_sources);
+	fprintf(stdout, "    %d sources initialized\n", n_sources);
 	target_list = init_targets(&cfg, &n_targets);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
