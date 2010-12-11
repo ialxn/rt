@@ -51,6 +51,9 @@ static void run_simulation(source_list_t * source_list,
 	const double ppr = get_ppr(current_source);	/* power per ray of 'current_source' */
 	ray_t *ray = new_ray(current_source, r);	/* get first 'ray' of 'current_source' */
 
+	fprintf(stdout, "        source %s ... ",
+		get_source_name(current_source));
+
 	while (ray) {		/* loop until 'current_source' is exhausted */
 
 	    while (ray) {	/* loop until 'ray' is absorbed or leaves system */
@@ -113,6 +116,7 @@ static void run_simulation(source_list_t * source_list,
 	    }			/* 'ray' absorbed or lost */
 	    ray = new_ray(current_source, r);	/* start next ray */
 	}			/* 'current_source' is exhausted */
+	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
     gsl_rng_free(r);
 }
