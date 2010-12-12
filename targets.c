@@ -76,6 +76,12 @@ const char *get_target_name(const target_t * T)
     return (T->type->get_target_name) (T->state);
 }
 
+void dump_string(const target_t * T, const char *str)
+{
+    return (T->type->dump_string) (T->state, str);
+}
+
+
 int check_targets(config_t * cfg)
 {
     int status = NO_ERR;
