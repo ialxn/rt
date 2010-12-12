@@ -51,8 +51,9 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
 
     unsigned int i = 0;
     const char *S;
-    double F, norm;
+    double norm;
     char f_name[256];
+    int j;
 
     config_setting_t *this_target, *point, *normal;
     const config_setting_t *targets = config_lookup(cfg, "targets");
@@ -75,20 +76,12 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name)
     }
 
     point = config_setting_get_member(this_target, "point");
-    config_setting_lookup_float(point, "x", &F);
-    state->point[0] = F;
-    config_setting_lookup_float(point, "y", &F);
-    state->point[1] = F;
-    config_setting_lookup_float(point, "z", &F);
-    state->point[2] = F;
+    for (j = 0; j < 3; j++)
+	state->point[j] = config_setting_get_float_elem(point, j);
 
     normal = config_setting_get_member(this_target, "normal");
-    config_setting_lookup_float(normal, "x", &F);
-    state->normal[0] = F;
-    config_setting_lookup_float(normal, "y", &F);
-    state->normal[1] = F;
-    config_setting_lookup_float(normal, "z", &F);
-    state->normal[2] = F;
+    for (j = 0; j < 3; j++)
+	state->normal[j] = config_setting_get_float_elem(normal, j);
 
     /* normalize normal vector */
     norm = cblas_dnrm2(3, state->normal, 1);

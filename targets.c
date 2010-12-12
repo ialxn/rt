@@ -88,7 +88,6 @@ int check_targets(config_t * cfg)
 		config_setting_get_elem(t, (unsigned int) i);
 
 	    const char *S, *type;
-	    double F;
 
 	    /*
 	     * keywords common to all targets
@@ -121,148 +120,80 @@ int check_targets(config_t * cfg)
 	    if (strstr(type, "one-sided plane screen") == type) {
 		/*
 		 * one-sided plane screen:
-		 *  - group 'point' (point on plane)
-		 *          'x', 'y', 'z': coordinates / double
-		 *  - group 'normal' (normal vector of plane)
-		 *          'x', 'y', 'z': coordinates / double
+		 *  - array 'point' (point on plane) [x,y,z] / double
+		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 */
 		config_setting_t *point, *normal;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
 		    fprintf(stderr,
-			    "missing 'point' group in 'targets' section %u\n",
+			    "missing 'point' array in 'targets' section %u\n",
 			    i + 1);
 		    status = ERR;
-		} else {	/* group 'point' found */
-		    if (config_setting_lookup_float(point, "x", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword x in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(point, "y", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(point, "z", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		}		/* end group 'point' */
-
+		} else if (config_setting_is_array(point) == CONFIG_FALSE
+			   || config_setting_length(point) != 3) {
+		    fprintf(stderr,
+			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'point' found */
 		if ((normal =
 		     config_setting_get_member(this_t,
 					       "normal")) == NULL) {
 		    fprintf(stderr,
-			    "missing 'normal' group in 'targets' section %u\n",
+			    "missing 'normal' array in 'targets' section %u\n",
 			    i + 1);
 		    status = ERR;
-		} else {	/* group 'normal' found */
-		    if (config_setting_lookup_float(normal, "x", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword x in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(normal, "y", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(normal, "z", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		}		/* end group 'normal' */
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'normal' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'normal' found */
 	    }
 	    /* end 'one-sided plane_screen' */
 	    if (strstr(type, "two-sided plane screen") == type) {
 		/*
-		 * [one-sided|two-sided] plane screen:
-		 *  - group 'point' (point on plane)
-		 *          'x', 'y', 'z': coordinates / double
-		 *  - group 'normal' (normal vector of plane)
-		 *          'x', 'y', 'z': coordinates / double
+		 * two-sided plane screen:
+		 *  - array 'point' (point on plane) [x,y,z] / double
+		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 */
 		config_setting_t *point, *normal;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
 		    fprintf(stderr,
-			    "missing 'point' group in 'targets' section %u\n",
+			    "missing 'point' array in 'targets' section %u\n",
 			    i + 1);
 		    status = ERR;
-		} else {	/* group 'point' present */
-		    if (config_setting_lookup_float(point, "x", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword x in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(point, "y", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(point, "z", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'point' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		}		/* end group 'point' */
-
+		} else if (config_setting_is_array(point) == CONFIG_FALSE
+			   || config_setting_length(point) != 3) {
+		    fprintf(stderr,
+			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'point' found */
 		if ((normal =
 		     config_setting_get_member(this_t,
 					       "normal")) == NULL) {
 		    fprintf(stderr,
-			    "missing 'normal' group in 'targets' section %u\n",
+			    "missing 'normal' array in 'targets' section %u\n",
 			    i + 1);
 		    status = ERR;
-		} else {	/* group 'normal' present */
-		    if (config_setting_lookup_float(normal, "x", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword x in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(normal, "y", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(normal, "z", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'normal' in 'targets' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		}		/* end group 'normal' */
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'normal' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'normal' found */
 	    }			/* end 'two-sided plane_screen' */
 	}			/* end 'this_t', check next target */
-    }
+    }				/* end 'targets' section present */
     return status;
 }
 
