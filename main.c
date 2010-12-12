@@ -274,11 +274,17 @@ int main(int argc, char **argv)
 	target_list = init_targets(&cfg, &n_targets, file_mode);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
-	if (file_mode[0] == 'w')	/* use seed from cfg, otherwise from command line */
+	if (file_mode[0] == 'w') {	/* use seed from cfg, otherwise from command line */
 	    config_lookup_int(&cfg, "seed", &seed);
-	fprintf(stdout,
-		"    using %d as seed for random number generator\n",
-		seed);
+	    fprintf(stdout,
+		    "    using %d as seed for random number generator from config file\n",
+		    seed);
+	} else {
+	    fprintf(stdout, "    appending to existing files\n");
+	    fprintf(stdout,
+		    "    using %d as seed for random number generator from command line\n",
+		    seed);
+	}
 
 	config_destroy(&cfg);
 
