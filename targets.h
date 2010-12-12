@@ -55,6 +55,7 @@ extern double *interception(const target_t * T, ray_t * in_ray,
 			    int *dump_flag);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
 		      double *hit, int *dump_flag, const int n_targets);
+extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);
 
 
