@@ -54,6 +54,7 @@ static void run_simulation(source_list_t * source_list,
 	fprintf(stdout, "        %s %s ... ",
 		get_source_type(current_source),
 		get_source_name(current_source));
+	fflush(stdout);
 
 	while (ray) {		/* loop until 'current_source' is exhausted */
 
