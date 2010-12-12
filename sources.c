@@ -131,9 +131,7 @@ int check_sources(config_t * cfg)
 	    if (strstr(type, "uniform point_source") == type) {
 		/*
 		 * uniform point source:
-		 *  - group 'origin'
-		 *          'x', 'y', 'z': coordinates / double
-		 */
+		 *  - array 'origin' [x,y,z] / double            */
 		config_setting_t *origin;
 
 		if ((origin =
@@ -143,29 +141,13 @@ int check_sources(config_t * cfg)
 			    "missing 'origin' group in 'sources' section %u\n",
 			    i + 1);
 		    status = ERR;
-		} else {	/* group 'origin' found */
-		    if (config_setting_lookup_float(origin, "x", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword x in group 'origin' in 'sources' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(origin, "y", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'origin' in 'sources' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		    if (config_setting_lookup_float(origin, "z", &F)
-			!= CONFIG_TRUE) {
-			fprintf(stderr,
-				"missing keyword y in group 'origin' in 'sources' section %u\n",
-				i + 1);
-			status = ERR;
-		    }
-		}		/* end group'origin' */
+		} else if (config_setting_is_array(origin) == CONFIG_FALSE
+			   || config_setting_length(origin) != 3) {
+		    fprintf(stderr,
+			    "setting 'origin' in 'sources' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'origin' found */
 	    }			/* end 'uniform point source' */
 	}			/* end 'this_s', check next source */
     }
