@@ -51,6 +51,10 @@ static void run_simulation(source_list_t * source_list,
 	const double ppr = get_ppr(current_source);	/* power per ray of 'current_source' */
 	ray_t *ray = new_ray(current_source, r);	/* get first 'ray' of 'current_source' */
 
+	fprintf(stdout, "        %s %s ... ",
+		get_source_type(current_source),
+		get_source_name(current_source));
+
 	while (ray) {		/* loop until 'current_source' is exhausted */
 
 	    while (ray) {	/* loop until 'ray' is absorbed or leaves system */
@@ -113,6 +117,7 @@ static void run_simulation(source_list_t * source_list,
 	    }			/* 'ray' absorbed or lost */
 	    ray = new_ray(current_source, r);	/* start next ray */
 	}			/* 'current_source' is exhausted */
+	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
     gsl_rng_free(r);
 }
@@ -237,6 +242,7 @@ int main(int argc, char **argv)
     switch (mode) {
 	int seed;		/* seed for rng */
 	int n_targets;		/* needed for dump cycle */
+	int n_sources;
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
 
@@ -255,8 +261,8 @@ int main(int argc, char **argv)
     case RUN:			/* do the simulation */
 	fprintf(stdout, "rt version %s running ...\n", VERSION);
 
-	source_list = init_sources(&cfg);
-	fprintf(stdout, "    sources initialized\n");
+	source_list = init_sources(&cfg, &n_sources);
+	fprintf(stdout, "    %d sources initialized\n", n_sources);
 	target_list = init_targets(&cfg, &n_targets);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 

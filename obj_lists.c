@@ -13,17 +13,17 @@
 
 #include "obj_lists.h"
 
-source_list_t *init_sources(config_t * cfg)
+source_list_t *init_sources(config_t * cfg, int *n_sources)
 {
     int i;
     source_list_t *s_list;
     const config_setting_t *sources = config_lookup(cfg, "sources");
-    const int n_sources = config_setting_length(sources);
 
     s_list = (source_list_t *) malloc(sizeof(source_list_t));
     INIT_LIST_HEAD(&s_list->list);
 
-    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
+    *n_sources = config_setting_length(sources);
+    for (i = 0; i < *n_sources; ++i) {	/* iterate through all sources */
 	source_list_t *new_entry;
 	source_t *new_source;
 	config_setting_t *this_source;
