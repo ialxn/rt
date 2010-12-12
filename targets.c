@@ -66,6 +66,11 @@ ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
 				   dump_flag, n_targets);
 }
 
+const char *get_target_name(const target_t * T)
+{
+    return (T->type->get_target_name) (T->state);
+}
+
 int check_targets(config_t * cfg)
 {
     int status = NO_ERR;

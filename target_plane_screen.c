@@ -226,6 +226,13 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     return out;
 }
 
+static const char *ps_get_target_name(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    return state->name;
+}
+
 
 static const target_type_t ps1_t = {
     "one-sided plane screen",
@@ -234,7 +241,8 @@ static const target_type_t ps1_t = {
     &ps1_init_state,
     &ps_free_state,
     &ps_get_intercept,
-    &ps_get_out_ray
+    &ps_get_out_ray,
+    &ps_get_target_name
 };
 
 static const target_type_t ps2_t = {
@@ -244,7 +252,8 @@ static const target_type_t ps2_t = {
     &ps2_init_state,
     &ps_free_state,
     &ps_get_intercept,
-    &ps_get_out_ray
+    &ps_get_out_ray,
+    &ps_get_target_name
 };
 
 const target_type_t *target_plane_screen_one_sided = &ps1_t;
