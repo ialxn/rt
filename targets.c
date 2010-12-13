@@ -78,7 +78,7 @@ const char *get_target_name(const target_t * T)
 
 void dump_string(const target_t * T, const char *str)
 {
-    return (T->type->dump_string) (T->state, str);
+    (T->type->dump_string) (T->state, str);
 }
 
 
