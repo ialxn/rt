@@ -45,6 +45,10 @@ static void run_simulation(source_list_t * source_list,
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
 
+    fprintf(stdout,
+	    "    using random number generator %s from Gnu Scientif Library\n",
+	    gsl_rng_name(r));
+
     list_for_each(s_pos, &(source_list->list)) {
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
