@@ -264,6 +264,13 @@ static void ps_dump_string(void *vstate, const char *str)
     fprintf(state->dump_file, "%s", str);
 }
 
+static double *ps_M(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    return state->M;
+}
+
 
 static const target_type_t ps1_t = {
     "one-sided plane screen",
@@ -274,7 +281,8 @@ static const target_type_t ps1_t = {
     &ps_get_intercept,
     &ps_get_out_ray,
     &ps_get_target_name,
-    &ps_dump_string
+    &ps_dump_string,
+    &ps_M
 };
 
 static const target_type_t ps2_t = {
@@ -286,7 +294,8 @@ static const target_type_t ps2_t = {
     &ps_get_intercept,
     &ps_get_out_ray,
     &ps_get_target_name,
-    ps_dump_string
+    &ps_dump_string,
+    &ps_M
 };
 
 const target_type_t *target_plane_screen_one_sided = &ps1_t;

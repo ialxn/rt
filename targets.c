@@ -81,6 +81,11 @@ void dump_string(const target_t * T, const char *str)
     return (T->type->dump_string) (T->state, str);
 }
 
+double *M(const target_t * T)
+{
+    return (T->type->M) (T->state);
+}
+
 
 int check_targets(config_t * cfg)
 {
