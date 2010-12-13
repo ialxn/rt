@@ -25,6 +25,7 @@ typedef struct ps_state_t {
     FILE *dump_file;
     double point[3];		/* point on plane */
     double normal[3];		/* normal vector of plane */
+    double M[9];		/* transform matrix local -> global coordinates */
     size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
     size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
     double *data;		/* buffer to store hits */
@@ -56,7 +57,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     char f_name[256];
     int j;
 
-    config_setting_t *this_target, *point, *normal;
+    config_setting_t *this_target, *point, *normal, *x;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
@@ -80,6 +81,13 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     for (j = 0; j < 3; j++)
 	state->point[j] = config_setting_get_float_elem(point, j);
 
+    /*
+     * generate transform matrix M to convert
+     * between local and global coordinates
+     * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
+     * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+     */
+    /* get normal vector of plane (serving also as basis vector z) */
     normal = config_setting_get_member(this_target, "normal");
     for (j = 0; j < 3; j++)
 	state->normal[j] = config_setting_get_float_elem(normal, j);
@@ -89,6 +97,19 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     for (i = 0; i < 3; i++)
 	state->normal[i] /= norm;
 
+    memcpy(&state->M[6], state->normal, 3 * sizeof(double));
+
+    /* get basis vector x */
+    x = config_setting_get_member(this_target, "x");
+    for (j = 0; j < 3; j++)
+	state->M[j] = config_setting_get_float_elem(x, j);
+    /* normalize basis vector x */
+    norm = cblas_dnrm2(3, state->M, 1);
+    for (i = 0; i < 3; i++)
+	state->M[i] /= norm;
+
+    cross_product(&state->M[6], state->M, &state->M[3]);
+    /* state->M[3-5] = z cross x */
     state->n_data = 0;
 }
 
