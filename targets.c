@@ -138,8 +138,9 @@ int check_targets(config_t * cfg)
 		 * one-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal;
+		config_setting_t *point, *normal, *x;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
@@ -169,6 +170,20 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
+		if ((x =
+		     config_setting_get_member(this_t,
+					       "x")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'x' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'x' found */
 	    }
 	    /* end 'one-sided plane_screen' */
 	    if (strstr(type, "two-sided plane screen") == type) {
@@ -176,8 +191,9 @@ int check_targets(config_t * cfg)
 		 * two-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal;
+		config_setting_t *point, *normal, *x;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
@@ -207,6 +223,20 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
+		if ((x =
+		     config_setting_get_member(this_t,
+					       "x")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'x' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'x' found */
 	    }			/* end 'two-sided plane_screen' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
