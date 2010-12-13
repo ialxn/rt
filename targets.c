@@ -170,9 +170,7 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
-		if ((x =
-		     config_setting_get_member(this_t,
-					       "x")) == NULL) {
+		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
 		    fprintf(stderr,
 			    "missing 'x' array in 'targets' section %u\n",
 			    i + 1);
@@ -223,9 +221,7 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
-		if ((x =
-		     config_setting_get_member(this_t,
-					       "x")) == NULL) {
+		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
 		    fprintf(stderr,
 			    "missing 'x' array in 'targets' section %u\n",
 			    i + 1);
