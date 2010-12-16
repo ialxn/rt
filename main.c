@@ -30,6 +30,10 @@
 #define RUN 2
 
 
+static void output_targets(const config_t * cfg)
+{
+}
+
 static void output_sources(const config_t * cfg)
 {
     int i;
@@ -68,6 +72,7 @@ static void output_geometry(config_t * cfg)
 {
     off_axes(10.0);
     output_sources(cfg);
+    output_targets(cfg);
 }
 
 static void run_simulation(source_list_t * source_list,
