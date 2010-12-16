@@ -30,9 +30,44 @@
 #define RUN 2
 
 
+static void output_sources(const config_t * cfg)
+{
+    int i;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+    const int n_sources = config_setting_length(s);
+
+    for (i = 0; i < n_sources; ++i) {	/* go through all sources */
+	const char *type, *name;
+	const config_setting_t *this_s =
+	    config_setting_get_elem(s, (unsigned int) i);
+
+	config_setting_lookup_string(this_s, "name", &name);
+	config_setting_lookup_string(this_s, "type", &type);
+
+	if (!strcmp(type, "uniform point source")) {
+	    int j;
+	    double O[3];
+	    const config_setting_t *origin =
+		config_setting_get_member(this_s, "origin");
+
+	    for (j = 0; j < 3; j++)
+		O[j] = config_setting_get_float_elem(origin, j);
+	
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
+	     * with size 1.2
+	     * at origin 'O'
+	     */
+	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
+	}
+
+    }				/* end all sources */
+}
+
 static void output_geometry(config_t * cfg)
 {
     off_axes(10.0);
+    output_sources(cfg);
 }
 
 static void run_simulation(source_list_t * source_list,
