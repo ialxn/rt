@@ -20,6 +20,7 @@
 #include <gsl/gsl_rng.h>
 
 #include "obj_lists.h"
+#include "off.h"
 #include "sources.h"
 #include "targets.h"
 #include "version.h"
@@ -29,9 +30,9 @@
 #define RUN 2
 
 
-
 static void output_geometry(config_t * cfg)
 {
+    off_axes(10.0);
 }
 
 static void run_simulation(source_list_t * source_list,

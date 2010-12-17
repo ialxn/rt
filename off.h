@@ -11,4 +11,6 @@
 #ifndef __OFF_H__
 #define __OFF_H__
 
+extern void off_axes(const double size);
+
 #endif				/* __OFF_H__ */
