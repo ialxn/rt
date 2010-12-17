@@ -98,3 +98,42 @@ extern void off_axes(const double size)
 
     fclose(outf);
 }
+
+
+extern void off_sphere(const char *name, double *O, const double radius,
+		       const double r, const double g, const double b)
+{
+/*
+ * print octaeder as source
+ */
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "6 8 0\n\n");	/* 6 vertices, 8 faces */
+
+    /*
+     * list of vertices
+     * 0 ... 5
+     */
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[3] + radius);
+    fprintf(outf, "%f\t%f\t%f\n", O[0] + radius, O[1], O[3]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] + radius, O[3]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0] - radius, O[1], O[3]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] - radius, O[3]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[3] - radius);
+
+    /*
+     * list of (triangular) faces, each defined by 3 vertices, as
+     * a->b->c->a
+     */
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 4 1 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 5 1 2 5 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 5 2 3 5 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 5 3 4 5 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 5 4 1 5 %f\t%f\t%f\n", r, g, b);
+
+    fclose(outf);
+}
