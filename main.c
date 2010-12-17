@@ -16,6 +16,7 @@
 
 #include <libconfig.h>
 
+#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_machine.h>
 #include <gsl/gsl_rng.h>
 
@@ -47,6 +48,7 @@ static void output_targets(const config_t * cfg)
 	    int j;
 	    double P[3];
 	    double N[3];
+	    double norm;
 	    config_setting_t *this;
 
 	    this = config_setting_get_member(this_t, "point");
@@ -56,6 +58,11 @@ static void output_targets(const config_t * cfg)
 	    this = config_setting_get_member(this_t, "normal");
 	    for (j = 0; j < 3; j++)
 		N[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, norm, N, 1);
+
 	    /*
 	     * off_plane()      front (red, counter)
 	     * off_plane()      backside (black)
@@ -68,6 +75,7 @@ static void output_targets(const config_t * cfg)
 	    int j;
 	    double P[3];
 	    double N[3];
+	    double norm;
 	    config_setting_t *this;
 
 	    this = config_setting_get_member(this_t, "point");
@@ -77,6 +85,11 @@ static void output_targets(const config_t * cfg)
 	    this = config_setting_get_member(this_t, "normal");
 	    for (j = 0; j < 3; j++)
 		N[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, norm, N, 1);
+
 	    /*
 	     * off_plane()      front (red, counter)
 	     * off_plane()      backside (red, counter)
