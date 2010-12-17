@@ -204,3 +204,100 @@ extern void off_sphere(const char *name, double *O, const double radius,
 
     fclose(outf);
 }
+
+void off_plane(const char *name, const double *P, const double *N,
+	       const double x, const double y, const double rf,
+	       const double gf, const double bf, const double rb,
+	       const double gb, const double bb, const double dz)
+/*
+ * writes 'OFF' file to 'name.off' for two sided plane. the plane is defined
+ * by the point 'P' and its normal vector 'N'.
+ * two planes are actually draw:
+ *	- front side (offset by +dz) colored rf,gf,bf
+ *	- back side (offset by -dz) colored rb,gb,bb
+ * the dimension of the planes drawn is 'x' by 'y'
+ */
+{
+    double L[3], G[3];
+    const double O[3] = { 0, 0, 0 };
+    double length;
+    double alpha, beta;
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "8 2 0\n\n");	/* 8 vertices, 2 faces */
+
+    /*
+     * determine alpha, beta to convert N from/to global
+     * coordinate system.
+     *
+     * (N-P) -- rotate by alpha/beta --> L
+     */
+    g2l_off(O, N, L, &alpha, &beta);
+    length = L[2];
+
+    /*
+     * construct corners of front plane in L
+     * covert to G and print vertices
+     */
+    L[0] = x / 2;
+    L[1] = y / 2;
+    L[2] = dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = x / 2;
+    L[1] = -y / 2;
+    L[2] = dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x / 2;
+    L[1] = -y / 2;
+    L[2] = dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x / 2;
+    L[1] = y / 2;
+    L[2] = dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    /*
+     * construct corners of back plane in L
+     * covert to G and print vertices
+     */
+    L[0] = x / 2;
+    L[1] = y / 2;
+    L[2] = -dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = x / 2;
+    L[1] = -y / 2;
+    L[2] = -dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x / 2;
+    L[1] = -y / 2;
+    L[2] = -dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x / 2;
+    L[1] = y / 2;
+    L[2] = -dz;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    /*
+     * print front face (rf, gf, bf)
+     * print back face (rb, gb, bb)
+     */
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rb, gb, bb);
+
+    fclose(outf);
+}

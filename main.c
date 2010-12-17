@@ -70,6 +70,8 @@ static void output_targets(const config_t * cfg)
 	     * one-sided plane only counts ray parallel to normal vector
 	     * thus the normal vector points from the backside.
 	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		      0.005);
 
 	} else if (!strcmp(type, "two-sided plane screen")) {
 	    int j;
@@ -96,6 +98,8 @@ static void output_targets(const config_t * cfg)
 	     *
 	     * one-sided plane only counts all rays
 	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+		      0.005);
 
 	}
     }
