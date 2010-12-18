@@ -30,6 +30,7 @@
 #define PRINT_GEOMETRY 1
 #define RUN 2
 
+#define DZ 0.005
 
 static void output_targets(const config_t * cfg)
 {
@@ -47,8 +48,7 @@ static void output_targets(const config_t * cfg)
 
 	if (!strcmp(type, "one-sided plane screen")) {
 	    int j;
-	    double P[3];
-	    double N[3];
+	    double P[3], N[3];
 	    double norm;
 	    config_setting_t *this;
 
@@ -72,12 +72,11 @@ static void output_targets(const config_t * cfg)
 	     *   backside (black) at '-DZ'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		      0.005);
+		      DZ);
 
 	} else if (!strcmp(type, "two-sided plane screen")) {
 	    int j;
-	    double P[3];
-	    double N[3];
+	    double P[3], N[3];
 	    double norm;
 	    config_setting_t *this;
 
@@ -100,7 +99,7 @@ static void output_targets(const config_t * cfg)
 	     *   backside (red, counter) at '-DZ'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-		      0.005);
+		      DZ);
 
 	}
     }				/* end all targets */
