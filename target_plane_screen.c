@@ -98,8 +98,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 
     /* normalize normal vector */
     norm = cblas_dnrm2(3, state->normal, 1);
-    for (i = 0; i < 3; i++)
-	state->normal[i] /= norm;
+    cblas_dscal(3, norm, state->normal, 1);
 
     memcpy(&state->M[6], state->normal, 3 * sizeof(double));
 
@@ -109,8 +108,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 	state->M[j] = config_setting_get_float_elem(x, j);
     /* normalize basis vector x */
     norm = cblas_dnrm2(3, state->M, 1);
-    for (i = 0; i < 3; i++)
-	state->M[i] /= norm;
+    cblas_dscal(3, norm, state->M, 1);
 
     cross_product(&state->M[6], state->M, &state->M[3]);
     /* state->M[3-5] = z cross x */

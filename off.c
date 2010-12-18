@@ -220,8 +220,9 @@ void off_plane(const char *name, const double *P, const double *N,
 {
     double L[3], G[3];
     const double O[3] = { 0, 0, 0 };
-    double length;
     double alpha, beta;
+    const double x2 = x / 2.0;
+    const double y2 = y / 2.0;
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
@@ -234,33 +235,26 @@ void off_plane(const char *name, const double *P, const double *N,
      * (N-P) -- rotate by alpha/beta --> L
      */
     g2l_off(O, N, L, &alpha, &beta);
-    length = L[2];
 
     /*
      * construct corners of front plane in L
      * covert to G and print vertices
      */
-    L[0] = x / 2;
-    L[1] = y / 2;
+    L[0] = x2;
+    L[1] = y2;
     L[2] = dz;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = x / 2;
-    L[1] = -y / 2;
-    L[2] = dz;
+    L[1] = -y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -x / 2;
-    L[1] = -y / 2;
-    L[2] = dz;
+    L[0] = -x2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -x / 2;
-    L[1] = y / 2;
-    L[2] = dz;
+    L[1] = y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
@@ -268,27 +262,20 @@ void off_plane(const char *name, const double *P, const double *N,
      * construct corners of back plane in L
      * covert to G and print vertices
      */
-    L[0] = x / 2;
-    L[1] = y / 2;
+    L[0] = x2;
     L[2] = -dz;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = x / 2;
-    L[1] = -y / 2;
-    L[2] = -dz;
+    L[1] = -y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -x / 2;
-    L[1] = -y / 2;
-    L[2] = -dz;
+    L[0] = -x2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -x / 2;
-    L[1] = y / 2;
-    L[2] = -dz;
+    L[1] = y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
