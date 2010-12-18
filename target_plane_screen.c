@@ -18,6 +18,8 @@
 #include "ray.h"
 #include "targets.h"
 
+#define N_COORDINATES 2		/* store only x,y */
+
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
@@ -36,9 +38,11 @@ static int ps_alloc_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* 4 items per data set is hard coded */
+    /* 3 items per data set (x,y,ppr) */
     if (!
-	(state->data = (double *) malloc(4 * BLOCK_SIZE * sizeof(double))))
+	(state->data =
+	 (double *) malloc((N_COORDINATES + 1) * BLOCK_SIZE *
+			   sizeof(double))))
 	return ERR;
 
     state->n_alloc = BLOCK_SIZE;
@@ -135,8 +139,9 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* first write remaining data to file. 4 items per data set hard coded */
-    dump_data(state->dump_file, state->data, state->n_data, 4);
+    /* first write remaining data to file. 3 items per data (x,y,ppr) */
+    dump_data(state->dump_file, state->data, state->n_data,
+	      N_COORDINATES + 1);
     fclose(state->dump_file);
 
     free(state->name);
@@ -153,8 +158,10 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double *intercept;
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data, 4);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc));
+	dump_data(state->dump_file, state->data, state->n_data,
+		  N_COORDINATES + 1);
+	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
+		      N_COORDINATES + 1);
 	(*dump_flag)--;
     }
 
@@ -224,12 +231,17 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     ray_t *out;
     double hit_copy[3];
 
+    /* transform to local coordinates */
     memcpy(hit_copy, hit, 3 * sizeof(double));
     g2l(state->M, state->point, hit, hit_copy);
 
-    /* 4 items per data set hard coded */
-    memcpy(&(state->data[4 * state->n_data]), hit_copy, 3 * sizeof(double));	/* store intercept */
-    state->data[4 * state->n_data + 3] = ppr;
+    /*
+     * store 3 items per data set (x,y,ppr)
+     * first x,y then ppr
+     */
+    memcpy(&(state->data[(N_COORDINATES + 1) * state->n_data]), hit_copy,
+	   N_COORDINATES * sizeof(double));
+    state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] = ppr;
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 
@@ -240,8 +252,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
      */
     if (state->n_data == state->n_alloc)	/* buffer full */
 	try_increase_memory(&(state->data), &(state->n_data),
-			    &(state->n_alloc), state->dump_file, dump_flag,
-			    n_targets);
+			    &(state->n_alloc), N_COORDINATES + 1,
+			    state->dump_file, dump_flag, n_targets);
 
     out = (ray_t *) malloc(sizeof(ray_t));
 

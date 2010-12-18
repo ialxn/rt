@@ -267,13 +267,14 @@ void dump_data(FILE * f, double *data, const size_t n_data,
     }
 }
 
-void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
+void shrink_memory(double **data, size_t * n_data, size_t * n_alloc,
+		   const size_t N)
 {
     /*
      * shrink memory to minimum (BLOCK_SIZE)
-     * 4 items per data set is hard coded
+     * 'N' doubles per data set
      */
-    double *t = (double *) realloc(*data, 4 * BLOCK_SIZE * sizeof(double));
+    double *t = (double *) realloc(*data, N * BLOCK_SIZE * sizeof(double));
 
     *data = t;
     *n_data = 0;
@@ -281,34 +282,34 @@ void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
 }
 
 void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
-			 FILE * dump_file, int *dump_flag,
+			 const size_t N, FILE * dump_file, int *dump_flag,
 			 const int n_targets)
 {
     /*
      * we try to increase the size of the '**data' buffer by
-     * BLOCK_SIZE*3 (3 items per data set hard coded). if
+     * BLOCK_SIZE*'N' ('N' items per data set). if
      * memory can not be allocated of if the buffer already
-     * has reached the maximum size MAX_BLOCK_SIZE*3, '**data'
+     * has reached the maximum size MAX_BLOCK_SIZE*'N', '**data'
      * is written to the 'dump_file' and the size of the buffer
-     * is decreased to BLOCK_SIZE*3. this initiates a dump cycle
+     * is decreased to BLOCK_SIZE*'N'. this initiates a dump cycle
      * as all targets will dump their data and decrease their
      * buffer too during the next call of 'interception()' in
      * 'run_simulation()'
      */
     if (*n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-	dump_data(dump_file, *data, *n_data, 4);
-	shrink_memory(data, n_data, n_alloc);
+	dump_data(dump_file, *data, *n_data, N);
+	shrink_memory(data, n_data, n_alloc, N);
 
 	*dump_flag = n_targets - 1;
     } else {			/* try to increase buffer */
 	const size_t n = *n_data + BLOCK_SIZE;
-	double *t = (double *) realloc(*data, 4 * n * sizeof(double));
+	double *t = (double *) realloc(*data, N * n * sizeof(double));
 	if (t) {		/* success, update state */
 	    *data = t;
 	    *n_alloc = n;
 	} else {		/* memory exhausted, initiate dump cycle */
-	    dump_data(dump_file, *data, *n_data, 4);
-	    shrink_memory(data, n_data, n_alloc);
+	    dump_data(dump_file, *data, *n_data, N);
+	    shrink_memory(data, n_data, n_alloc, N);
 
 	    *dump_flag = n_targets - 1;
 	}
