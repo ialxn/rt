@@ -32,6 +32,60 @@
 
 static void output_targets(const config_t * cfg)
 {
+    int i;
+    const config_setting_t *t = config_lookup(cfg, "targets");
+    const int n_targets = config_setting_length(t);
+    for (i = 0; i < n_targets; ++i) {
+	const char *type, *name;
+	const config_setting_t *this_t =
+	    config_setting_get_elem(t, (unsigned int) i);
+
+	config_setting_lookup_string(this_t, "name", &name);
+	config_setting_lookup_string(this_t, "type", &type);
+
+	if (!strcmp(type, "one-sided plane screen")) {
+	    int j;
+	    double P[3];
+	    double N[3];
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "point");
+	    for (j = 0; j < 3; j++)
+		P[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "normal");
+	    for (j = 0; j < 3; j++)
+		N[j] = config_setting_get_float_elem(this, j);
+	    /*
+	     * off_plane()      front (red, counter)
+	     * off_plane()      backside (black)
+	     *
+	     * one-sided plane only counts ray parallel to normal vector
+	     * thus the normal vector points from the backside.
+	     */
+
+	} else if (!strcmp(type, "two-sided plane screen")) {
+	    int j;
+	    double P[3];
+	    double N[3];
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "point");
+	    for (j = 0; j < 3; j++)
+		P[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "normal");
+	    for (j = 0; j < 3; j++)
+		N[j] = config_setting_get_float_elem(this, j);
+	    /*
+	     * off_plane()      front (red, counter)
+	     * off_plane()      backside (red, counter)
+	     *
+	     * one-sided plane only counts all rays
+	     */
+
+	}
+    }
 }
 
 static void output_sources(const config_t * cfg)
@@ -56,7 +110,7 @@ static void output_sources(const config_t * cfg)
 
 	    for (j = 0; j < 3; j++)
 		O[j] = config_setting_get_float_elem(origin, j);
-	
+
 	    /*
 	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
 	     * with size 1.2
