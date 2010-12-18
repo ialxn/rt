@@ -36,7 +36,8 @@ static void output_targets(const config_t * cfg)
     int i;
     const config_setting_t *t = config_lookup(cfg, "targets");
     const int n_targets = config_setting_length(t);
-    for (i = 0; i < n_targets; ++i) {
+
+    for (i = 0; i < n_targets; ++i) {	/* iterate through all targets */
 	const char *type, *name;
 	const config_setting_t *this_t =
 	    config_setting_get_elem(t, (unsigned int) i);
@@ -64,11 +65,11 @@ static void output_targets(const config_t * cfg)
 	    cblas_dscal(3, norm, N, 1);
 
 	    /*
-	     * off_plane()      front (red, counter)
-	     * off_plane()      backside (black)
-	     *
 	     * one-sided plane only counts ray parallel to normal vector
 	     * thus the normal vector points from the backside.
+	     *
+	     *   front (red, counter) at +'DZ'
+	     *   backside (black) at '-DZ'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		      0.005);
@@ -93,16 +94,16 @@ static void output_targets(const config_t * cfg)
 	    cblas_dscal(3, norm, N, 1);
 
 	    /*
-	     * off_plane()      front (red, counter)
-	     * off_plane()      backside (red, counter)
+	     * two-sided plane counts all rays
 	     *
-	     * one-sided plane only counts all rays
+	     *   front (red, counter) at +'DZ'
+	     *   backside (red, counter) at '-DZ'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		      0.005);
 
 	}
-    }
+    }				/* end all targets */
 }
 
 static void output_sources(const config_t * cfg)
@@ -111,7 +112,7 @@ static void output_sources(const config_t * cfg)
     const config_setting_t *s = config_lookup(cfg, "sources");
     const int n_sources = config_setting_length(s);
 
-    for (i = 0; i < n_sources; ++i) {	/* go through all sources */
+    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
 	const char *type, *name;
 	const config_setting_t *this_s =
 	    config_setting_get_elem(s, (unsigned int) i);
