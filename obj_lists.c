@@ -111,12 +111,33 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 
 	if (file_mode[0] == 'w') {	/* write header to new dump_file */
 	    char string[256];
+	    double *mat;
+	    int idx;
 
 	    snprintf(string, 256, "# %s (%s)\n",
 		     get_target_name(new_target),
 		     get_target_type(new_target));
 	    dump_string(new_target, string);
-	    snprintf(string, 256, "# x\ty\tz\tpower\n");
+
+	    snprintf(string, 256, "# transformation matrix M:\n");
+	    dump_string(new_target, string);
+	    snprintf(string, 256,
+		     "#    g(x, y, z) = M l(x, y, z) + o(x, y, z))\n");
+	    dump_string(new_target, string);
+	    snprintf(string, 256,
+		     "#    l(x, y, z) = MT (g(x, y, z) - o(x, y, z))\n");
+	    dump_string(new_target, string);
+
+	    mat = M(new_target);
+	    for (idx = 0; idx < 3; idx++) {
+		const int offset = 3 * idx;
+
+		snprintf(string, 256, "#   %g\t%g\t%g\n", mat[offset],
+			 mat[offset + 1], mat[offset + 2]);
+		dump_string(new_target, string);
+	    }
+	    snprintf(string, 256,
+		     "#\n# x\ty\t[z]\tpower\t\t(z component is missing for plane targets!)\n#\n");
 	    dump_string(new_target, string);
 	}
 

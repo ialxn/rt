@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <gsl/gsl_cblas.h>
 
 #include "targets.h"
 
@@ -81,6 +82,11 @@ void dump_string(const target_t * T, const char *str)
     (T->type->dump_string) (T->state, str);
 }
 
+double *M(const target_t * T)
+{
+    return (T->type->M) (T->state);
+}
+
 
 int check_targets(config_t * cfg)
 {
@@ -138,8 +144,9 @@ int check_targets(config_t * cfg)
 		 * one-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal;
+		config_setting_t *point, *normal, *x;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
@@ -169,6 +176,18 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
+		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'x' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'x' found */
 	    }
 	    /* end 'one-sided plane_screen' */
 	    if (strstr(type, "two-sided plane screen") == type) {
@@ -176,8 +195,9 @@ int check_targets(config_t * cfg)
 		 * two-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal;
+		config_setting_t *point, *normal, *x;
 
 		if ((point =
 		     config_setting_get_member(this_t, "point")) == NULL) {
@@ -207,6 +227,18 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'normal' found */
+		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'x' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(normal) == CONFIG_FALSE
+			   || config_setting_length(normal) != 3) {
+		    fprintf(stderr,
+			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'x' found */
 	    }			/* end 'two-sided plane_screen' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
@@ -235,13 +267,14 @@ void dump_data(FILE * f, double *data, const size_t n_data,
     }
 }
 
-void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
+void shrink_memory(double **data, size_t * n_data, size_t * n_alloc,
+		   const size_t N)
 {
     /*
      * shrink memory to minimum (BLOCK_SIZE)
-     * 4 items per data set is hard coded
+     * 'N' doubles per data set
      */
-    double *t = (double *) realloc(*data, 4 * BLOCK_SIZE * sizeof(double));
+    double *t = (double *) realloc(*data, N * BLOCK_SIZE * sizeof(double));
 
     *data = t;
     *n_data = 0;
@@ -249,36 +282,74 @@ void shrink_memory(double **data, size_t * n_data, size_t * n_alloc)
 }
 
 void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
-			 FILE * dump_file, int *dump_flag,
+			 const size_t N, FILE * dump_file, int *dump_flag,
 			 const int n_targets)
 {
     /*
      * we try to increase the size of the '**data' buffer by
-     * BLOCK_SIZE*3 (3 items per data set hard coded). if
+     * BLOCK_SIZE*'N' ('N' items per data set). if
      * memory can not be allocated of if the buffer already
-     * has reached the maximum size MAX_BLOCK_SIZE*3, '**data'
+     * has reached the maximum size MAX_BLOCK_SIZE*'N', '**data'
      * is written to the 'dump_file' and the size of the buffer
-     * is decreased to BLOCK_SIZE*3. this initiates a dump cycle
+     * is decreased to BLOCK_SIZE*'N'. this initiates a dump cycle
      * as all targets will dump their data and decrease their
      * buffer too during the next call of 'interception()' in
      * 'run_simulation()'
      */
     if (*n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-	dump_data(dump_file, *data, *n_data, 4);
-	shrink_memory(data, n_data, n_alloc);
+	dump_data(dump_file, *data, *n_data, N);
+	shrink_memory(data, n_data, n_alloc, N);
 
 	*dump_flag = n_targets - 1;
     } else {			/* try to increase buffer */
 	const size_t n = *n_data + BLOCK_SIZE;
-	double *t = (double *) realloc(*data, 4 * n * sizeof(double));
+	double *t = (double *) realloc(*data, N * n * sizeof(double));
 	if (t) {		/* success, update state */
 	    *data = t;
 	    *n_alloc = n;
 	} else {		/* memory exhausted, initiate dump cycle */
-	    dump_data(dump_file, *data, *n_data, 4);
-	    shrink_memory(data, n_data, n_alloc);
+	    dump_data(dump_file, *data, *n_data, N);
+	    shrink_memory(data, n_data, n_alloc, N);
 
 	    *dump_flag = n_targets - 1;
 	}
     }
+}
+
+void cross_product(const double a[3], const double b[3], double result[3])
+{
+    result[0] = a[1] * b[2] - a[2] * b[1];
+    result[1] = a[0] * b[2] - a[2] * b[0];
+    result[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+void g2l(const double *mat, const double *origin, const double *g,
+	 double *l)
+/*
+ * expresses vector 'vec' (global) in local coordinates
+ *     l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+ */
+{
+    int i;
+    double t[3];
+
+    for (i = 0; i < 3; i++)
+	t[i] = g[i] - origin[i];
+
+    for (i = 0; i < 3; i++)
+	l[i] = cblas_ddot(3, t, 1, &mat[3 * i], 1);
+}
+
+void l2g(const double *mat, const double *origin, const double *l,
+	 double *g)
+/*
+ * expresses vector 'vec' (local) in global coordinates
+ *     g(x, y, z) = M l(x, y, z) + o(x, y, z)
+ */
+{
+    int i;
+
+    for (i = 0; i < 3; i++)
+	g[i] = cblas_ddot(3, &mat[i], 3, l, 1) + origin[i];
+
 }

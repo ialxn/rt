@@ -25,7 +25,10 @@ typedef struct target_type_t {
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
     int (*alloc_state) (void *state);	/* allocate */
-    void (*init_state) (void *state, config_t * cfg, const char *name, const char *file_mode);	/* initialize internal data from configuration */
+    void (*init_state) (void *state, config_t * cfg, const char *name, const char *file_mode);	/* initialize
+												   internal data
+												   from
+												   configuration */
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, const double ppr,	/* exit ray */
@@ -33,6 +36,7 @@ typedef struct target_type_t {
 			   const int n_targets);
     const char *(*get_target_name) (void *state);
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
+    double *(*M) (void *state);	/* returns pointer to M matrix */
 } target_type_t;
 
 typedef struct target_t {
@@ -58,6 +62,7 @@ extern ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
 extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);
 extern void dump_string(const target_t * T, const char *str);
+extern double *M(const target_t * T);
 
 
 /*
@@ -67,9 +72,16 @@ extern int check_targets(config_t * cfg);
 extern void dump_data(FILE * f, double *data, const size_t n_data,
 		      const size_t n_items);
 extern void shrink_memory(double **data, size_t * n_data,
-			  size_t * n_alloc);
+			  size_t * n_alloc, const size_t N);
 extern void try_increase_memory(double **data, size_t * n_data,
-				size_t * n_alloc, FILE * dump_file,
-				int *dump_flag, const int n_targets);
+				size_t * n_alloc, const size_t N,
+				FILE * dump_file, int *dump_flag,
+				const int n_targets);
+extern void cross_product(const double a[3], const double b[3],
+			  double result[3]);
+extern void g2l(const double *mat, const double *origin, const double *g,
+		double *l);
+extern void l2g(const double *mat, const double *origin, const double *l,
+		double *g);
 
 #endif				/* __TARGETS_H__ */

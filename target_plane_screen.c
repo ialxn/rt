@@ -18,6 +18,8 @@
 #include "ray.h"
 #include "targets.h"
 
+#define N_COORDINATES 2		/* store only x,y */
+
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
@@ -25,6 +27,7 @@ typedef struct ps_state_t {
     FILE *dump_file;
     double point[3];		/* point on plane */
     double normal[3];		/* normal vector of plane */
+    double M[9];		/* transform matrix local -> global coordinates */
     size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
     size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
     double *data;		/* buffer to store hits */
@@ -35,9 +38,11 @@ static int ps_alloc_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* 4 items per data set is hard coded */
+    /* 3 items per data set (x,y,ppr) */
     if (!
-	(state->data = (double *) malloc(4 * BLOCK_SIZE * sizeof(double))))
+	(state->data =
+	 (double *) malloc((N_COORDINATES + 1) * BLOCK_SIZE *
+			   sizeof(double))))
 	return ERR;
 
     state->n_alloc = BLOCK_SIZE;
@@ -56,7 +61,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     char f_name[256];
     int j;
 
-    config_setting_t *this_target, *point, *normal;
+    config_setting_t *this_target, *point, *normal, *x;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
@@ -80,6 +85,13 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     for (j = 0; j < 3; j++)
 	state->point[j] = config_setting_get_float_elem(point, j);
 
+    /*
+     * generate transform matrix M to convert
+     * between local and global coordinates
+     * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
+     * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+     */
+    /* get normal vector of plane (serving also as basis vector z) */
     normal = config_setting_get_member(this_target, "normal");
     for (j = 0; j < 3; j++)
 	state->normal[j] = config_setting_get_float_elem(normal, j);
@@ -89,6 +101,19 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     for (i = 0; i < 3; i++)
 	state->normal[i] /= norm;
 
+    memcpy(&state->M[6], state->normal, 3 * sizeof(double));
+
+    /* get basis vector x */
+    x = config_setting_get_member(this_target, "x");
+    for (j = 0; j < 3; j++)
+	state->M[j] = config_setting_get_float_elem(x, j);
+    /* normalize basis vector x */
+    norm = cblas_dnrm2(3, state->M, 1);
+    for (i = 0; i < 3; i++)
+	state->M[i] /= norm;
+
+    cross_product(&state->M[6], state->M, &state->M[3]);
+    /* state->M[3-5] = z cross x */
     state->n_data = 0;
 }
 
@@ -114,8 +139,9 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    /* first write remaining data to file. 4 items per data set hard coded */
-    dump_data(state->dump_file, state->data, state->n_data, 4);
+    /* first write remaining data to file. 3 items per data (x,y,ppr) */
+    dump_data(state->dump_file, state->data, state->n_data,
+	      N_COORDINATES + 1);
     fclose(state->dump_file);
 
     free(state->name);
@@ -132,8 +158,10 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double *intercept;
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data, 4);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc));
+	dump_data(state->dump_file, state->data, state->n_data,
+		  N_COORDINATES + 1);
+	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
+		      N_COORDINATES + 1);
 	(*dump_flag)--;
     }
 
@@ -201,10 +229,19 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     ps_state_t *state = (ps_state_t *) vstate;
 
     ray_t *out;
+    double hit_copy[3];
 
-    /* 4 items per data set hard coded */
-    memcpy(&(state->data[4 * state->n_data]), hit, 3 * sizeof(double));	/* store intercept */
-    state->data[4 * state->n_data + 3] = ppr;
+    /* transform to local coordinates */
+    memcpy(hit_copy, hit, 3 * sizeof(double));
+    g2l(state->M, state->point, hit, hit_copy);
+
+    /*
+     * store 3 items per data set (x,y,ppr)
+     * first x,y then ppr
+     */
+    memcpy(&(state->data[(N_COORDINATES + 1) * state->n_data]), hit_copy,
+	   N_COORDINATES * sizeof(double));
+    state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] = ppr;
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 
@@ -215,8 +252,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
      */
     if (state->n_data == state->n_alloc)	/* buffer full */
 	try_increase_memory(&(state->data), &(state->n_data),
-			    &(state->n_alloc), state->dump_file, dump_flag,
-			    n_targets);
+			    &(state->n_alloc), N_COORDINATES + 1,
+			    state->dump_file, dump_flag, n_targets);
 
     out = (ray_t *) malloc(sizeof(ray_t));
 
@@ -243,6 +280,13 @@ static void ps_dump_string(void *vstate, const char *str)
     fprintf(state->dump_file, "%s", str);
 }
 
+static double *ps_M(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    return state->M;
+}
+
 
 static const target_type_t ps1_t = {
     "one-sided plane screen",
@@ -253,7 +297,8 @@ static const target_type_t ps1_t = {
     &ps_get_intercept,
     &ps_get_out_ray,
     &ps_get_target_name,
-    &ps_dump_string
+    &ps_dump_string,
+    &ps_M
 };
 
 static const target_type_t ps2_t = {
@@ -265,7 +310,8 @@ static const target_type_t ps2_t = {
     &ps_get_intercept,
     &ps_get_out_ray,
     &ps_get_target_name,
-    ps_dump_string
+    &ps_dump_string,
+    &ps_M
 };
 
 const target_type_t *target_plane_screen_one_sided = &ps1_t;
