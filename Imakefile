@@ -7,7 +7,8 @@ SRCS= main.c \
       sources.c \
       targets.c \
       source_uniform_point_source.c \
-      target_plane_screen.c
+      target_plane_screen.c \
+      off.c
 
 
 OBJ= main.o \
@@ -15,7 +16,8 @@ OBJ= main.o \
      sources.o \
      targets.o \
      source_uniform_point_source.o \
-     target_plane_screen.o
+     target_plane_screen.o \
+     off.o
 
 #LIBS= -lgsl -lgslcblas -lconfig -lm
 LIBS= -lgsl -lcblas -latlas -lconfig -lm

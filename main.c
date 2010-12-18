@@ -16,10 +16,12 @@
 
 #include <libconfig.h>
 
+#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_machine.h>
 #include <gsl/gsl_rng.h>
 
 #include "obj_lists.h"
+#include "off.h"
 #include "sources.h"
 #include "targets.h"
 #include "version.h"
@@ -29,9 +31,119 @@
 #define RUN 2
 
 
+static void output_targets(const config_t * cfg)
+{
+    int i;
+    const config_setting_t *t = config_lookup(cfg, "targets");
+    const int n_targets = config_setting_length(t);
+    for (i = 0; i < n_targets; ++i) {
+	const char *type, *name;
+	const config_setting_t *this_t =
+	    config_setting_get_elem(t, (unsigned int) i);
+
+	config_setting_lookup_string(this_t, "name", &name);
+	config_setting_lookup_string(this_t, "type", &type);
+
+	if (!strcmp(type, "one-sided plane screen")) {
+	    int j;
+	    double P[3];
+	    double N[3];
+	    double norm;
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "point");
+	    for (j = 0; j < 3; j++)
+		P[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "normal");
+	    for (j = 0; j < 3; j++)
+		N[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, norm, N, 1);
+
+	    /*
+	     * off_plane()      front (red, counter)
+	     * off_plane()      backside (black)
+	     *
+	     * one-sided plane only counts ray parallel to normal vector
+	     * thus the normal vector points from the backside.
+	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		      0.005);
+
+	} else if (!strcmp(type, "two-sided plane screen")) {
+	    int j;
+	    double P[3];
+	    double N[3];
+	    double norm;
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "point");
+	    for (j = 0; j < 3; j++)
+		P[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "normal");
+	    for (j = 0; j < 3; j++)
+		N[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, norm, N, 1);
+
+	    /*
+	     * off_plane()      front (red, counter)
+	     * off_plane()      backside (red, counter)
+	     *
+	     * one-sided plane only counts all rays
+	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+		      0.005);
+
+	}
+    }
+}
+
+static void output_sources(const config_t * cfg)
+{
+    int i;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+    const int n_sources = config_setting_length(s);
+
+    for (i = 0; i < n_sources; ++i) {	/* go through all sources */
+	const char *type, *name;
+	const config_setting_t *this_s =
+	    config_setting_get_elem(s, (unsigned int) i);
+
+	config_setting_lookup_string(this_s, "name", &name);
+	config_setting_lookup_string(this_s, "type", &type);
+
+	if (!strcmp(type, "uniform point source")) {
+	    int j;
+	    double O[3];
+	    const config_setting_t *origin =
+		config_setting_get_member(this_s, "origin");
+
+	    for (j = 0; j < 3; j++)
+		O[j] = config_setting_get_float_elem(origin, j);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
+	     * with size 1.2
+	     * at origin 'O'
+	     */
+	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
+	}
+
+    }				/* end all sources */
+}
 
 static void output_geometry(config_t * cfg)
 {
+    off_axes(10.0);
+    output_sources(cfg);
+    output_targets(cfg);
 }
 
 static void run_simulation(source_list_t * source_list,
