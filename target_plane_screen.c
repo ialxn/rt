@@ -222,9 +222,13 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
     ps_state_t *state = (ps_state_t *) vstate;
 
     ray_t *out;
+    double hit_copy[3];
+
+    memcpy(hit_copy, hit, 3 * sizeof(double));
+    g2l(state->M, state->point, hit, hit_copy);
 
     /* 4 items per data set hard coded */
-    memcpy(&(state->data[4 * state->n_data]), hit, 3 * sizeof(double));	/* store intercept */
+    memcpy(&(state->data[4 * state->n_data]), hit_copy, 3 * sizeof(double));	/* store intercept */
     state->data[4 * state->n_data + 3] = ppr;
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */

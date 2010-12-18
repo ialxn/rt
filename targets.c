@@ -10,6 +10,7 @@
 
 #include <string.h>
 #include <stdlib.h>
+#include <gsl/gsl_cblas.h>
 
 #include "targets.h"
 
@@ -319,4 +320,35 @@ void cross_product(const double a[3], const double b[3], double result[3])
     result[0] = a[1] * b[2] - a[2] * b[1];
     result[1] = a[0] * b[2] - a[2] * b[0];
     result[2] = a[0] * b[1] - a[1] * b[0];
+}
+
+void g2l(const double *mat, const double *origin, const double *g,
+	 double *l)
+/*
+ * expresses vector 'vec' (global) in local coordinates
+ *     l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+ */
+{
+    int i;
+    double t[3];
+
+    for (i = 0; i < 3; i++)
+	t[i] = g[i] - origin[i];
+
+    for (i = 0; i < 3; i++)
+	l[i] = cblas_ddot(3, t, 1, &mat[3 * i], 1);
+}
+
+void l2g(const double *mat, const double *origin, const double *l,
+	 double *g)
+/*
+ * expresses vector 'vec' (local) in global coordinates
+ *     g(x, y, z) = M l(x, y, z) + o(x, y, z)
+ */
+{
+    int i;
+
+    for (i = 0; i < 3; i++)
+	g[i] = cblas_ddot(3, &mat[i], 3, l, 1) + origin[i];
+
 }
