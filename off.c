@@ -87,15 +87,94 @@ static void l2g_off(const double *P, const double *L, double *G,
 
 }
 
-static void cube_faces(FILE * f, const int i, const double r,
-		       const double g, const double b)
+static void block_vertices(FILE * f, const double *P, const double *N,
+			   const double d)
 /*
- * prints the faces of a general cube (in OFF format) to 'f'.
- * all faces are colored 'r','g','b'.
- * 'i' denotes offset (index) of first vertex of cube.
- * NOTE: vertices have to be written before to OFF file
- *       in the correct order! (SEE 'off_axes()'
+ * writes the vertices of a block of length 'N' - 'P' and diameter d to file 'f'
+ */
+{
+    double L[3], G[3];
+    double alpha, beta;
+    double l;
+    const double delta = d / 2.0;
+
+/*
+ * determine alpha, beta for transformation from local to global system.
+ * copy length from z component of 'L'.
+ */
+    g2l_off(P, N, L, &alpha, &beta);
+    l = L[2];
+
+/*
+ * write the vertices
+ *	+, +, 0
+ *	+, -, 0
+ *	-, -, 0
+ *	-, +, 0
+ *	+, +, l
+ *	+, -, l
+ *	-, -, l
+ *	-, +, l
  *
+ */
+    L[0] = delta;
+    L[1] = delta;
+    L[2] = 0.0;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = delta;
+    L[1] = -delta;
+    L[2] = 0.0;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -delta;
+    L[1] = -delta;
+    L[2] = 0.0;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -delta;
+    L[1] = delta;
+    L[2] = 0.0;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = delta;
+    L[1] = delta;
+    L[2] = l;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = delta;
+    L[1] = -delta;
+    L[2] = l;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -delta;
+    L[1] = -delta;
+    L[2] = l;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -delta;
+    L[1] = delta;
+    L[2] = l;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+}
+
+static void block_faces(FILE * f, const int i, const double r,
+			const double g, const double b)
+/*
+ * prints the faces of a block (in OFF format) to 'f'.
+ * all faces are colored 'r','g','b'.
+ * 'i' denotes offset (index) of first vertex of block.
+ * NOTE: vertices have to be written before to OFF file
+ *       in the correct order! (use 'block_vertices()'
  */
 {
     fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 1, i + 2, i + 3, i,
@@ -121,53 +200,36 @@ extern void off_axes(const double size)
  * z-axis: blue
  */
     const double s = size / 25.0;
+    const double O[3] = { 0.0, 0.0, 0.0 };
+    double P[3];
     FILE *outf = open_off("axes");
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "24 18 0\n\n");
 
-    /*
-     * vertices of x axis
-     */
-    fprintf(outf, "0\t%f\t%f\n", s, s);
-    fprintf(outf, "0\t%f\t%f\n", s, -s);
-    fprintf(outf, "0\t%f\t%f\n", -s, -s);
-    fprintf(outf, "0\t%f\t%f\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", size, s, s);
-    fprintf(outf, "%f\t%f\t%f\n", size, s, -s);
-    fprintf(outf, "%f\t%f\t%f\n", size, -s, -s);
-    fprintf(outf, "%f\t%f\t%f\n", size, -s, s);
-    /*
-     * vertices of z axis
-     */
-    fprintf(outf, "%f\t0\t%f\n", s, s);
-    fprintf(outf, "%f\t0\t%f\n", s, -s);
-    fprintf(outf, "%f\t0\t%f\n", -s, -s);
-    fprintf(outf, "%f\t0\t%f\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, size, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, size, -s);
-    fprintf(outf, "%f\t%f\t%f\n", -s, size, -s);
-    fprintf(outf, "%f\t%f\t%f\n", -s, size, s);
-    /*
-     * vertices of z axis
-     */
-    fprintf(outf, "%f\t%f\t0\n", s, s);
-    fprintf(outf, "%f\t%f\t0\n", s, -s);
-    fprintf(outf, "%f\t%f\t0\n", -s, -s);
-    fprintf(outf, "%f\t%f\t0\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, s, size);
-    fprintf(outf, "%f\t%f\t%f\n", s, -s, size);
-    fprintf(outf, "%f\t%f\t%f\n", -s, -s, size);
-    fprintf(outf, "%f\t%f\t%f\n", -s, s, size);
+    P[0] = size;		/* vertices of x axis */
+    P[1] = 0.0;
+    P[2] = 0.0;
+    block_vertices(outf, O, P, s);
+
+    P[0] = 0.0;
+    P[1] = size;		/* vertices of y axis */
+    P[2] = 0.0;
+    block_vertices(outf, O, P, s);
+
+    P[0] = 0.0;
+    P[1] = 0.0;
+    P[2] = size;		/* vertices of z axis */
+    block_vertices(outf, O, P, s);
 
     /* faces of x axis in red */
-    cube_faces(outf, 0, 1.0, 0.0, 0.0);
+    block_faces(outf, 0, 1.0, 0.0, 0.0);
 
     /* faces of y axis in green */
-    cube_faces(outf, 8, 0.0, 1.0, 0.0);
+    block_faces(outf, 8, 0.0, 1.0, 0.0);
 
     /* faces of z axis in blue */
-    cube_faces(outf, 16, 0.0, 0.0, 1.0);
+    block_faces(outf, 16, 0.0, 0.0, 1.0);
 
     fclose(outf);
 }
