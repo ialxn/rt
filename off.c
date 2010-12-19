@@ -123,45 +123,32 @@ static void block_vertices(FILE * f, const double *P, const double *N,
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = delta;
     L[1] = -delta;
-    L[2] = 0.0;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
     L[0] = -delta;
-    L[1] = -delta;
-    L[2] = 0.0;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -delta;
     L[1] = delta;
-    L[2] = 0.0;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
     L[0] = delta;
-    L[1] = delta;
     L[2] = l;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = delta;
     L[1] = -delta;
-    L[2] = l;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
     L[0] = -delta;
-    L[1] = -delta;
-    L[2] = l;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -delta;
     L[1] = delta;
-    L[2] = l;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
