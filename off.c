@@ -88,15 +88,17 @@ static void l2g_off(const double *P, const double *L, double *G,
 }
 
 static void block_vertices(FILE * f, const double *P, const double *N,
-			   const double d)
+			   const double x, const double y)
 /*
- * writes the vertices of a block of length 'N' - 'P' and diameter d to file 'f'
+ * writes the vertices of a block of length 'N' - 'P'
+ * and diameter 'x' times 'y' to file 'f'
  */
 {
     double L[3], G[3];
     double alpha, beta;
     double l;
-    const double delta = d / 2.0;
+    const double x2 = x / 2.0;
+    const double y2 = y / 2.0;
 
 /*
  * determine alpha, beta for transformation from local to global system.
@@ -117,38 +119,38 @@ static void block_vertices(FILE * f, const double *P, const double *N,
  *	-, +, l
  *
  */
-    L[0] = delta;
-    L[1] = delta;
+    L[0] = x2;
+    L[1] = y2;
     L[2] = 0.0;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[1] = -delta;
+    L[1] = -y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -delta;
+    L[0] = -x2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[1] = delta;
+    L[1] = y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = delta;
+    L[0] = x2;
     L[2] = l;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[1] = -delta;
+    L[1] = -y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[0] = -delta;
+    L[0] = -x2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
-    L[1] = delta;
+    L[1] = y2;
     l2g_off(P, L, G, alpha, beta);
     fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
 
@@ -197,17 +199,17 @@ extern void off_axes(const double size)
     P[0] = size;		/* vertices of x axis */
     P[1] = 0.0;
     P[2] = 0.0;
-    block_vertices(outf, O, P, s);
+    block_vertices(outf, O, P, s, s);
 
     P[0] = 0.0;
     P[1] = size;		/* vertices of y axis */
     P[2] = 0.0;
-    block_vertices(outf, O, P, s);
+    block_vertices(outf, O, P, s, s);
 
     P[0] = 0.0;
     P[1] = 0.0;
     P[2] = size;		/* vertices of z axis */
-    block_vertices(outf, O, P, s);
+    block_vertices(outf, O, P, s, s);
 
     /* faces of x axis in red */
     block_faces(outf, 0, 1.0, 0.0, 0.0);
@@ -286,7 +288,7 @@ void off_plane(const char *name, const double *P, const double *N,
     for (i = 0; i < 3; i++)	/* 'P2' is point on front side */
 	P2[i] = P[i] + dz * N[i];
 
-    block_vertices(outf, P, P2, x);
+    block_vertices(outf, P, P2, x, y);
 
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
