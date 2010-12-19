@@ -268,78 +268,31 @@ void off_plane(const char *name, const double *P, const double *N,
  * writes 'OFF' file to 'name.off' for two sided plane. the plane is defined
  * by the point 'P' and its normal vector 'N'.
  * two planes are actually draw:
- *	- front side (offset by +dz) colored rf,gf,bf
- *	- back side (offset by -dz) colored rb,gb,bb
- * the dimension of the planes drawn is 'x' by 'y'
+ *	- front side ('P2', offset by 'dz'*'N') colored 'rf','gf','bf'
+ *	- back side ('P')colored rb,gb,bb
+ * the dimension of the planes drawn is 'x' by 'y'.
+ * the structure of the vertices for two parallel
+ * planes is identical to the one for a block. we
+ * thus can abuse 'block_vertices()' for this task
  */
 {
-    double L[3], G[3];
-    const double O[3] = { 0, 0, 0 };
-    double alpha, beta;
-    const double x2 = x / 2.0;
-    const double y2 = y / 2.0;
+    int i;
+    double P2[3];
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "8 2 0\n\n");	/* 8 vertices, 2 faces */
 
-    /*
-     * determine alpha, beta to convert N from/to global
-     * coordinate system.
-     *
-     * (N-P) -- rotate by alpha/beta --> L
-     */
-    g2l_off(O, N, L, &alpha, &beta);
+    for (i = 0; i < 3; i++)	/* 'P2' is point on front side */
+	P2[i] = P[i] + dz * N[i];
+
+    block_vertices(outf, P, P2, x);
 
     /*
-     * construct corners of front plane in L
-     * covert to G and print vertices
+     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    L[0] = x2;
-    L[1] = y2;
-    L[2] = dz;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    /*
-     * construct corners of back plane in L
-     * covert to G and print vertices
-     */
-    L[0] = x2;
-    L[2] = -dz;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    /*
-     * print front face (rf, gf, bf)
-     * print back face (rb, gb, bb)
-     */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rf, gf, bf);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
 }
