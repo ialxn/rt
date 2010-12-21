@@ -31,6 +31,7 @@
 #define RUN 2
 
 #define DZ 0.005
+#define AXES_LENGTH 5.0
 
 static void output_targets(const config_t * cfg)
 {
@@ -141,7 +142,12 @@ static void output_sources(const config_t * cfg)
 
 static void output_geometry(config_t * cfg)
 {
-    off_axes(10.0);
+    const double O[] = { 0.0, 0.0, 0.0 };
+    const double X[] = { AXES_LENGTH, 0.0, 0.0 };
+    const double Y[] = { 0.0, AXES_LENGTH, 0.0 };
+    const double Z[] = { 0.0, 0.0, AXES_LENGTH };
+
+    off_axes(O, X, Y, Z);
     output_sources(cfg);
     output_targets(cfg);
 }

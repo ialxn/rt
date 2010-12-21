@@ -180,44 +180,29 @@ static void block_faces(FILE * f, const int i, const double r,
 	    i + 4, r, g, b);
 }
 
-extern void off_axes(const double size)
+void off_axes(const double *origin, const double *X, const double *Y,
+	      const double *Z)
 {
 /*
  * draw axes of global coordinate system as colored bars
- * x-axis: red
- * y-axis: green
- * z-axis: blue
+ * x-axis (X): red
+ * y-axis (Y): green
+ * z-axis (Z): blue
  */
-    const double s = size / 25.0;
-    const double O[3] = { 0.0, 0.0, 0.0 };
-    double P[3];
+    const double s = 0.05;
     FILE *outf = open_off("axes");
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "24 18 0\n\n");
 
-    P[0] = size;		/* vertices of x axis */
-    P[1] = 0.0;
-    P[2] = 0.0;
-    block_vertices(outf, O, P, s, s);
+    /* output vertices of axes */
+    block_vertices(outf, origin, X, s, s);
+    block_vertices(outf, origin, Y, s, s);
+    block_vertices(outf, origin, Z, s, s);
 
-    P[0] = 0.0;
-    P[1] = size;		/* vertices of y axis */
-    P[2] = 0.0;
-    block_vertices(outf, O, P, s, s);
-
-    P[0] = 0.0;
-    P[1] = 0.0;
-    P[2] = size;		/* vertices of z axis */
-    block_vertices(outf, O, P, s, s);
-
-    /* faces of x axis in red */
+    /* output faces of axes */
     block_faces(outf, 0, 1.0, 0.0, 0.0);
-
-    /* faces of y axis in green */
     block_faces(outf, 8, 0.0, 1.0, 0.0);
-
-    /* faces of z axis in blue */
     block_faces(outf, 16, 0.0, 0.0, 1.0);
 
     fclose(outf);
