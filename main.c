@@ -147,7 +147,7 @@ static void output_geometry(config_t * cfg)
     const double Y[] = { 0.0, AXES_LENGTH, 0.0 };
     const double Z[] = { 0.0, 0.0, AXES_LENGTH };
 
-    off_axes(O, X, Y, Z);
+    off_axes(NULL, O, X, Y, Z);
     output_sources(cfg);
     output_targets(cfg);
 }

@@ -13,8 +13,8 @@
 
 extern void off_sphere(const char *name, double *O, const double radius,
 		       const double r, const double g, const double b);
-extern void off_axes(const double *origin, const double *X,
-		     const double *y, const double *Z);
+extern void off_axes(const char *name, const double *origin,
+		     const double *X, const double *y, const double *Z);
 extern void off_plane(const char *name, const double *P, const double *N,
 		      const double x, const double y, const double rf,
 		      const double gf, const double bf, const double rb,
