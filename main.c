@@ -31,6 +31,7 @@
 #define RUN 2
 
 #define DZ 0.005
+#define AXES_LENGTH 5.0
 
 static void output_targets(const config_t * cfg)
 {
@@ -49,6 +50,7 @@ static void output_targets(const config_t * cfg)
 	if (!strcmp(type, "one-sided plane screen")) {
 	    int j;
 	    double P[3], N[3];
+	    double X[3], Y[3];
 	    double norm;
 	    config_setting_t *this;
 
@@ -63,6 +65,19 @@ static void output_targets(const config_t * cfg)
 	    /* normalize N */
 	    norm = cblas_dnrm2(3, N, 1);
 	    cblas_dscal(3, 1.0 / norm, N, 1);
+
+	    this = config_setting_get_member(this_t, "x");
+	    for (j = 0; j < 3; j++)
+		X[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize X */
+	    norm = cblas_dnrm2(3, X, 1);
+	    cblas_dscal(3, 1.0 / norm, X, 1);
+
+	    /* Y = X cross N */
+	    cross_product(X, N, Y);
+
+	    off_axes(name, P, X, Y, N);	/* local system */
 
 	    /*
 	     * one-sided plane only counts ray parallel to normal vector
@@ -77,6 +92,7 @@ static void output_targets(const config_t * cfg)
 	} else if (!strcmp(type, "two-sided plane screen")) {
 	    int j;
 	    double P[3], N[3];
+	    double X[3], Y[3];
 	    double norm;
 	    config_setting_t *this;
 
@@ -91,6 +107,19 @@ static void output_targets(const config_t * cfg)
 	    /* normalize N */
 	    norm = cblas_dnrm2(3, N, 1);
 	    cblas_dscal(3, 1.0 / norm, N, 1);
+
+	    this = config_setting_get_member(this_t, "x");
+	    for (j = 0; j < 3; j++)
+		X[j] = config_setting_get_float_elem(this, j);
+
+	    /* normalize X */
+	    norm = cblas_dnrm2(3, X, 1);
+	    cblas_dscal(3, 1.0 / norm, X, 1);
+
+	    /* Y = X cross N */
+	    cross_product(X, N, Y);
+
+	    off_axes(name, P, X, Y, N);	/*local system */
 
 	    /*
 	     * two-sided plane counts all rays
@@ -141,7 +170,12 @@ static void output_sources(const config_t * cfg)
 
 static void output_geometry(config_t * cfg)
 {
-    off_axes(10.0);
+    const double O[] = { 0.0, 0.0, 0.0 };
+    const double X[] = { AXES_LENGTH, 0.0, 0.0 };
+    const double Y[] = { 0.0, AXES_LENGTH, 0.0 };
+    const double Z[] = { 0.0, 0.0, AXES_LENGTH };
+
+    off_axes(NULL, O, X, Y, Z);
     output_sources(cfg);
     output_targets(cfg);
 }
