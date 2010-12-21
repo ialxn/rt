@@ -62,7 +62,7 @@ static void output_targets(const config_t * cfg)
 
 	    /* normalize N */
 	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, norm, N, 1);
+	    cblas_dscal(3, 1.0 / norm, N, 1);
 
 	    /*
 	     * one-sided plane only counts ray parallel to normal vector
@@ -90,7 +90,7 @@ static void output_targets(const config_t * cfg)
 
 	    /* normalize N */
 	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, norm, N, 1);
+	    cblas_dscal(3, 1.0 / norm, N, 1);
 
 	    /*
 	     * two-sided plane counts all rays
