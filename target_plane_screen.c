@@ -98,7 +98,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 
     /* normalize normal vector */
     norm = cblas_dnrm2(3, state->normal, 1);
-    cblas_dscal(3, norm, state->normal, 1);
+    cblas_dscal(3, 1.0 / norm, state->normal, 1);
 
     memcpy(&state->M[6], state->normal, 3 * sizeof(double));
 
@@ -108,7 +108,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 	state->M[j] = config_setting_get_float_elem(x, j);
     /* normalize basis vector x */
     norm = cblas_dnrm2(3, state->M, 1);
-    cblas_dscal(3, norm, state->M, 1);
+    cblas_dscal(3, 1.0 / norm, state->M, 1);
 
     cross_product(&state->M[6], state->M, &state->M[3]);
     /* state->M[3-5] = z cross x */
@@ -191,11 +191,11 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
 	return NULL;
     /*
-     * in case of a one-sided target, check that t1 is positive.
-     * if l and n are anti parallel (dot product is negative),
+     * in case of a one-sided target, check that t1 is negative.
+     * if l and n are parallel (dot product is positive),
      * the intersection does not count
      */
-    if (state->one_sided && (t1 < 0.0))
+    if (state->one_sided && (t1 > 0.0))
 	return NULL;
 
     t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */

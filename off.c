@@ -87,81 +87,140 @@ static void l2g_off(const double *P, const double *L, double *G,
 
 }
 
-extern void off_axes(const double size)
+static void block_vertices(FILE * f, const double *P, const double *N,
+			   const double x, const double y)
+/*
+ * writes the vertices of a block of length 'N' - 'P'
+ * and diameter 'x' times 'y' to file 'f'
+ */
+{
+    double L[3], G[3];
+    double alpha, beta;
+    double l;
+    const double x2 = x / 2.0;
+    const double y2 = y / 2.0;
+
+/*
+ * determine alpha, beta for transformation from local to global system.
+ * copy length from z component of 'L'.
+ */
+    g2l_off(P, N, L, &alpha, &beta);
+    l = L[2];
+
+/*
+ * write the vertices
+ *	+, +, 0
+ *	+, -, 0
+ *	-, -, 0
+ *	-, +, 0
+ *	+, +, l
+ *	+, -, l
+ *	-, -, l
+ *	-, +, l
+ *
+ */
+    L[0] = x2;
+    L[1] = y2;
+    L[2] = 0.0;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[1] = -y2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[1] = y2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = x2;
+    L[2] = l;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[1] = -y2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[0] = -x2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+    L[1] = y2;
+    l2g_off(P, L, G, alpha, beta);
+    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+
+}
+
+static void block_faces(FILE * f, const int i, const double r,
+			const double g, const double b)
+/*
+ * prints the faces of a block (in OFF format) to 'f'.
+ * all faces are colored 'r','g','b'.
+ * 'i' denotes offset (index) of first vertex of block.
+ * NOTE: vertices have to be written before to OFF file
+ *       in the correct order! (use 'block_vertices()'
+ */
+{
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 1, i + 2, i + 3, i,
+	    r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 1, i + 5, i + 4, i,
+	    r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 3, i + 7, i + 4, i,
+	    r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 2, i + 1, i + 5, i + 6,
+	    i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 2, i + 3, i + 7, i + 6,
+	    i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 4, i + 5, i + 6, i + 7,
+	    i + 4, r, g, b);
+}
+
+void off_axes(const char *name, const double *origin, const double *X,
+	      const double *Y, const double *Z)
 {
 /*
  * draw axes of global coordinate system as colored bars
- * x-axis: red
- * y-axis: green
- * z-axis: blue
+ * x-axis (X): red
+ * y-axis (Y): green
+ * z-axis (Z): blue
  */
-    const double s = size / 25.0;
-    FILE *outf = open_off("axes");
+    const double s = 0.05;
+    double P[3];
+    int i;
+    FILE *outf;
+
+    if (!name)
+	outf = open_off("axes");
+    else {
+	char f_name[256];
+
+	snprintf(f_name, 256, "axes_%s", name);
+	outf = open_off(f_name);
+    }
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "24 18 0\n\n");
 
-    /*
-     * vertices of x axis
-     */
-    fprintf(outf, "0\t%f\t%f\n", s, s);
-    fprintf(outf, "0\t%f\t%f\n", s, -s);
-    fprintf(outf, "0\t%f\t%f\n", -s, -s);
-    fprintf(outf, "0\t%f\t%f\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", size, s, s);
-    fprintf(outf, "%f\t%f\t%f\n", size, s, -s);
-    fprintf(outf, "%f\t%f\t%f\n", size, -s, -s);
-    fprintf(outf, "%f\t%f\t%f\n", size, -s, s);
-    /*
-     * vertices of z axis
-     */
-    fprintf(outf, "%f\t0\t%f\n", s, s);
-    fprintf(outf, "%f\t0\t%f\n", s, -s);
-    fprintf(outf, "%f\t0\t%f\n", -s, -s);
-    fprintf(outf, "%f\t0\t%f\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, size, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, size, -s);
-    fprintf(outf, "%f\t%f\t%f\n", -s, size, -s);
-    fprintf(outf, "%f\t%f\t%f\n", -s, size, s);
-    /*
-     * vertices of z axis
-     */
-    fprintf(outf, "%f\t%f\t0\n", s, s);
-    fprintf(outf, "%f\t%f\t0\n", s, -s);
-    fprintf(outf, "%f\t%f\t0\n", -s, -s);
-    fprintf(outf, "%f\t%f\t0\n", -s, s);
-    fprintf(outf, "%f\t%f\t%f\n", s, s, size);
-    fprintf(outf, "%f\t%f\t%f\n", s, -s, size);
-    fprintf(outf, "%f\t%f\t%f\n", -s, -s, size);
-    fprintf(outf, "%f\t%f\t%f\n", -s, s, size);
+    /* output vertices of axes */
+    for (i = 0; i < 3; i++)
+	P[i] = origin[i] + X[i];
+    block_vertices(outf, origin, P, s, s);
+    for (i = 0; i < 3; i++)
+	P[i] = origin[i] + Y[i];
+    block_vertices(outf, origin, P, s, s);
+    for (i = 0; i < 3; i++)
+	P[i] = origin[i] + Z[i];
+    block_vertices(outf, origin, P, s, s);
 
-    /*
-       faces of x axis in red
-     */
-    fprintf(outf, "5 0 1 2 3 0 1.0 0.0 0.0\n");
-    fprintf(outf, "5 0 1 5 4 0 1.0 0.0 0.0\n");
-    fprintf(outf, "5 0 3 7 4 0 1.0 0.0 0.0\n");
-    fprintf(outf, "5 2 1 5 6 2 1.0 0.0 0.0\n");
-    fprintf(outf, "5 2 3 7 6 2 1.0 0.0 0.0\n");
-    fprintf(outf, "5 4 5 6 7 4 1.0 0.0 0.0\n");
-    /*
-       faces of x axis in green
-     */
-    fprintf(outf, "5 8 9 10 11 8 0.0 1.0 0.0\n");
-    fprintf(outf, "5 8 9 13 12 8 0.0 1.0 0.0\n");
-    fprintf(outf, "5 8 11 15 12 8 0.0 1.0 0.0\n");
-    fprintf(outf, "5 10 9 13 14 10 0.0 1.0 0.0\n");
-    fprintf(outf, "5 10 11 15 14 10 0.0 1.0 0.0\n");
-    fprintf(outf, "5 12 13 14 15 12 0.0 1.0 0.0\n");
-    /*
-       faces of x axis in blue
-     */
-    fprintf(outf, "5 16 17 18 19 16 0.0 0.0 1.0\n");
-    fprintf(outf, "5 16 17 21 20 16 0.0 0.0 1.0\n");
-    fprintf(outf, "5 16 19 23 20 16 0.0 0.0 1.0\n");
-    fprintf(outf, "5 18 17 21 22 18 0.0 0.0 1.0\n");
-    fprintf(outf, "5 18 19 23 22 18 0.0 0.0 1.0\n");
-    fprintf(outf, "5 20 21 22 23 20 0.0 0.0 1.0\n");
+    /* output faces of axes */
+    block_faces(outf, 0, 1.0, 0.0, 0.0);
+    block_faces(outf, 8, 0.0, 1.0, 0.0);
+    block_faces(outf, 16, 0.0, 0.0, 1.0);
 
     fclose(outf);
 }
@@ -213,78 +272,31 @@ void off_plane(const char *name, const double *P, const double *N,
  * writes 'OFF' file to 'name.off' for two sided plane. the plane is defined
  * by the point 'P' and its normal vector 'N'.
  * two planes are actually draw:
- *	- front side (offset by +dz) colored rf,gf,bf
- *	- back side (offset by -dz) colored rb,gb,bb
- * the dimension of the planes drawn is 'x' by 'y'
+ *	- front side ('P2', offset by 'dz'*'N') colored 'rf','gf','bf'
+ *	- back side ('P')colored rb,gb,bb
+ * the dimension of the planes drawn is 'x' by 'y'.
+ * the structure of the vertices for two parallel
+ * planes is identical to the one for a block. we
+ * thus can abuse 'block_vertices()' for this task
  */
 {
-    double L[3], G[3];
-    const double O[3] = { 0, 0, 0 };
-    double alpha, beta;
-    const double x2 = x / 2.0;
-    const double y2 = y / 2.0;
+    int i;
+    double P2[3];
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "8 2 0\n\n");	/* 8 vertices, 2 faces */
 
-    /*
-     * determine alpha, beta to convert N from/to global
-     * coordinate system.
-     *
-     * (N-P) -- rotate by alpha/beta --> L
-     */
-    g2l_off(O, N, L, &alpha, &beta);
+    for (i = 0; i < 3; i++)	/* 'P2' is point on front side */
+	P2[i] = P[i] + dz * N[i];
+
+    block_vertices(outf, P, P2, x, y);
 
     /*
-     * construct corners of front plane in L
-     * covert to G and print vertices
+     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    L[0] = x2;
-    L[1] = y2;
-    L[2] = dz;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    /*
-     * construct corners of back plane in L
-     * covert to G and print vertices
-     */
-    L[0] = x2;
-    L[2] = -dz;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(outf, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    /*
-     * print front face (rf, gf, bf)
-     * print back face (rb, gb, bb)
-     */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rf, gf, bf);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
 }

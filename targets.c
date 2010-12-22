@@ -116,7 +116,7 @@ int check_targets(config_t * cfg)
 	     * 'name':  identifier / string
 	     * 'type':  type of source / string
 	     *          - "one-sided plane_screen": non-absorbing counter plane
-	     *                                      only rays intersecting parallel
+	     *                                      only rays intersecting anti-parallel
 	     *                                      to plane's normal vector are counted
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides
@@ -319,7 +319,7 @@ void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
 void cross_product(const double a[3], const double b[3], double result[3])
 {
     result[0] = a[1] * b[2] - a[2] * b[1];
-    result[1] = a[0] * b[2] - a[2] * b[0];
+    result[1] = a[2] * b[0] - a[0] * b[2];
     result[2] = a[0] * b[1] - a[1] * b[0];
 }
 
