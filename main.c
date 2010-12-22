@@ -74,8 +74,8 @@ static void output_targets(const config_t * cfg)
 	    norm = cblas_dnrm2(3, X, 1);
 	    cblas_dscal(3, 1.0 / norm, X, 1);
 
-	    /* Y = X cross N */
-	    cross_product(X, N, Y);
+	    /* Y = N cross X */
+	    cross_product(N, X, Y);
 
 	    off_axes(name, P, X, Y, N);	/* local system */
 
@@ -114,8 +114,8 @@ static void output_targets(const config_t * cfg)
 	    norm = cblas_dnrm2(3, X, 1);
 	    cblas_dscal(3, 1.0 / norm, X, 1);
 
-	    /* Y = X cross N */
-	    cross_product(X, N, Y);
+	    /* Y = N cross X */
+	    cross_product(N, X, Y);
 
 	    off_axes(name, P, X, Y, N);	/*local system */
 
