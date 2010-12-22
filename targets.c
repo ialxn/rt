@@ -116,7 +116,7 @@ int check_targets(config_t * cfg)
 	     * 'name':  identifier / string
 	     * 'type':  type of source / string
 	     *          - "one-sided plane_screen": non-absorbing counter plane
-	     *                                      only rays intersecting parallel
+	     *                                      only rays intersecting anti-parallel
 	     *                                      to plane's normal vector are counted
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides

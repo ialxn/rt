@@ -191,11 +191,11 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
 	return NULL;
     /*
-     * in case of a one-sided target, check that t1 is positive.
-     * if l and n are anti parallel (dot product is negative),
+     * in case of a one-sided target, check that t1 is negative.
+     * if l and n are parallel (dot product is positive),
      * the intersection does not count
      */
-    if (state->one_sided && (t1 < 0.0))
+    if (state->one_sided && (t1 > 0.0))
 	return NULL;
 
     t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
