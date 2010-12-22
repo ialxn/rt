@@ -80,11 +80,9 @@ static void output_targets(const config_t * cfg)
 	    off_axes(name, P, X, Y, N);	/* local system */
 
 	    /*
-	     * one-sided plane only counts ray parallel to normal vector
-	     * thus the normal vector points from the backside.
-	     *
-	     *   front (red, counter) at +'DZ'
-	     *   backside (black) at '-DZ'
+	     * draw plane:
+	     *   front (red, counter) at 'P'+'DZ'
+	     *   back side (black) at 'P'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
 		      DZ);
@@ -122,10 +120,9 @@ static void output_targets(const config_t * cfg)
 	    off_axes(name, P, X, Y, N);	/*local system */
 
 	    /*
-	     * two-sided plane counts all rays
-	     *
-	     *   front (red, counter) at +'DZ'
-	     *   backside (red, counter) at '-DZ'
+	     * draw plane:
+	     *   front (red, counter) at 'P'+'DZ'
+	     *   back side (red, counter) at 'P'
 	     */
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		      DZ);
