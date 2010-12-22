@@ -138,7 +138,7 @@ int check_sources(config_t * cfg)
 
 	    /* check source specific settings */
 
-	    if (strstr(type, "uniform point_source") == type) {
+	    if (!strcmp(type, "uniform point_source")) {
 		/*
 		 * uniform point source:
 		 *  - array 'origin' [x,y,z] / double            */

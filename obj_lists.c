@@ -42,7 +42,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	 * argument in the call to 'source_alloc()'. 
 	 */
 	config_setting_lookup_string(this_source, "type", &type);
-	if (strstr(type, "uniform point source"))
+	if (!strcmp(type, "uniform point source"))
 	    new_source =
 		source_alloc(source_uniform_point_source, cfg, name);
 	else {
@@ -90,11 +90,11 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	 * argument in the call to 'target_alloc()'. 
 	 */
 	config_setting_lookup_string(this_target, "type", &type);
-	if (strstr(type, "one-sided plane screen"))
+	if (!strcmp(type, "one-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_one_sided, cfg, name,
 			     file_mode);
-	else if (strstr(type, "two-sided plane screen"))
+	else if (!strcmp(type, "two-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_two_sided, cfg, name,
 			     file_mode);

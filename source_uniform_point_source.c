@@ -47,7 +47,7 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 	this_s = config_setting_get_elem(s, i);
 
 	config_setting_lookup_string(this_s, "name", &S);
-	if (strstr(S, name))
+	if (!strcmp(S, name))
 	    break;
 
 	i++;
