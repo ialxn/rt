@@ -36,8 +36,7 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
     unsigned int i = 0;
     const char *S;
-    int I, j;
-    double F;
+    int j;
     config_setting_t *this_s, *origin;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
@@ -53,13 +52,9 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 	i++;
     }
 
-    config_setting_lookup_int(this_s, "n_rays", &I);
-    state->n_rays = I;
-
-    config_setting_lookup_float(this_s, "power", &F);
-    state->power = F;
-
-    state->ppr = F / I;
+    config_setting_lookup_int(this_s, "n_rays", &state->n_rays);
+    config_setting_lookup_float(this_s, "power", &state->power);
+    state->ppr = state->power / state->n_rays;
 
     origin = config_setting_get_member(this_s, "origin");
     for (j = 0; j < 3; j++)
