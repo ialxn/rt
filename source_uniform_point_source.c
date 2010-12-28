@@ -75,20 +75,20 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 
     if (state->n_rays) {
 	double t;
-	double theta, sin_theta, phi;
+	double cos_theta, sin_theta, phi;
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
 
 	t = gsl_rng_uniform(r);
-	theta = acos(1.0 - 2.0 * t);
-	sin_theta = sin(theta);
+	cos_theta = 1.0 - 2.0 * t;
+	sin_theta = sin(acos(cos_theta));
 
 	t = gsl_rng_uniform(r);
 	phi = 2.0 * M_PI * t;
 
 	ray->direction[0] = sin_theta * cos(phi);
 	ray->direction[1] = sin_theta * sin(phi);
-	ray->direction[2] = cos(theta);
+	ray->direction[2] = cos_theta;
 
 	memcpy(ray->origin, state->origin, 3 * sizeof(double));
 
