@@ -264,6 +264,56 @@ extern void off_sphere(const char *name, double *O, const double radius,
     fclose(outf);
 }
 
+void off_cone(const char *name, double *O, double *dir, const double l,
+	      const double r, const double g, const double b)
+{
+    double P[3], g_P[3];
+    double alpha, beta;
+    int i;
+
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "7 7 0\n\n");	/* 7 vertices, 7 faces */
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off(O, dir, P, &alpha, &beta);
+
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2]);
+    /*
+     * vertices at hexagonal base of cone
+     */
+    for (i = 0; i < 6; i++) {
+	const double arg = i / 3.0 * M_PI;	/* i * 60 / 360 * 2 * M_PI */
+	const double radius=l/4.0;
+	P[0] = radius*sin(arg);
+	P[1] = radius*cos(arg);
+	P[2] = l;
+	l2g_off(O, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * list of (triangular) faces, each defined by 3 vertices, as
+     * a->b->c->a
+     */
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 4 5 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 5 6 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 6 1 0 %f\t%f\t%f\n", r, g, b);
+
+    /* hexagonal face */
+    fprintf(outf, "7 1 2 3 4 5 6 1 %f\t%f\t%f\n", r, g, b);
+
+    fclose(outf);
+}
+
+
 void off_plane(const char *name, const double *P, const double *N,
 	       const double x, const double y, const double rf,
 	       const double gf, const double bf, const double rb,
