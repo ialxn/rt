@@ -45,6 +45,8 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	if (strstr(type, "uniform point source"))
 	    new_source =
 		source_alloc(source_uniform_point_source, cfg, name);
+	else if (!strcmp(type, "spot source"))
+	    new_source = source_alloc(source_spot, cfg, name);
 	else {
 	    fprintf(stderr,
 		    "Unknown source type (%s) found. Ignoring source %s\n",
