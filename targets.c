@@ -121,6 +121,10 @@ int check_targets(config_t * cfg)
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides
 	     *                                      are counted
+	     *          - "square mirror":          specular reflection on front surface
+	     *                                      defined by direction of surface
+	     *                                      normal. total absorption on rear
+	     *                                      surface.
 	     */
 	    if (config_setting_lookup_string(this_t, "name", &S) !=
 		CONFIG_TRUE) {
@@ -190,7 +194,7 @@ int check_targets(config_t * cfg)
 		}		/* end keyword 'x' found */
 	    }
 	    /* end 'one-sided plane_screen' */
-	    if (!strcmp(type, "two-sided plane screen")) {
+	    else if (!strcmp(type, "two-sided plane screen")) {
 		/*
 		 * two-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
@@ -239,7 +243,59 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'x' found */
-	    }			/* end 'two-sided plane_screen' */
+	    } /* end 'two-sided plane_screen' */
+	    else if (!strcmp(type, "square mirror")) {
+		/*
+		 * square mirror
+		 *  - array 'point' (corner point of square) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
+		 *  - array 'y' (direction of local y-axis of plane) [x,y,z] / double
+		 *
+		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
+		 *       anti-parallel to normal are reflected. ray impiging
+		 *       parallel to mirror hit its back side and are absorbed
+		 */
+		config_setting_t *point, *X, *Y;
+
+		if ((point =
+		     config_setting_get_member(this_t, "point")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'point' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(point) == CONFIG_FALSE
+			   || config_setting_length(point) != 3) {
+		    fprintf(stderr,
+			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'point' found */
+		if ((X = config_setting_get_member(this_t, "x")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'x' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(X) == CONFIG_FALSE
+			   || config_setting_length(X) != 3) {
+		    fprintf(stderr,
+			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'x' found */
+		if ((Y = config_setting_get_member(this_t, "y")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'y' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(Y) == CONFIG_FALSE
+			   || config_setting_length(Y) != 3) {
+		    fprintf(stderr,
+			    "setting 'y' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'y' found */
+	    }			/* end 'square mirror' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
     return status;

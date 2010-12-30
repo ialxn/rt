@@ -100,6 +100,9 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	    new_target =
 		target_alloc(target_plane_screen_two_sided, cfg, name,
 			     file_mode);
+	else if (!strcmp(type, "square mirror"))
+	    new_target =
+		target_alloc(target_square_mirror, cfg, name, file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

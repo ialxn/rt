@@ -127,6 +127,51 @@ static void output_targets(const config_t * cfg)
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		      DZ);
 
+	} else if (!strcmp(type, "square mirror")) {
+	    int j;
+	    double P[3], N[3];
+	    double X[3], Y[3];
+	    double norm;
+	    double nX, nY;
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "point");
+	    for (j = 0; j < 3; j++)
+		P[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "x");
+	    for (j = 0; j < 3; j++)
+		X[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "y");
+	    for (j = 0; j < 3; j++)
+		Y[j] = config_setting_get_float_elem(this, j);
+
+	    /* N = X cross Y */
+	    cross_product(X, Y, N);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, 1.0 / norm, N, 1);
+
+	    /* make 'P' point to center of square */
+	    for (j = 0; j < 3; j++)
+		P[j] += (X[j] + Y[j]) / 2.0;
+
+	    nX = cblas_dnrm2(3, X, 1);
+	    nY = cblas_dnrm2(3, Y, 1);
+	    /*
+	     * draw plane:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_plane(name, P, N, nX, nY, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+		      DZ);
+
+	    cblas_dscal(3, 1.0 / nX, X, 1);
+	    cblas_dscal(3, 1.0 / nY, Y, 1);
+	    off_axes(name, P, X, Y, N);	/*local system */
+
 	}
     }				/* end all targets */
 }
