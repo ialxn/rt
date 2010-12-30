@@ -125,6 +125,10 @@ int check_targets(config_t * cfg)
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
+	     *          - "triangle":               specular reflection on front surface
+	     *                                      defined by direction of surface
+	     *                                      normal. total absorption on rear
+	     *                                      surface.
 	     */
 	    if (config_setting_lookup_string(this_t, "name", &S) !=
 		CONFIG_TRUE) {
@@ -296,6 +300,59 @@ int check_targets(config_t * cfg)
 		    status = ERR;
 		}		/* end keyword 'y' found */
 	    }			/* end 'square' */
+	    else if (!strcmp(type, "triangle")) {
+		/*
+		 * triangle
+		 *  - array 'P1' (corner point of triangle) [x,y,z] / double
+		 *  - array 'P2' (corner point of triangle) [x,y,z] / double
+		 *  - array 'P3' (corner point of triangle) [x,y,z] / double
+		 *
+		 * NOTE: normal of triangle is defined by ('P2'-'P1') cross ('P3'-'P1').
+		 *       only rays anti-parallel to normal are reflected. ray impiging
+		 *       parallel to the triangle hit its back side and are absorbed
+		 */
+		config_setting_t *P1, *P2, *P3;
+
+		if ((P1 = config_setting_get_member(this_t, "P1")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'P1' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(P1) == CONFIG_FALSE
+			   || config_setting_length(P1) != 3) {
+		    fprintf(stderr,
+			    "setting 'P1' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'P1' found */
+		if ((P2 = config_setting_get_member(this_t, "P2")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'P2' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(P2) == CONFIG_FALSE
+			   || config_setting_length(P2) != 3) {
+		    fprintf(stderr,
+			    "setting 'P2' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'P2' found */
+		if ((P3 = config_setting_get_member(this_t, "P3")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'P3' array in 'targets' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(P3) == CONFIG_FALSE
+			   || config_setting_length(P3) != 3) {
+		    fprintf(stderr,
+			    "setting 'P3' in 'targets' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}
+		/* end keyword 'P3' found */
+	    }			/* end 'triangle' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
     return status;
