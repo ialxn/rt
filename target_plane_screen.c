@@ -75,7 +75,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 	this_target = config_setting_get_elem(targets, i);
 
 	config_setting_lookup_string(this_target, "name", &S);
-	if (strstr(S, name))
+	if (!strcmp(S, name))
 	    break;
 
 	i++;

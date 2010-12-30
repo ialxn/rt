@@ -241,12 +241,12 @@ extern void off_sphere(const char *name, double *O, const double radius,
      * list of vertices
      * 0 ... 5
      */
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[3] + radius);
-    fprintf(outf, "%f\t%f\t%f\n", O[0] + radius, O[1], O[3]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] + radius, O[3]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0] - radius, O[1], O[3]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] - radius, O[3]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[3] - radius);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2] + radius);
+    fprintf(outf, "%f\t%f\t%f\n", O[0] + radius, O[1], O[2]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] + radius, O[2]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0] - radius, O[1], O[2]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] - radius, O[2]);
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2] - radius);
 
     /*
      * list of (triangular) faces, each defined by 3 vertices, as

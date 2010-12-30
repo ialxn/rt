@@ -109,7 +109,7 @@ int check_targets(config_t * cfg)
 	    config_setting_t *this_t =
 		config_setting_get_elem(t, (unsigned int) i);
 
-	    const char *S, *type;
+	    const char *S, *type = NULL;
 
 	    /*
 	     * keywords common to all targets
@@ -139,7 +139,7 @@ int check_targets(config_t * cfg)
 
 	    /* check target specific settings */
 
-	    if (strstr(type, "one-sided plane screen") == type) {
+	    if (!strcmp(type, "one-sided plane screen")) {
 		/*
 		 * one-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
@@ -190,7 +190,7 @@ int check_targets(config_t * cfg)
 		}		/* end keyword 'x' found */
 	    }
 	    /* end 'one-sided plane_screen' */
-	    if (strstr(type, "two-sided plane screen") == type) {
+	    if (!strcmp(type, "two-sided plane screen")) {
 		/*
 		 * two-sided plane screen:
 		 *  - array 'point' (point on plane) [x,y,z] / double
