@@ -172,6 +172,53 @@ static void output_targets(const config_t * cfg)
 	    cblas_dscal(3, 1.0 / nY, Y, 1);
 	    off_axes(name, P, X, Y, N);	/*local system */
 
+	} else if (!strcmp(type, "triangle")) {
+	    int j;
+	    double P1[3];
+	    double P2[3];	/* redefined 'P2'='P2'-'P1' */
+	    double P3[3];	/* redefined 'P3'='P3'-'P1' */
+	    double N[3];	/* 'P2' cross 'P3' */
+	    double Y[3];	/* local system. 'X' parallel 'P2' */
+	    double norm;
+	    config_setting_t *this;
+
+	    this = config_setting_get_member(this_t, "P1");
+	    for (j = 0; j < 3; j++)
+		P1[j] = config_setting_get_float_elem(this, j);
+
+	    this = config_setting_get_member(this_t, "P2");
+	    for (j = 0; j < 3; j++)
+		P2[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+	    this = config_setting_get_member(this_t, "P3");
+	    for (j = 0; j < 3; j++)
+		P3[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+
+	    /* N = P2 cross P3 */
+	    cross_product(P2, P3, N);
+
+	    /* normalize N */
+	    norm = cblas_dnrm2(3, N, 1);
+	    cblas_dscal(3, 1.0 / norm, N, 1);
+
+	    /*
+	     * draw triangle:
+	     *   front (white, mirror) at 'P1' + 'N' * 'DZ'
+	     *   rear side (black, absorbs) at 'P1'
+	     */
+	    off_triangle(name, P1, P2, P3, N, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+			 DZ);
+
+	    /* normalize 'P2' (local x axis) */
+	    norm = cblas_dnrm2(3, P2, 1);
+	    cblas_dscal(3, 1.0 / norm, P2, 1);
+
+	    /* 'Y' = 'N' cross 'P2' */
+	    cross_product(N, P2, Y);
+
+	    off_axes(name, P1, P2, Y, N);	/*local system */
+
 	}
     }				/* end all targets */
 }

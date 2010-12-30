@@ -22,6 +22,12 @@ extern void off_plane(const char *name, const double *P, const double *N,
 		      const double x, const double y, const double rf,
 		      const double gf, const double bf, const double rb,
 		      const double gb, const double bb, const double dz);
+extern void off_triangle(const char *name, const double *P1,
+			 const double *P2, const double *P3,
+			 const double *N, const double rf, const double gf,
+			 const double bf, const double rb, const double gb,
+			 const double bb, const double dz);
+
 extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
 extern void l2g_off(const double *P, const double *L, double *G,

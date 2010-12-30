@@ -289,6 +289,47 @@ void off_plane(const char *name, const double *P, const double *N,
     fclose(outf);
 }
 
+void off_triangle(const char *name, const double *P1,
+		  const double *P2, const double *P3,
+		  const double *N, const double rf, const double gf,
+		  const double bf, const double rb, const double gb,
+		  const double bb, const double d)
+/*
+ * writes 'OFF' file to 'name.off' for two sided triangle. the triangle is defined
+ * by the point 'P1' and the two sides 'P2' and 'P3'. its normal vector is 'N'.
+ * two triangles are actually draw:
+ *	- front side ('Pi', offset by 'dz'*'N') colored 'rf','gf','bf'
+ *	- back side ('Pi')colored rb,gb,bb
+ */
+{
+    const double dx = N[0] * d;
+    const double dy = N[1] * d;
+    const double dz = N[2] * d;
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "6 2 0\n\n");	/* 6 vertices, 2 faces */
+
+    fprintf(outf, "%f\t%f\t%f\n", P1[0], P1[1], P1[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P2[0] + P1[0], P2[1] + P1[1],
+	    P2[2] + P1[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P3[0] + P1[0], P3[1] + P1[1],
+	    P3[2] + P1[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P1[0] + dx, P1[1] + dy, P1[2] + dz);
+    fprintf(outf, "%f\t%f\t%f\n", P2[0] + P1[0] + dx, P2[1] + P1[1] + dy,
+	    P2[2] + P1[2] + dz);
+    fprintf(outf, "%f\t%f\t%f\n", P3[0] + P1[0] + dx, P3[1] + P1[1] + dy,
+	    P3[2] + P1[2] + dz);
+
+    /*
+     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
+     */
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f\n", rf, gf, bf);
+
+    fclose(outf);
+}
+
 void g2l_off(const double *P, const double *N, double *L,
 	     double *alpha, double *beta)
 /*
