@@ -23,70 +23,6 @@ static FILE *open_off(const char *name)
     return fopen(f_name, "w");
 }
 
-static void g2l_off(const double *P, const double *N, double *L,
-		    double *alpha, double *beta)
-/*
- * convert vector N from global coordinate system to local one by
- *
- * 1) translation by -P
- * 2a) determine beta
- * 2b) rotation around z axis into x-z plane (beta)
- * 3a) determine alpha
- * 3b) rotation around y axis onto z axis (alpha)
- *
- * return alpha, beta, and resulting vector in L
- */
-{
-    int i;
-    double norm;
-
-    for (i = 0; i < 3; i++)	/* translate to origin */
-	L[i] = N[i] - P[i];
-
-    norm = cblas_dnrm2(3, L, 1);	/* length of L */
-
-    *beta = atan2(L[1], L[0]);
-    *alpha = atan2(L[0] * cos(-*beta) - L[1] * sin(-*beta), L[2]);
-
-    /*
-     * after translation, rotation L lies on z axis
-     * and therefore becomes {0, 0, norm}
-     */
-    L[0] = 0.0;
-    L[1] = 0.0;
-    L[2] = norm;
-
-}
-
-static void l2g_off(const double *P, const double *L, double *G,
-		    const double alpha, const double beta)
-/*
- * convert vector L from local coordinate system to global one by
- *
- * 1) rotation around y axis by -alpha
- * 2) rotation around z axis by -beta
- * 3) translation by P
- *
- * return alpha, beta, and resulting vector in G
- */
-{
-    int i;
-    const double ca = cos(-alpha);
-    const double cb = cos(-beta);
-    const double sa = sin(-alpha);
-    const double sb = sin(-beta);
-
-    const double x = L[0] * ca - L[2] * sa;
-
-    G[0] = x * cb - L[1] * sb;
-    G[1] = -x * sb - L[1] * cb;
-    G[2] = L[0] * sa + L[2] * ca;;
-
-    for (i = 0; i < 3; i++)
-	G[i] += P[i];
-
-}
-
 static void block_vertices(FILE * f, const double *P, const double *N,
 			   const double x, const double y)
 /*
@@ -264,6 +200,56 @@ extern void off_sphere(const char *name, double *O, const double radius,
     fclose(outf);
 }
 
+void off_cone(const char *name, double *O, double *dir, const double l,
+	      const double r, const double g, const double b)
+{
+    double P[3], g_P[3];
+    double alpha, beta;
+    int i;
+
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "7 7 0\n\n");	/* 7 vertices, 7 faces */
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off(O, dir, P, &alpha, &beta);
+
+    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2]);
+    /*
+     * vertices at hexagonal base of cone
+     */
+    for (i = 0; i < 6; i++) {
+	const double arg = i / 3.0 * M_PI;	/* i * 60 / 360 * 2 * M_PI */
+	const double radius = l / 4.0;
+	P[0] = radius * sin(arg);
+	P[1] = radius * cos(arg);
+	P[2] = l;
+	l2g_off(O, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * list of (triangular) faces, each defined by 3 vertices, as
+     * a->b->c->a
+     */
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 4 5 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 5 6 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 6 1 0 %f\t%f\t%f\n", r, g, b);
+
+    /* hexagonal face */
+    fprintf(outf, "7 1 2 3 4 5 6 1 %f\t%f\t%f\n", r, g, b);
+
+    fclose(outf);
+}
+
+
 void off_plane(const char *name, const double *P, const double *N,
 	       const double x, const double y, const double rf,
 	       const double gf, const double bf, const double rb,
@@ -299,4 +285,68 @@ void off_plane(const char *name, const double *P, const double *N,
     fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
+}
+
+void g2l_off(const double *P, const double *N, double *L,
+	     double *alpha, double *beta)
+/*
+ * convert vector N from global coordinate system to local one by
+ *
+ * 1) translation by -P
+ * 2a) determine beta
+ * 2b) rotation around z axis into x-z plane (beta)
+ * 3a) determine alpha
+ * 3b) rotation around y axis onto z axis (alpha)
+ *
+ * return alpha, beta, and resulting vector in L
+ */
+{
+    int i;
+    double norm;
+
+    for (i = 0; i < 3; i++)	/* translate to origin */
+	L[i] = N[i] - P[i];
+
+    norm = cblas_dnrm2(3, L, 1);	/* length of L */
+
+    *beta = atan2(L[1], L[0]);
+    *alpha = atan2(L[0] * cos(-*beta) - L[1] * sin(-*beta), L[2]);
+
+    /*
+     * after translation, rotation L lies on z axis
+     * and therefore becomes {0, 0, norm}
+     */
+    L[0] = 0.0;
+    L[1] = 0.0;
+    L[2] = norm;
+
+}
+
+void l2g_off(const double *P, const double *L, double *G,
+	     const double alpha, const double beta)
+/*
+ * convert vector L from local coordinate system to global one by
+ *
+ * 1) rotation around y axis by -alpha
+ * 2) rotation around z axis by -beta
+ * 3) translation by P
+ *
+ * return alpha, beta, and resulting vector in G
+ */
+{
+    int i;
+    const double ca = cos(-alpha);
+    const double cb = cos(-beta);
+    const double sa = sin(-alpha);
+    const double sb = sin(-beta);
+
+    const double x = L[0] * ca - L[2] * sa;
+
+    G[0] = x * cb - L[1] * sb;
+    G[1] = -x * sb - L[1] * cb;
+    G[2] = L[0] * sa + L[2] * ca;;
+
+    for (i = 0; i < 3; i++)
+	G[i] += P[i];
+
 }

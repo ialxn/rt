@@ -160,8 +160,29 @@ static void output_sources(const config_t * cfg)
 	     * at origin 'O'
 	     */
 	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
-	}
+	} /* end 'uniform point source' */
+	else if (!strcmp(type, "spot source")) {
+	    int j;
+	    double O[3], dir[3];
+	    config_setting_t *this_group;
 
+	    this_group = config_setting_get_member(this_s, "origin");
+	    for (j = 0; j < 3; j++)
+		O[j] = config_setting_get_float_elem(this_group, j);
+
+	    this_group = config_setting_get_member(this_s, "direction");
+	    for (j = 0; j < 3; j++)
+		dir[j] = config_setting_get_float_elem(this_group, j);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) cone
+	     * with size 1.2
+	     * at origin 'O'
+	     * in direction 'dir'
+	     */
+	    off_cone(name, O, dir, 1.2, 1.0, 1.0, 0.0);
+	}
+	/* end 'spot source' */
     }				/* end all sources */
 }
 

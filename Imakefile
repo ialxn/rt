@@ -7,6 +7,7 @@ SRCS= main.c \
       sources.c \
       targets.c \
       source_uniform_point_source.c \
+      source_spot.c \
       target_plane_screen.c \
       off.c
 
@@ -16,6 +17,7 @@ OBJ= main.o \
      sources.o \
      targets.o \
      source_uniform_point_source.o \
+     source_spot.o \
      target_plane_screen.o \
      off.o
 

@@ -158,6 +158,53 @@ int check_sources(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'origin' found */
+	    }
+	    /* end 'uniform point source' */
+	    else if (!strcmp(type, "spot source")) {
+		/*
+		 * spot source:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - array 'direction' [x,y,z] / double
+		 *  - 'theta' / double
+		 */
+		config_setting_t *origin, *direction;
+
+		if ((origin =
+		     config_setting_get_member(this_s,
+					       "origin")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'origin' group in 'sources' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(origin) == CONFIG_FALSE
+			   || config_setting_length(origin) != 3) {
+		    fprintf(stderr,
+			    "setting 'origin' in 'sources' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'origin' found */
+		if ((direction =
+		     config_setting_get_member(this_s,
+					       "direction")) == NULL) {
+		    fprintf(stderr,
+			    "missing 'direction' group in 'sources' section %u\n",
+			    i + 1);
+		    status = ERR;
+		} else if (config_setting_is_array(direction) ==
+			   CONFIG_FALSE
+			   || config_setting_length(direction) != 3) {
+		    fprintf(stderr,
+			    "setting 'direction' in 'sources' section %u is not array with 3 coordinates\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'direction' found */
+		if (config_setting_lookup_float(this_s, "theta", &F) !=
+		    CONFIG_TRUE) {
+		    fprintf(stderr,
+			    "missing 'theta' keyword in 'sources' section %u\n",
+			    i + 1);
+		    status = ERR;
+		}		/* end keyword 'theta' */
 	    }			/* end 'uniform point source' */
 	}			/* end 'this_s', check next source */
     }
