@@ -10,6 +10,7 @@ SRCS= main.c \
       source_spot.c \
       target_plane_screen.c \
       target_square.c \
+      target_triangle.c \
       off.c
 
 
@@ -21,6 +22,7 @@ OBJ= main.o \
      source_spot.o \
      target_plane_screen.o \
      target_square.o \
+     target_triangle.o \
      off.o
 
 #LIBS= -lgsl -lgslcblas -lconfig -lm
