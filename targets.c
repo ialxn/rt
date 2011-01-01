@@ -299,7 +299,7 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'y' found */
-	    }			/* end 'square' */
+	    } /* end 'square' */
 	    else if (!strcmp(type, "triangle")) {
 		/*
 		 * triangle
