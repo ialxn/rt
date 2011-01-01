@@ -200,10 +200,12 @@ extern void off_sphere(const char *name, double *O, const double radius,
     fclose(outf);
 }
 
-void off_cone(const char *name, double *O, double *dir, const double l,
-	      const double r, const double g, const double b)
+void off_cone(const char *name, double *origin, double *dir,
+	      const double l, const double r, const double g,
+	      const double b)
 {
     double P[3], g_P[3];
+    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -218,7 +220,7 @@ void off_cone(const char *name, double *O, double *dir, const double l,
      */
     g2l_off(O, dir, P, &alpha, &beta);
 
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2]);
+    fprintf(outf, "%f\t%f\t%f\n", origin[0], origin[1], origin[2]);
     /*
      * vertices at hexagonal base of cone
      */
@@ -228,7 +230,7 @@ void off_cone(const char *name, double *O, double *dir, const double l,
 	P[0] = radius * sin(arg);
 	P[1] = radius * cos(arg);
 	P[2] = l;
-	l2g_off(O, P, g_P, alpha, beta);
+	l2g_off(origin, P, g_P, alpha, beta);
 	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
     }
 
@@ -298,7 +300,7 @@ void g2l_off(const double *P, const double *N, double *L,
  * 3a) determine alpha
  * 3b) rotation around y axis onto z axis (alpha)
  *
- * return alpha, beta, and resulting vector in L
+ * return alpha, beta, and resulting vecmtor in L
  */
 {
     int i;
