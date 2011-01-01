@@ -30,6 +30,7 @@ typedef struct tr_state_t {
     double E2[3];		/* edge 'P2' - 'P1' */
     double E3[3];		/* edge 'P3' - 'P1' */
     double normal[3];		/* normal vector of plane */
+    double reflectivity;	/* reflectivity of target */
     double M[9];		/* transform matrix local -> global coordinates */
     size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
     size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
@@ -124,6 +125,8 @@ static void tr_init_state(void *vstate, config_t * cfg, const char *name,
     /* copy normal vector of plane */
     memcpy(state->normal, &state->M[6], 3 * sizeof(double));
 
+    config_setting_lookup_float(this_target, "reflectivity",
+				&state->reflectivity);
     state->last_was_hit = 0;
     state->absorbed = 0;
     state->n_data = 0;
@@ -143,7 +146,7 @@ static void tr_free_state(void *vstate)
 }
 
 static double *tr_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+				int *dump_flag, const gsl_rng * r)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -207,6 +210,8 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
     intercept[2] = in_ray->origin[2] + t * in_ray->direction[2];
 
     if (det < 0.0)		/* hits rear side (parallel to surface normal) */
+	state->absorbed = 1;
+    else /* hits front */ if (gsl_rng_uniform(r) > state->reflectivity)
 	state->absorbed = 1;
 
     return intercept;

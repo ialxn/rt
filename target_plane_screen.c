@@ -148,7 +148,7 @@ static void ps_free_state(void *vstate)
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+				int *dump_flag, const gsl_rng * r)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 

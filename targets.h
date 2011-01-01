@@ -11,6 +11,8 @@
 #ifndef __TARGETS_H__
 #define __TARGETS_H__
 
+#include <gsl/gsl_rng.h>
+
 #include <libconfig.h>
 
 #include "ray.h"
@@ -28,7 +30,7 @@ typedef struct target_type_t {
 												   from
 												   configuration */
     void (*free_state) (void *state);	/* free */
-    double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);	/* point of intersection */
+    double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag, const gsl_rng * r);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, const double ppr,	/* exit ray */
 			   double *hit, int *dump_flag,
 			   const int n_targets);
@@ -56,7 +58,7 @@ extern target_t *target_alloc(const target_type_t * type, config_t * cfg,
 			      const char *name, const char *file_mode);
 extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray,
-			    int *dump_flag);
+			    int *dump_flag, const gsl_rng * r);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
 		      double *hit, int *dump_flag, const int n_targets);
 extern const char *get_target_type(const target_t * T);
