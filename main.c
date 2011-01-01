@@ -127,7 +127,7 @@ static void output_targets(const config_t * cfg)
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		      DZ);
 
-	} else if (!strcmp(type, "square mirror")) {
+	} else if (!strcmp(type, "square")) {
 	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];

@@ -49,7 +49,7 @@ typedef struct target_t {
  */
 const target_type_t *target_plane_screen_one_sided;
 const target_type_t *target_plane_screen_two_sided;
-const target_type_t *target_square_mirror;
+const target_type_t *target_square;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */

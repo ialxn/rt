@@ -121,7 +121,7 @@ int check_targets(config_t * cfg)
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides
 	     *                                      are counted
-	     *          - "square mirror":          specular reflection on front surface
+	     *          - "square":                 specular reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
@@ -244,16 +244,16 @@ int check_targets(config_t * cfg)
 		    status = ERR;
 		}		/* end keyword 'x' found */
 	    } /* end 'two-sided plane_screen' */
-	    else if (!strcmp(type, "square mirror")) {
+	    else if (!strcmp(type, "square")) {
 		/*
-		 * square mirror
+		 * square
 		 *  - array 'point' (corner point of square) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 *  - array 'y' (direction of local y-axis of plane) [x,y,z] / double
 		 *
 		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
 		 *       anti-parallel to normal are reflected. ray impiging
-		 *       parallel to mirror hit its back side and are absorbed
+		 *       parallel to square hit its back side and are absorbed
 		 */
 		config_setting_t *point, *X, *Y;
 
@@ -295,7 +295,7 @@ int check_targets(config_t * cfg)
 			    i + 1);
 		    status = ERR;
 		}		/* end keyword 'y' found */
-	    }			/* end 'square mirror' */
+	    }			/* end 'square' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
     return status;

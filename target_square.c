@@ -1,4 +1,4 @@
-/*	target_square_mirror.c
+/*	target_square.c
  *
  * Copyright (C) 2010 Ivo Alxneit
  *
@@ -20,7 +20,7 @@
 
 #define N_COORDINATES 2		/* store only x,y */
 
-typedef struct sm_state_t {
+typedef struct sq_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
     FILE *dump_file;
@@ -33,12 +33,12 @@ typedef struct sm_state_t {
     size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
     size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
     double *data;		/* buffer to store hits */
-} sm_state_t;
+} sq_state_t;
 
 
-static int sm_alloc_state(void *vstate)
+static int sq_alloc_state(void *vstate)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     /* 3 items per data set (x,y,ppr) */
     if (!
@@ -52,10 +52,10 @@ static int sm_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void sm_init_state(void *vstate, config_t * cfg, const char *name,
+static void sq_init_state(void *vstate, config_t * cfg, const char *name,
 			  const char *file_mode)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     unsigned int i = 0;
     const char *S;
@@ -121,9 +121,9 @@ static void sm_init_state(void *vstate, config_t * cfg, const char *name,
     state->n_data = 0;
 }
 
-static void sm_free_state(void *vstate)
+static void sq_free_state(void *vstate)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     /* first write remaining data to file. 3 items per data (x,y,ppr) */
     dump_data(state->dump_file, state->data, state->n_data,
@@ -134,10 +134,10 @@ static void sm_free_state(void *vstate)
     free(state->data);
 }
 
-static double *sm_get_intercept(void *vstate, ray_t * in_ray,
+static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 				int *dump_flag)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     double t1, t2[3], t3;
     double d;
@@ -219,11 +219,11 @@ static double *sm_get_intercept(void *vstate, ray_t * in_ray,
 
 }
 
-static ray_t *sm_get_out_ray(void *vstate, ray_t * in_ray,
+static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray,
 			     const double ppr, double *hit,
 			     int *dump_flag, const int n_targets)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     if (state->absorbed) {	/* rear surface was hit */
 	double hit_copy[3];
@@ -269,39 +269,39 @@ static ray_t *sm_get_out_ray(void *vstate, ray_t * in_ray,
     }
 }
 
-static const char *sm_get_target_name(void *vstate)
+static const char *sq_get_target_name(void *vstate)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     return state->name;
 }
 
-static void sm_dump_string(void *vstate, const char *str)
+static void sq_dump_string(void *vstate, const char *str)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     fprintf(state->dump_file, "%s", str);
 }
 
-static double *sm_M(void *vstate)
+static double *sq_M(void *vstate)
 {
-    sm_state_t *state = (sm_state_t *) vstate;
+    sq_state_t *state = (sq_state_t *) vstate;
 
     return state->M;
 }
 
 
-static const target_type_t sm_t = {
-    "square mirror",
-    sizeof(struct sm_state_t),
-    &sm_alloc_state,
-    &sm_init_state,
-    &sm_free_state,
-    &sm_get_intercept,
-    &sm_get_out_ray,
-    &sm_get_target_name,
-    &sm_dump_string,
-    &sm_M
+static const target_type_t sq_t = {
+    "square",
+    sizeof(struct sq_state_t),
+    &sq_alloc_state,
+    &sq_init_state,
+    &sq_free_state,
+    &sq_get_intercept,
+    &sq_get_out_ray,
+    &sq_get_target_name,
+    &sq_dump_string,
+    &sq_M
 };
 
-const target_type_t *target_square_mirror = &sm_t;
+const target_type_t *target_square = &sq_t;
