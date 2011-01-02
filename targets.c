@@ -96,14 +96,14 @@ int check_targets(config_t * cfg)
 
     if (t == NULL) {
 	fprintf(stderr, "missing 'targets' keyword\n");
-	status = ERR;
+	status += ERR;
     } else {			/* 'targets' section present */
 	const int n_targets = config_setting_length(t);
 	int i;
 
 	if (n_targets == 0) {
 	    fprintf(stderr, "empty 'targets' section\n");
-	    status = ERR;
+	    status += ERR;
 	}
 
 	for (i = 0; i < n_targets; ++i) {
@@ -132,14 +132,14 @@ int check_targets(config_t * cfg)
 		fprintf(stderr,
 			"missing 'name' keyword in 'targets' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 	    if (config_setting_lookup_string(this_t, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'type' keyword in 'targets' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 
 	    /* check target specific settings */
@@ -151,9 +151,9 @@ int check_targets(config_t * cfg)
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		check_array("targets", this_t, "point", i);
-		check_array("targets", this_t, "normal", i);
-		check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
 
 	    } /* end 'one-sided plane_screen' */
 	    else if (!strcmp(type, "two-sided plane screen")) {
@@ -163,9 +163,9 @@ int check_targets(config_t * cfg)
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		check_array("targets", this_t, "point", i);
-		check_array("targets", this_t, "normal", i);
-		check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
 
 	    } /* end 'two-sided plane_screen' */
 	    else if (!strcmp(type, "square")) {
@@ -179,9 +179,9 @@ int check_targets(config_t * cfg)
 		 *       anti-parallel to normal are reflected. ray impiging
 		 *       parallel to square hit its back side and are absorbed
 		 */
-		check_array("targets", this_t, "point", i);
-		check_array("targets", this_t, "x", i);
-		check_array("targets", this_t, "y", i);
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "y", i);
 
 	    }			/* end 'square' */
 	}			/* end 'this_t', check next target */

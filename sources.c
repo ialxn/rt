@@ -83,14 +83,14 @@ int check_sources(config_t * cfg)
 
     if (s == NULL) {
 	fprintf(stderr, "missing 'sources' keyword\n");
-	status = ERR;
+	status += ERR;
     } else {			/* 'sources' section present */
 	int i;
 	const int n_sources = config_setting_length(s);
 
 	if (n_sources == 0) {
 	    fprintf(stderr, "empty 'sources' section\n");
-	    status = ERR;
+	    status += ERR;
 	}
 
 	for (i = 0; i < n_sources; ++i) {
@@ -113,28 +113,28 @@ int check_sources(config_t * cfg)
 		fprintf(stderr,
 			"missing 'name' keyword in 'sources' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 	    if (config_setting_lookup_string(this_s, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'type' keyword in 'sources' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 	    if (config_setting_lookup_float(this_s, "power", &F) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'power' keyword in 'sources' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 	    if (config_setting_lookup_int(this_s, "n_rays", &I) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'n_rays' keyword in 'sources' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 
 	    /* check source specific settings */
@@ -143,7 +143,7 @@ int check_sources(config_t * cfg)
 		/*
 		 * uniform point source:
 		 *  - array 'origin' [x,y,z] / double            */
-		check_array("sources", this_s, "origin", i);
+		status += check_array("sources", this_s, "origin", i);
 
 	    } /* end 'uniform point source' */
 	    else if (!strcmp(type, "spot source")) {
@@ -153,15 +153,15 @@ int check_sources(config_t * cfg)
 		 *  - array 'direction' [x,y,z] / double
 		 *  - 'theta' / double
 		 */
-		check_array("sources", this_s, "origin", i);
-		check_array("sources", this_s, "direction", i);
+		status += check_array("sources", this_s, "origin", i);
+		status += check_array("sources", this_s, "direction", i);
 
 		if (config_setting_lookup_float(this_s, "theta", &F) !=
 		    CONFIG_TRUE) {
 		    fprintf(stderr,
 			    "missing 'theta' keyword in 'sources' section %u\n",
 			    i + 1);
-		    status = ERR;
+		    status += ERR;
 		}
 		/* end keyword 'theta' */
 	    }			/* end 'uniform point source' */
