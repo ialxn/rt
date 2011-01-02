@@ -13,7 +13,6 @@
 
 #include <gsl/gsl_rng.h>
 
-#include "io_util.h"
 #include "ray.h"
 #include "sources.h"
 
@@ -25,11 +24,6 @@ typedef struct ups_state_t {
     double ppr;			/* power allotted to one ray */
 } ups_state_t;
 
-
-static int ups_alloc_state(void *vstate)
-{
-    return NO_ERR;
-}
 
 static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 {
@@ -119,7 +113,6 @@ static const char *ups_get_source_name(void *vstate)
 static const source_type_t ups_t = {
     "uniform point source",
     sizeof(struct ups_state_t),
-    &ups_alloc_state,
     &ups_init_state,
     &ups_free_state,
     &ups_get_new_ray,

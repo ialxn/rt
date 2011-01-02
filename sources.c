@@ -33,15 +33,6 @@ source_t *source_alloc(const source_type_t * T, config_t * cfg,
 
     S->type = T;
 
-    /* specific part for source 'T' */
-    if ((S->type->alloc_state) (S->state) == ERR) {
-	fprintf(stderr,
-		"failed to allocate space for specific internal state of source\n");
-	free(S->state);
-	free(S);
-	return NULL;
-    }
-
     (S->type->init_state) (S->state, cfg, name);	/* initialize data structures */
 
     return S;

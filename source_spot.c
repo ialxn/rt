@@ -14,7 +14,6 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_cblas.h>
 
-#include "io_util.h"
 #include "off.h"
 #include "ray.h"
 #include "sources.h"
@@ -31,11 +30,6 @@ typedef struct sp_state_t {
     double ppr;			/* power allotted to one ray */
 } sp_state_t;
 
-
-static int sp_alloc_state(void *vstate)
-{
-    return NO_ERR;
-}
 
 static void sp_init_state(void *vstate, config_t * cfg, const char *name)
 {
@@ -148,7 +142,6 @@ static const char *sp_get_source_name(void
 static const source_type_t sp_t = {
     "spot source",
     sizeof(struct sp_state_t),
-    &sp_alloc_state,
     &sp_init_state,
     &sp_free_state,
     &sp_get_new_ray,
