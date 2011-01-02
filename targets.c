@@ -1,6 +1,6 @@
 /*	targets.c
  *
- * Copyright (C) 2010 Ivo Alxneit
+ * Copyright (C) 2010, 2011 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_cblas.h>
 
+#include "io_util.h"
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type, config_t * cfg,
@@ -95,21 +96,21 @@ int check_targets(config_t * cfg)
 
     if (t == NULL) {
 	fprintf(stderr, "missing 'targets' keyword\n");
-	status = ERR;
+	status += ERR;
     } else {			/* 'targets' section present */
 	const int n_targets = config_setting_length(t);
 	int i;
 
 	if (n_targets == 0) {
 	    fprintf(stderr, "empty 'targets' section\n");
-	    status = ERR;
+	    status += ERR;
 	}
 
 	for (i = 0; i < n_targets; ++i) {
 	    config_setting_t *this_t =
 		config_setting_get_elem(t, (unsigned int) i);
 
-	    const char *S, *type = NULL;
+	    const char *type = NULL;
 
 	    /*
 	     * keywords common to all targets
@@ -130,19 +131,14 @@ int check_targets(config_t * cfg)
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
 	     */
-	    if (config_setting_lookup_string(this_t, "name", &S) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'name' keyword in 'targets' section %u\n",
-			i + 1);
-		status = ERR;
-	    }
+	    status += check_string("sources", this_t, "name", i);
+
 	    if (config_setting_lookup_string(this_t, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'type' keyword in 'targets' section %u\n",
 			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 
 	    /* check target specific settings */
@@ -154,50 +150,11 @@ int check_targets(config_t * cfg)
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal, *x;
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
 
-		if ((point =
-		     config_setting_get_member(this_t, "point")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'point' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(point) == CONFIG_FALSE
-			   || config_setting_length(point) != 3) {
-		    fprintf(stderr,
-			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'point' found */
-		if ((normal =
-		     config_setting_get_member(this_t,
-					       "normal")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'normal' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(normal) == CONFIG_FALSE
-			   || config_setting_length(normal) != 3) {
-		    fprintf(stderr,
-			    "setting 'normal' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'normal' found */
-		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'x' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(normal) == CONFIG_FALSE
-			   || config_setting_length(normal) != 3) {
-		    fprintf(stderr,
-			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'x' found */
-	    }
-	    /* end 'one-sided plane_screen' */
+	    } /* end 'one-sided plane_screen' */
 	    else if (!strcmp(type, "two-sided plane screen")) {
 		/*
 		 * two-sided plane screen:
@@ -205,48 +162,10 @@ int check_targets(config_t * cfg)
 		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
 		 */
-		config_setting_t *point, *normal, *x;
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
 
-		if ((point =
-		     config_setting_get_member(this_t, "point")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'point' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(point) == CONFIG_FALSE
-			   || config_setting_length(point) != 3) {
-		    fprintf(stderr,
-			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'point' found */
-		if ((normal =
-		     config_setting_get_member(this_t,
-					       "normal")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'normal' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(normal) == CONFIG_FALSE
-			   || config_setting_length(normal) != 3) {
-		    fprintf(stderr,
-			    "setting 'normal' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'normal' found */
-		if ((x = config_setting_get_member(this_t, "x")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'x' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(normal) == CONFIG_FALSE
-			   || config_setting_length(normal) != 3) {
-		    fprintf(stderr,
-			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'x' found */
 	    } /* end 'two-sided plane_screen' */
 	    else if (!strcmp(type, "square")) {
 		/*
@@ -259,47 +178,11 @@ int check_targets(config_t * cfg)
 		 *       anti-parallel to normal are reflected. ray impiging
 		 *       parallel to square hit its back side and are absorbed
 		 */
-		config_setting_t *point, *X, *Y;
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "y", i);
 
-		if ((point =
-		     config_setting_get_member(this_t, "point")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'point' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(point) == CONFIG_FALSE
-			   || config_setting_length(point) != 3) {
-		    fprintf(stderr,
-			    "setting 'point' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'point' found */
-		if ((X = config_setting_get_member(this_t, "x")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'x' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(X) == CONFIG_FALSE
-			   || config_setting_length(X) != 3) {
-		    fprintf(stderr,
-			    "setting 'x' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'x' found */
-		if ((Y = config_setting_get_member(this_t, "y")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'y' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(Y) == CONFIG_FALSE
-			   || config_setting_length(Y) != 3) {
-		    fprintf(stderr,
-			    "setting 'y' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'y' found */
-	    } /* end 'square' */
+	    }			/* end 'square' */
 	    else if (!strcmp(type, "triangle")) {
 		/*
 		 * triangle
@@ -311,50 +194,14 @@ int check_targets(config_t * cfg)
 		 *       only rays anti-parallel to normal are reflected. ray impiging
 		 *       parallel to the triangle hit its back side and are absorbed
 		 */
-		config_setting_t *P1, *P2, *P3;
+		status += check_array("targets", this_t, "P1", i);
+		status += check_array("targets", this_t, "P2", i);
+		status += check_array("targets", this_t, "P3", i);
 
-		if ((P1 = config_setting_get_member(this_t, "P1")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'P1' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(P1) == CONFIG_FALSE
-			   || config_setting_length(P1) != 3) {
-		    fprintf(stderr,
-			    "setting 'P1' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'P1' found */
-		if ((P2 = config_setting_get_member(this_t, "P2")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'P2' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(P2) == CONFIG_FALSE
-			   || config_setting_length(P2) != 3) {
-		    fprintf(stderr,
-			    "setting 'P2' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'P2' found */
-		if ((P3 = config_setting_get_member(this_t, "P3")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'P3' array in 'targets' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(P3) == CONFIG_FALSE
-			   || config_setting_length(P3) != 3) {
-		    fprintf(stderr,
-			    "setting 'P3' in 'targets' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}
-		/* end keyword 'P3' found */
 	    }			/* end 'triangle' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
+
     return status;
 }
 

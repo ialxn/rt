@@ -1,6 +1,6 @@
 /*	sources.c
  *
- * Copyright (C) 2010 Ivo Alxneit
+ * Copyright (C) 2010, 2011 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -10,6 +10,7 @@
 
 #include <string.h>
 
+#include "io_util.h"
 #include "sources.h"
 
 source_t *source_alloc(const source_type_t * T, config_t * cfg,
@@ -31,15 +32,6 @@ source_t *source_alloc(const source_type_t * T, config_t * cfg,
     };
 
     S->type = T;
-
-    /* specific part for source 'T' */
-    if ((S->type->alloc_state) (S->state) == ERR) {
-	fprintf(stderr,
-		"failed to allocate space for specific internal state of source\n");
-	free(S->state);
-	free(S);
-	return NULL;
-    }
 
     (S->type->init_state) (S->state, cfg, name);	/* initialize data structures */
 
@@ -82,20 +74,18 @@ int check_sources(config_t * cfg)
 
     if (s == NULL) {
 	fprintf(stderr, "missing 'sources' keyword\n");
-	status = ERR;
+	status += ERR;
     } else {			/* 'sources' section present */
 	int i;
 	const int n_sources = config_setting_length(s);
 
 	if (n_sources == 0) {
 	    fprintf(stderr, "empty 'sources' section\n");
-	    status = ERR;
+	    status += ERR;
 	}
 
 	for (i = 0; i < n_sources; ++i) {
-	    const char *S, *type;
-	    double F;
-	    int I;
+	    const char *type = NULL;
 	    config_setting_t *this_s =
 		config_setting_get_elem(s, (unsigned int) i);
 
@@ -107,59 +97,27 @@ int check_sources(config_t * cfg)
 	     * 'power': power [W] of source / double
 	     * 'n_rays': number of rays used for this source / int
 	     */
-	    if (config_setting_lookup_string(this_s, "name", &S) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'name' keyword in 'sources' section %u\n",
-			i + 1);
-		status = ERR;
-	    }
+	    status += check_string("sources", this_s, "name", i);
+	    status += check_float("sources", this_s, "power", i);
+	    status += check_int("sources", this_s, "n_rays", i);
+
 	    if (config_setting_lookup_string(this_s, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'type' keyword in 'sources' section %u\n",
 			i + 1);
-		status = ERR;
-	    }
-	    if (config_setting_lookup_float(this_s, "power", &F) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'power' keyword in 'sources' section %u\n",
-			i + 1);
-		status = ERR;
-	    }
-	    if (config_setting_lookup_int(this_s, "n_rays", &I) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'n_rays' keyword in 'sources' section %u\n",
-			i + 1);
-		status = ERR;
+		status += ERR;
 	    }
 
 	    /* check source specific settings */
 
-	    if (!strcmp(type, "uniform point_source")) {
+	    if (!strcmp(type, "uniform point source")) {
 		/*
 		 * uniform point source:
 		 *  - array 'origin' [x,y,z] / double            */
-		config_setting_t *origin;
+		status += check_array("sources", this_s, "origin", i);
 
-		if ((origin =
-		     config_setting_get_member(this_s,
-					       "origin")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'origin' group in 'sources' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(origin) == CONFIG_FALSE
-			   || config_setting_length(origin) != 3) {
-		    fprintf(stderr,
-			    "setting 'origin' in 'sources' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'origin' found */
-	    }
-	    /* end 'uniform point source' */
+	    } /* end 'uniform point source' */
 	    else if (!strcmp(type, "spot source")) {
 		/*
 		 * spot source:
@@ -167,46 +125,13 @@ int check_sources(config_t * cfg)
 		 *  - array 'direction' [x,y,z] / double
 		 *  - 'theta' / double
 		 */
-		config_setting_t *origin, *direction;
+		status += check_array("sources", this_s, "origin", i);
+		status += check_array("sources", this_s, "direction", i);
+		status += check_float("sources", this_s, "theta", i);
 
-		if ((origin =
-		     config_setting_get_member(this_s,
-					       "origin")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'origin' group in 'sources' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(origin) == CONFIG_FALSE
-			   || config_setting_length(origin) != 3) {
-		    fprintf(stderr,
-			    "setting 'origin' in 'sources' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'origin' found */
-		if ((direction =
-		     config_setting_get_member(this_s,
-					       "direction")) == NULL) {
-		    fprintf(stderr,
-			    "missing 'direction' group in 'sources' section %u\n",
-			    i + 1);
-		    status = ERR;
-		} else if (config_setting_is_array(direction) ==
-			   CONFIG_FALSE
-			   || config_setting_length(direction) != 3) {
-		    fprintf(stderr,
-			    "setting 'direction' in 'sources' section %u is not array with 3 coordinates\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'direction' found */
-		if (config_setting_lookup_float(this_s, "theta", &F) !=
-		    CONFIG_TRUE) {
-		    fprintf(stderr,
-			    "missing 'theta' keyword in 'sources' section %u\n",
-			    i + 1);
-		    status = ERR;
-		}		/* end keyword 'theta' */
 	    }			/* end 'uniform point source' */
 	}			/* end 'this_s', check next source */
     }
+
     return status;
 }

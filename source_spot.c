@@ -1,6 +1,6 @@
 /*	source_spot.c
  *
- * Copyright (C) 2010 Ivo Alxneit
+ * Copyright (C) 2010, 2011 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -30,11 +30,6 @@ typedef struct sp_state_t {
     double ppr;			/* power allotted to one ray */
 } sp_state_t;
 
-
-static int sp_alloc_state(void *vstate)
-{
-    return NO_ERR;
-}
 
 static void sp_init_state(void *vstate, config_t * cfg, const char *name)
 {
@@ -147,7 +142,6 @@ static const char *sp_get_source_name(void
 static const source_type_t sp_t = {
     "spot source",
     sizeof(struct sp_state_t),
-    &sp_alloc_state,
     &sp_init_state,
     &sp_free_state,
     &sp_get_new_ray,

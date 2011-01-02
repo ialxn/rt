@@ -1,6 +1,6 @@
 /*	target_square.c
  *
- * Copyright (C) 2010 Ivo Alxneit
+ * Copyright (C) 2010, 2011 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -15,6 +15,7 @@
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 
+#include "io_util.h"
 #include "ray.h"
 #include "targets.h"
 
