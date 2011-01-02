@@ -95,7 +95,6 @@ int check_sources(config_t * cfg)
 
 	for (i = 0; i < n_sources; ++i) {
 	    const char *type = NULL;
-	    int I;
 	    config_setting_t *this_s =
 		config_setting_get_elem(s, (unsigned int) i);
 
@@ -109,19 +108,12 @@ int check_sources(config_t * cfg)
 	     */
 	    status += check_string("sources", this_s, "name", i);
 	    status += check_float("sources", this_s, "power", i);
+	    status += check_int("sources", this_s, "n_rays", i);
 
 	    if (config_setting_lookup_string(this_s, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
 			"missing 'type' keyword in 'sources' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
-
-	    if (config_setting_lookup_int(this_s, "n_rays", &I) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'n_rays' keyword in 'sources' section %u\n",
 			i + 1);
 		status += ERR;
 	    }
