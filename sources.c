@@ -95,7 +95,6 @@ int check_sources(config_t * cfg)
 
 	for (i = 0; i < n_sources; ++i) {
 	    const char *type = NULL;
-	    double F;
 	    int I;
 	    config_setting_t *this_s =
 		config_setting_get_elem(s, (unsigned int) i);
@@ -109,6 +108,7 @@ int check_sources(config_t * cfg)
 	     * 'n_rays': number of rays used for this source / int
 	     */
 	    status += check_string("sources", this_s, "name", i);
+	    status += check_float("sources", this_s, "power", i);
 
 	    if (config_setting_lookup_string(this_s, "type", &type) !=
 		CONFIG_TRUE) {
@@ -117,13 +117,7 @@ int check_sources(config_t * cfg)
 			i + 1);
 		status += ERR;
 	    }
-	    if (config_setting_lookup_float(this_s, "power", &F) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'power' keyword in 'sources' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
+
 	    if (config_setting_lookup_int(this_s, "n_rays", &I) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
@@ -150,15 +144,8 @@ int check_sources(config_t * cfg)
 		 */
 		status += check_array("sources", this_s, "origin", i);
 		status += check_array("sources", this_s, "direction", i);
+		status += check_float("sources", this_s, "theta", i);
 
-		if (config_setting_lookup_float(this_s, "theta", &F) !=
-		    CONFIG_TRUE) {
-		    fprintf(stderr,
-			    "missing 'theta' keyword in 'sources' section %u\n",
-			    i + 1);
-		    status += ERR;
-		}
-		/* end keyword 'theta' */
 	    }			/* end 'uniform point source' */
 	}			/* end 'this_s', check next source */
     }
