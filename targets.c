@@ -110,7 +110,7 @@ int check_targets(config_t * cfg)
 	    config_setting_t *this_t =
 		config_setting_get_elem(t, (unsigned int) i);
 
-	    const char *S, *type = NULL;
+	    const char *type = NULL;
 
 	    /*
 	     * keywords common to all targets
@@ -127,13 +127,8 @@ int check_targets(config_t * cfg)
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
 	     */
-	    if (config_setting_lookup_string(this_t, "name", &S) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'name' keyword in 'targets' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
+	    status += check_string("sources", this_t, "name", i);
+
 	    if (config_setting_lookup_string(this_t, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,

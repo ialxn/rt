@@ -94,7 +94,7 @@ int check_sources(config_t * cfg)
 	}
 
 	for (i = 0; i < n_sources; ++i) {
-	    const char *S, *type = NULL;
+	    const char *type = NULL;
 	    double F;
 	    int I;
 	    config_setting_t *this_s =
@@ -108,13 +108,8 @@ int check_sources(config_t * cfg)
 	     * 'power': power [W] of source / double
 	     * 'n_rays': number of rays used for this source / int
 	     */
-	    if (config_setting_lookup_string(this_s, "name", &S) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'name' keyword in 'sources' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
+	    status += check_string("sources", this_s, "name", i);
+
 	    if (config_setting_lookup_string(this_s, "type", &type) !=
 		CONFIG_TRUE) {
 		fprintf(stderr,
