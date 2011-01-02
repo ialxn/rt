@@ -13,6 +13,7 @@
 
 #include <gsl/gsl_rng.h>
 
+#include "io_util.h"
 #include "ray.h"
 #include "sources.h"
 

@@ -15,8 +15,6 @@
 
 #include "ray.h"
 
-#define NO_ERR 0
-#define ERR 1
 #define BLOCK_SIZE 32768
 #define MAX_BLOCK_SIZE 262144
 

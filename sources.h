@@ -17,9 +17,6 @@
 
 #include "ray.h"
 
-#define NO_ERR 0
-#define ERR 1
-
 typedef struct source_type_t {
     const char *type;		/* type of source */
     size_t size;		/* internally used to allocate the state (individual,

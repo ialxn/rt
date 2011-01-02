@@ -14,6 +14,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_cblas.h>
 
+#include "io_util.h"
 #include "off.h"
 #include "ray.h"
 #include "sources.h"
