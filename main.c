@@ -20,6 +20,7 @@
 #include <gsl/gsl_machine.h>
 #include <gsl/gsl_rng.h>
 
+#include "io_util.h"
 #include "obj_lists.h"
 #include "off.h"
 #include "sources.h"
@@ -48,31 +49,12 @@ static void output_targets(const config_t * cfg)
 	config_setting_lookup_string(this_t, "type", &type);
 
 	if (!strcmp(type, "one-sided plane screen")) {
-	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];
-	    double norm;
-	    config_setting_t *this;
 
-	    this = config_setting_get_member(this_t, "point");
-	    for (j = 0; j < 3; j++)
-		P[j] = config_setting_get_float_elem(this, j);
-
-	    this = config_setting_get_member(this_t, "normal");
-	    for (j = 0; j < 3; j++)
-		N[j] = config_setting_get_float_elem(this, j);
-
-	    /* normalize N */
-	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, 1.0 / norm, N, 1);
-
-	    this = config_setting_get_member(this_t, "x");
-	    for (j = 0; j < 3; j++)
-		X[j] = config_setting_get_float_elem(this, j);
-
-	    /* normalize X */
-	    norm = cblas_dnrm2(3, X, 1);
-	    cblas_dscal(3, 1.0 / norm, X, 1);
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
 
 	    /* Y = N cross X */
 	    cross_product(N, X, Y);
@@ -88,31 +70,12 @@ static void output_targets(const config_t * cfg)
 		      DZ);
 
 	} else if (!strcmp(type, "two-sided plane screen")) {
-	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];
-	    double norm;
-	    config_setting_t *this;
 
-	    this = config_setting_get_member(this_t, "point");
-	    for (j = 0; j < 3; j++)
-		P[j] = config_setting_get_float_elem(this, j);
-
-	    this = config_setting_get_member(this_t, "normal");
-	    for (j = 0; j < 3; j++)
-		N[j] = config_setting_get_float_elem(this, j);
-
-	    /* normalize N */
-	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, 1.0 / norm, N, 1);
-
-	    this = config_setting_get_member(this_t, "x");
-	    for (j = 0; j < 3; j++)
-		X[j] = config_setting_get_float_elem(this, j);
-
-	    /* normalize X */
-	    norm = cblas_dnrm2(3, X, 1);
-	    cblas_dscal(3, 1.0 / norm, X, 1);
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
 
 	    /* Y = N cross X */
 	    cross_product(N, X, Y);
@@ -133,19 +96,10 @@ static void output_targets(const config_t * cfg)
 	    double X[3], Y[3];
 	    double norm;
 	    double nX, nY;
-	    config_setting_t *this;
 
-	    this = config_setting_get_member(this_t, "point");
-	    for (j = 0; j < 3; j++)
-		P[j] = config_setting_get_float_elem(this, j);
-
-	    this = config_setting_get_member(this_t, "x");
-	    for (j = 0; j < 3; j++)
-		X[j] = config_setting_get_float_elem(this, j);
-
-	    this = config_setting_get_member(this_t, "y");
-	    for (j = 0; j < 3; j++)
-		Y[j] = config_setting_get_float_elem(this, j);
+	    read_vector(this_t, "point", P);
+	    read_vector(this_t, "x", X);
+	    read_vector(this_t, "y", Y);
 
 	    /* N = X cross Y */
 	    cross_product(X, Y, N);
@@ -182,9 +136,7 @@ static void output_targets(const config_t * cfg)
 	    double norm;
 	    config_setting_t *this;
 
-	    this = config_setting_get_member(this_t, "P1");
-	    for (j = 0; j < 3; j++)
-		P1[j] = config_setting_get_float_elem(this, j);
+	    read_vector(this_t, "P1", P1);
 
 	    this = config_setting_get_member(this_t, "P2");
 	    for (j = 0; j < 3; j++)
@@ -238,13 +190,9 @@ static void output_sources(const config_t * cfg)
 	config_setting_lookup_string(this_s, "type", &type);
 
 	if (!strcmp(type, "uniform point source")) {
-	    int j;
 	    double O[3];
-	    const config_setting_t *origin =
-		config_setting_get_member(this_s, "origin");
 
-	    for (j = 0; j < 3; j++)
-		O[j] = config_setting_get_float_elem(origin, j);
+	    read_vector(this_s, "origin", O);
 
 	    /*
 	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
@@ -254,17 +202,10 @@ static void output_sources(const config_t * cfg)
 	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
 	} /* end 'uniform point source' */
 	else if (!strcmp(type, "spot source")) {
-	    int j;
 	    double O[3], dir[3];
-	    config_setting_t *this_group;
 
-	    this_group = config_setting_get_member(this_s, "origin");
-	    for (j = 0; j < 3; j++)
-		O[j] = config_setting_get_float_elem(this_group, j);
-
-	    this_group = config_setting_get_member(this_s, "direction");
-	    for (j = 0; j < 3; j++)
-		dir[j] = config_setting_get_float_elem(this_group, j);
+	    read_vector(this_s, "origin", O);
+	    read_vector(this_s, "direction", dir);
 
 	    /*
 	     * draw yellow (rgb=1.0,1.0,0.0) cone
