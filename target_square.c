@@ -62,9 +62,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
     unsigned int i = 0;
     const char *S;
     char f_name[256];
-    int j;
-
-    config_setting_t *this_target, *point, *X, *Y;
+    config_setting_t *this_target;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
@@ -82,10 +80,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
 	i++;
     }
 
-    point = config_setting_get_member(this_target, "point");
-    for (j = 0; j < 3; j++)
-	state->point[j] = config_setting_get_float_elem(point, j);
-
+    read_vector(this_target, "point", state->point);
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
@@ -97,9 +92,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      * calculate and store length 'dx', and
      * save normalized vector in the transformation matrix 'M'
      */
-    X = config_setting_get_member(this_target, "x");
-    for (j = 0; j < 3; j++)
-	state->M[j] = config_setting_get_float_elem(X, j);
+    read_vector(this_target, "x", state->M);
     state->dx = cblas_dnrm2(3, state->M, 1);
     cblas_dscal(3, 1.0 / state->dx, state->M, 1);
 
@@ -108,9 +101,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      * calculate and store length 'dy', and
      * save normalized vector in the transformation matrix 'M'
      */
-    Y = config_setting_get_member(this_target, "y");
-    for (j = 0; j < 3; j++)
-	state->M[3 + j] = config_setting_get_float_elem(Y, j);
+    read_vector(this_target, "y", &state->M[3]);
     state->dy = cblas_dnrm2(3, &state->M[3], 1);
     cblas_dscal(3, 1.0 / state->dy, &state->M[3], 1);
 

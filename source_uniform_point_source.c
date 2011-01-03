@@ -13,6 +13,7 @@
 
 #include <gsl/gsl_rng.h>
 
+#include "io_util.h"
 #include "ray.h"
 #include "sources.h"
 
@@ -31,8 +32,7 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
     unsigned int i = 0;
     const char *S;
-    int j;
-    config_setting_t *this_s, *origin;
+    config_setting_t *this_s;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
     state->name = strdup(name);
@@ -51,9 +51,8 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
     config_setting_lookup_float(this_s, "power", &state->power);
     state->ppr = state->power / state->n_rays;
 
-    origin = config_setting_get_member(this_s, "origin");
-    for (j = 0; j < 3; j++)
-	state->origin[j] = config_setting_get_float_elem(origin, j);
+    read_vector(this_s, "origin", state->origin);
+
 }
 
 static void ups_free_state(void *vstate)

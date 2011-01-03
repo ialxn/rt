@@ -14,6 +14,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_cblas.h>
 
+#include "io_util.h"
 #include "off.h"
 #include "ray.h"
 #include "sources.h"
@@ -39,9 +40,7 @@ static void sp_init_state(void *vstate, config_t * cfg, const char *name)
     double t[3];
     unsigned int i = 0;
     const char *S;
-    int j;
-    double norm;
-    config_setting_t *this_s, *origin, *dir;
+    config_setting_t *this_s;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
     state->name = strdup(name);
@@ -62,15 +61,8 @@ static void sp_init_state(void *vstate, config_t * cfg, const char *name)
     config_setting_lookup_float(this_s, "theta", &state->cos_theta);
     state->cos_theta = cos(state->cos_theta / 180.0 * M_PI);
 
-    origin = config_setting_get_member(this_s, "origin");
-    for (j = 0; j < 3; j++)
-	state->origin[j] = config_setting_get_float_elem(origin, j);
-
-    dir = config_setting_get_member(this_s, "direction");
-    for (j = 0; j < 3; j++)
-	state->dir[j] = config_setting_get_float_elem(dir, j);
-    norm = cblas_dnrm2(3, state->dir, 1);
-    cblas_dscal(3, 1.0 / norm, state->dir, 1);
+    read_vector(this_s, "origin", state->origin);
+    read_vector_normalize(this_s, "direction", state->dir);
 
     /* determine alpha, beta. discard t */
     g2l_off(O, state->dir, t, &state->alpha, &state->beta);

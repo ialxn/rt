@@ -8,8 +8,9 @@
  *
  */
 
-#include "io_util.h"
+#include <gsl/gsl_cblas.h>
 
+#include "io_util.h"
 
 int check_array(const char *section, const config_setting_t * s,
 		const char *name, const int nr)
@@ -78,7 +79,6 @@ int check_return_string(const char *section, const config_setting_t * s,
     return status;
 }
 
-
 int check_float(const char *section, const config_setting_t * s,
 		const char *name, const int nr)
 {
@@ -121,4 +121,24 @@ int check_int(const char *section, const config_setting_t * s,
     }
 
     return status;
+}
+
+void read_vector(const config_setting_t * s, const char *name,
+		 double *const vec)
+{
+    int i;
+    const config_setting_t *setting = config_setting_get_member(s, name);
+
+    for (i = 0; i < 3; i++)
+	vec[i] = config_setting_get_float_elem(setting, i);
+}
+
+void read_vector_normalize(const config_setting_t * s, const char *name,
+			   double *const vec)
+{
+    double norm;
+
+    read_vector(s, name, vec);
+    norm = cblas_dnrm2(3, vec, 1);
+    cblas_dscal(3, 1.0 / norm, vec, 1);
 }

@@ -29,6 +29,10 @@ extern int check_float(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_int(const char *section, const config_setting_t * s,
 		     const char *name, const int nr);
+extern void read_vector(const config_setting_t * s, const char *name,
+			double *const vec);
+extern void read_vector_normalize(const config_setting_t * s,
+				  const char *name, double *const vec);
 
 
 #endif				/* __IO_LISTS_H__ */

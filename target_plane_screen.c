@@ -58,11 +58,8 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 
     unsigned int i = 0;
     const char *S;
-    double norm;
     char f_name[256];
-    int j;
-
-    config_setting_t *this_target, *point, *normal, *x;
+    config_setting_t *this_target;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     state->name = strdup(name);
@@ -82,10 +79,7 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
 	i++;
     }
 
-    point = config_setting_get_member(this_target, "point");
-    for (j = 0; j < 3; j++)
-	state->point[j] = config_setting_get_float_elem(point, j);
-
+    read_vector(this_target, "point", state->point);
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
@@ -93,26 +87,14 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
      * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
      */
     /* get normal vector of plane (serving also as basis vector z) */
-    normal = config_setting_get_member(this_target, "normal");
-    for (j = 0; j < 3; j++)
-	state->normal[j] = config_setting_get_float_elem(normal, j);
-
-    /* normalize normal vector */
-    norm = cblas_dnrm2(3, state->normal, 1);
-    cblas_dscal(3, 1.0 / norm, state->normal, 1);
-
+    read_vector_normalize(this_target, "normal", state->normal);
     memcpy(&state->M[6], state->normal, 3 * sizeof(double));
 
     /* get basis vector x */
-    x = config_setting_get_member(this_target, "x");
-    for (j = 0; j < 3; j++)
-	state->M[j] = config_setting_get_float_elem(x, j);
-    /* normalize basis vector x */
-    norm = cblas_dnrm2(3, state->M, 1);
-    cblas_dscal(3, 1.0 / norm, state->M, 1);
+    read_vector_normalize(this_target, "x", state->M);
 
+    /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
-    /* state->M[3-5] = z cross x */
     state->n_data = 0;
 }
 

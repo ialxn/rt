@@ -85,9 +85,7 @@ static void tr_init_state(void *vstate, config_t * cfg, const char *name,
 	i++;
     }
 
-    point = config_setting_get_member(this_target, "P1");
-    for (j = 0; j < 3; j++)
-	state->P1[j] = config_setting_get_float_elem(point, j);
+    read_vector(this_target, "P1", state->P1);
 
     point = config_setting_get_member(this_target, "P2");
     for (j = 0; j < 3; j++)
