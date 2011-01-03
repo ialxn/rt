@@ -21,6 +21,10 @@ extern int check_array(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_string(const char *section, const config_setting_t * s,
 			const char *name, const int nr);
+extern int check_return_string(const char *section,
+			       const config_setting_t * s,
+			       const char *name, const int nr,
+			       const char **string);
 extern int check_float(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_int(const char *section, const config_setting_t * s,

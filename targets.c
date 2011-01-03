@@ -132,15 +132,12 @@ int check_targets(config_t * cfg)
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
 	     */
-	    status += check_string("sources", this_t, "name", i);
+	    status += check_string("targets", this_t, "name", i);
 
-	    if (config_setting_lookup_string(this_t, "type", &type) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'type' keyword in 'targets' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
+	    status +=
+		check_return_string("targets", this_t, "type", i, &type);
+	    if (!type)
+		continue;
 
 	    /* check target specific settings */
 
@@ -182,9 +179,10 @@ int check_targets(config_t * cfg)
 		status += check_array("targets", this_t, "point", i);
 		status += check_array("targets", this_t, "x", i);
 		status += check_array("targets", this_t, "y", i);
-		status += check_float("targets", this_t, "reflectivity", i);
+		status +=
+		    check_float("targets", this_t, "reflectivity", i);
 
-	    }			/* end 'square' */
+	    } /* end 'square' */
 	    else if (!strcmp(type, "triangle")) {
 		/*
 		 * triangle
@@ -199,7 +197,8 @@ int check_targets(config_t * cfg)
 		status += check_array("targets", this_t, "P1", i);
 		status += check_array("targets", this_t, "P2", i);
 		status += check_array("targets", this_t, "P3", i);
-		status += check_float("targets", this_t, "reflectivity", i);
+		status +=
+		    check_float("targets", this_t, "reflectivity", i);
 
 	    }			/* end 'triangle' */
 	}			/* end 'this_t', check next target */

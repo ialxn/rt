@@ -101,13 +101,10 @@ int check_sources(config_t * cfg)
 	    status += check_float("sources", this_s, "power", i);
 	    status += check_int("sources", this_s, "n_rays", i);
 
-	    if (config_setting_lookup_string(this_s, "type", &type) !=
-		CONFIG_TRUE) {
-		fprintf(stderr,
-			"missing 'type' keyword in 'sources' section %u\n",
-			i + 1);
-		status += ERR;
-	    }
+	    status +=
+		check_return_string("sources", this_s, "type", i, &type);
+	    if (!type)
+		continue;
 
 	    /* check source specific settings */
 
