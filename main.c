@@ -95,7 +95,6 @@ static void output_targets(const config_t * cfg)
 	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];
-	    double norm;
 	    double nX, nY;
 
 	    read_vector(this_t, "point", P);
@@ -104,10 +103,7 @@ static void output_targets(const config_t * cfg)
 
 	    /* N = X cross Y */
 	    cross_product(X, Y, N);
-
-	    /* normalize N */
-	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, 1.0 / norm, N, 1);
+	    normalize(N);
 
 	    /* make 'P' point to center of square */
 	    for (j = 0; j < 3; j++)
@@ -134,7 +130,6 @@ static void output_targets(const config_t * cfg)
 	    double P3[3];	/* redefined 'P3'='P3'-'P1' */
 	    double N[3];	/* 'P2' cross 'P3' */
 	    double Y[3];	/* local system. 'X' parallel 'P2' */
-	    double norm;
 	    config_setting_t *this;
 
 	    read_vector(this_t, "P1", P1);
@@ -150,10 +145,7 @@ static void output_targets(const config_t * cfg)
 
 	    /* N = P2 cross P3 */
 	    cross_product(P2, P3, N);
-
-	    /* normalize N */
-	    norm = cblas_dnrm2(3, N, 1);
-	    cblas_dscal(3, 1.0 / norm, N, 1);
+	    normalize(N);
 
 	    /*
 	     * draw triangle:
@@ -163,11 +155,8 @@ static void output_targets(const config_t * cfg)
 	    off_triangle(name, P1, P2, P3, N, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
 			 DZ);
 
-	    /* normalize 'P2' (local x axis) */
-	    norm = cblas_dnrm2(3, P2, 1);
-	    cblas_dscal(3, 1.0 / norm, P2, 1);
-
 	    /* 'Y' = 'N' cross 'P2' */
+	    normalize(P2);
 	    cross_product(N, P2, Y);
 
 	    off_axes(name, P1, P2, Y, N);	/*local system */

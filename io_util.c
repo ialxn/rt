@@ -11,6 +11,7 @@
 #include <gsl/gsl_cblas.h>
 
 #include "io_util.h"
+#include "vector_math.h"
 
 int check_array(const char *section, const config_setting_t * s,
 		const char *name, const int nr)
@@ -136,9 +137,6 @@ void read_vector(const config_setting_t * s, const char *name,
 void read_vector_normalize(const config_setting_t * s, const char *name,
 			   double *const vec)
 {
-    double norm;
-
     read_vector(s, name, vec);
-    norm = cblas_dnrm2(3, vec, 1);
-    cblas_dscal(3, 1.0 / norm, vec, 1);
+    normalize(vec);
 }

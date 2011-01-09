@@ -63,7 +63,6 @@ static void tr_init_state(void *vstate, config_t * cfg, const char *name,
 
     unsigned int i = 0;
     const char *S;
-    double norm;
     char f_name[256];
     int j;
 
@@ -108,16 +107,11 @@ static void tr_init_state(void *vstate, config_t * cfg, const char *name,
     /* x = 'E2' */
     for (j = 0; j < 3; j++)
 	state->M[j] = state->E2[j];
-    norm = cblas_dnrm2(3, state->M, 1);
-    cblas_dscal(3, 1.0 / norm, state->M, 1);
-
+    normalize(state->M);
 
     /* z = 'E2' cross 'E3' */
     cross_product(state->E2, state->E3, &state->M[6]);
-
-    /* normalize z */
-    norm = cblas_dnrm2(3, &state->M[6], 1);
-    cblas_dscal(3, 1.0 / norm, &state->M[6], 1);
+    normalize(&state->M[6]);
 
     /* y = state->M[3-5] = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);

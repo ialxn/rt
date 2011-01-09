@@ -95,8 +95,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      * save normalized vector in the transformation matrix 'M'
      */
     read_vector(this_target, "x", state->M);
-    state->dx = cblas_dnrm2(3, state->M, 1);
-    cblas_dscal(3, 1.0 / state->dx, state->M, 1);
+    state->dx = normalize(state->M);
 
     /*
      * get 'y' vector of plane,
@@ -104,8 +103,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      * save normalized vector in the transformation matrix 'M'
      */
     read_vector(this_target, "y", &state->M[3]);
-    state->dy = cblas_dnrm2(3, &state->M[3], 1);
-    cblas_dscal(3, 1.0 / state->dy, &state->M[3], 1);
+    state->dy = normalize(&state->M[3]);
 
     /* state->normal = state->M[6,7,8] = z = x cross y */
     cross_product(state->M, &state->M[3], state->normal);
