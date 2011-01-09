@@ -13,7 +13,7 @@
 
 extern void cross_product(const double a[3], const double b[3],
 			  double result[3]);
-extern void normalize(double a[3]);
+extern double normalize(double a[3]);
 
 extern void g2l(const double *mat, const double *origin, const double *g,
 		double *l);

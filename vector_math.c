@@ -20,11 +20,12 @@ void cross_product(const double a[3], const double b[3], double result[3])
     result[2] = a[0] * b[1] - a[1] * b[0];
 }
 
-void normalize(double a[3])
+double normalize(double a[3])
 {
     double norm = cblas_dnrm2(3, a, 1);
 
     cblas_dscal(3, 1.0 / norm, a, 1);
+    return norm;
 }
 
 void g2l(const double *mat, const double *origin, const double *g,
