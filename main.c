@@ -25,6 +25,7 @@
 #include "off.h"
 #include "sources.h"
 #include "targets.h"
+#include "vector_math.h"
 #include "version.h"
 
 #define CHECK_CONFIG 0

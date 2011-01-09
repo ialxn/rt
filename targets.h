@@ -79,12 +79,5 @@ extern void try_increase_memory(double **data, size_t * n_data,
 				size_t * n_alloc, const size_t N,
 				FILE * dump_file, int *dump_flag,
 				const int n_targets);
-extern void cross_product(const double a[3], const double b[3],
-			  double result[3]);
-extern void normalize(double a[3]);
-extern void g2l(const double *mat, const double *origin, const double *g,
-		double *l);
-extern void l2g(const double *mat, const double *origin, const double *l,
-		double *g);
 
 #endif				/* __TARGETS_H__ */

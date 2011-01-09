@@ -18,6 +18,8 @@
 #include "io_util.h"
 #include "ray.h"
 #include "targets.h"
+#include "vector_math.h"
+
 
 #define N_COORDINATES 2		/* store only x,y */
 
