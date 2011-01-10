@@ -90,19 +90,23 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
      */
     /*
-     * get 'x' vector of plane,
-     * calculate and store length 'dx', and
-     * save normalized vector in the transformation matrix 'M'
+     * get the other two corner points that define the 'x' and 'y'
+     * axis of ther plane. note for the axes 'x'='point'-'x',
+     * 'y'='point'-'y'.
      */
     read_vector(this_target, "x", state->M);
-    state->dx = normalize(state->M);
-
-    /*
-     * get 'y' vector of plane,
-     * calculate and store length 'dy', and
-     * save normalized vector in the transformation matrix 'M'
-     */
     read_vector(this_target, "y", &state->M[3]);
+ 
+    for (i = 0; i < 3; i++) {
+	state->M[i] -= state->point[i];
+	state->M[3 + i] -= state->point[i];
+    }
+
+    /* make 'point' point to center of square */
+    for (i = 0; i < 3; i++)
+	state->point[i] += (state->M[i] + state->M[3 + i]) / 2.0;
+
+    state->dx = normalize(state->M);
     state->dy = normalize(&state->M[3]);
 
     /* state->normal = state->M[6,7,8] = z = x cross y */
@@ -195,8 +199,8 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 	/* convert to local coordinates, origin is 'state->point' */
 	g2l(state->M, state->point, intercept, l_intercept);
 
-	if ((l_intercept[0] <= 0.0) || (l_intercept[0] >= state->dx)
-	    || (l_intercept[1] <= 0.0) || (l_intercept[1] >= state->dy)) {
+	if ((l_intercept[0] <= -state->dx) || (l_intercept[0] >= state->dx)
+	    || (l_intercept[1] <= -state->dy) || (l_intercept[1] >= state->dy)) {
 
 	    /* hit not within boundaries */
 	    free(intercept);

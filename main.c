@@ -101,16 +101,22 @@ static void output_targets(const config_t * cfg)
 	    read_vector(this_t, "x", X);
 	    read_vector(this_t, "y", Y);
 
-	    /* N = X cross Y */
-	    cross_product(X, Y, N);
-	    normalize(N);
+
+	    /* axes vectors are 'X' - 'P' and 'Y' - 'P' */
+	    for (j = 0; j < 3; j++) {
+		X[j] -= P[j];
+		Y[j] -= P[j];
+	    }
 
 	    /* make 'P' point to center of square */
 	    for (j = 0; j < 3; j++)
 		P[j] += (X[j] + Y[j]) / 2.0;
 
-	    nX = cblas_dnrm2(3, X, 1);
-	    nY = cblas_dnrm2(3, Y, 1);
+	    nX = normalize(X);
+	    nY = normalize(Y);
+	    /* N = X cross Y */
+	    cross_product(X, Y, N);
+
 	    /*
 	     * draw plane:
 	     *   front (white, mirror) at 'P'+'DZ'
@@ -119,8 +125,6 @@ static void output_targets(const config_t * cfg)
 	    off_plane(name, P, N, nX, nY, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
 		      DZ);
 
-	    cblas_dscal(3, 1.0 / nX, X, 1);
-	    cblas_dscal(3, 1.0 / nY, Y, 1);
 	    off_axes(name, P, X, Y, N);	/*local system */
 
 	} else if (!strcmp(type, "triangle")) {
