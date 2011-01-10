@@ -11,9 +11,12 @@
 #ifndef __VECTOR_MATH_H__
 #define __VECTOR_MATH_H__
 
+#include "ray.h"
+
 extern void cross_product(const double a[3], const double b[3],
 			  double result[3]);
 extern double normalize(double a[3]);
+extern void reflect(ray_t * r, const double N[3], const double P[3]);
 
 extern void g2l(const double *mat, const double *origin, const double *g,
 		double *l);

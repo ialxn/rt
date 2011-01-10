@@ -260,11 +260,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray,
 	return NULL;
 
     } else {			/* reflect 'in_ray' */
-	const double t = cblas_ddot(3, state->normal, 1, in_ray->direction, 1);	/* 'N' dot 'in_ray' */
-
-	/* 'in_ray' - 2 * 'N' dot 'in_ray' * 'N' */
-	cblas_daxpy(3, -2.0 * t, state->normal, 1, in_ray->direction, 1);
-	memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
+	reflect(in_ray, state->normal, hit);
 
 	state->last_was_hit = 1;	/* mark as hit */
 

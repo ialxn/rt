@@ -8,6 +8,7 @@
  *
  */
 
+#include <string.h>
 #include <gsl/gsl_cblas.h>
 
 #include "vector_math.h"
@@ -26,6 +27,14 @@ double normalize(double a[3])
 
     cblas_dscal(3, 1.0 / norm, a, 1);
     return norm;
+}
+
+void reflect(ray_t * r, const double N[3], const double P[3])
+{
+    const double t = cblas_ddot(3, N, 1, r->direction, 1);	/* 'N' dot 'r' */
+
+    cblas_daxpy(3, -2.0 * t, N, 1, r->direction, 1);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
+    memcpy(r->origin, P, 3 * sizeof(double));	/* update origin */
 }
 
 void g2l(const double *mat, const double *origin, const double *g,
