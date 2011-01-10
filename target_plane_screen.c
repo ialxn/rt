@@ -211,7 +211,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ray_t *out;
     double hit_copy[3];
 
     /* transform to local coordinates */
@@ -238,15 +237,9 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
 			    &(state->n_alloc), N_COORDINATES + 1,
 			    state->dump_file, dump_flag, n_targets);
 
-    out = (ray_t *) malloc(sizeof(ray_t));
+    memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
+    return in_ray;
 
-    memcpy(out->origin, hit, 3 * sizeof(double));	/* update origin */
-    memcpy(out->direction, in_ray->direction, 3 * sizeof(double));	/* copy direction */
-    out->power = in_ray->power;
-
-    free(in_ray);
-
-    return out;
 }
 
 static const char *ps_get_target_name(void *vstate)
