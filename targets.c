@@ -168,17 +168,19 @@ int check_targets(config_t * cfg)
 	    else if (!strcmp(type, "square")) {
 		/*
 		 * square
-		 *  - array 'point' (corner point of square) [x,y,z] / double
-		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
-		 *  - array 'y' (direction of local y-axis of plane) [x,y,z] / double
+		 *  - array 'P1' (corner point of square) [x,y,z] / double
+		 *  - array 'P2' (corner point of square) [x,y,z] / double
+		 *               direction of local x-axis of plane: 'P2'-'P1'
+		 *  - array 'P3' (corner point of square) [x,y,z] / double
+		 *               direction of local y-axis of plane: 'P2'-'P1'
 		 *
 		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
 		 *       anti-parallel to normal are reflected. ray impiging
 		 *       parallel to square hit its back side and are absorbed
 		 */
-		status += check_array("targets", this_t, "point", i);
-		status += check_array("targets", this_t, "x", i);
-		status += check_array("targets", this_t, "y", i);
+		status += check_array("targets", this_t, "P1", i);
+		status += check_array("targets", this_t, "P2", i);
+		status += check_array("targets", this_t, "P3", i);
 		status +=
 		    check_float("targets", this_t, "reflectivity", i);
 

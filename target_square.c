@@ -82,7 +82,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
 	i++;
     }
 
-    read_vector(this_target, "point", state->point);
+    read_vector(this_target, "P1", state->point);
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
@@ -91,12 +91,12 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      */
     /*
      * get the other two corner points that define the 'x' and 'y'
-     * axis of ther plane. note for the axes 'x'='point'-'x',
-     * 'y'='point'-'y'.
+     * axis of ther plane. note for the axes 'x'='P2'-'P1',
+     * 'y'='P3'-'P1'.
      */
-    read_vector(this_target, "x", state->M);
-    read_vector(this_target, "y", &state->M[3]);
- 
+    read_vector(this_target, "P2", state->M);
+    read_vector(this_target, "P3", &state->M[3]);
+
     for (i = 0; i < 3; i++) {
 	state->M[i] -= state->point[i];
 	state->M[3 + i] -= state->point[i];
@@ -200,7 +200,8 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 	g2l(state->M, state->point, intercept, l_intercept);
 
 	if ((l_intercept[0] <= -state->dx) || (l_intercept[0] >= state->dx)
-	    || (l_intercept[1] <= -state->dy) || (l_intercept[1] >= state->dy)) {
+	    || (l_intercept[1] <= -state->dy)
+	    || (l_intercept[1] >= state->dy)) {
 
 	    /* hit not within boundaries */
 	    free(intercept);

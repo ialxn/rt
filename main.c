@@ -97,24 +97,27 @@ static void output_targets(const config_t * cfg)
 	    double X[3], Y[3];
 	    double nX, nY;
 
-	    read_vector(this_t, "point", P);
-	    read_vector(this_t, "x", X);
-	    read_vector(this_t, "y", Y);
-
-
-	    /* axes vectors are 'X' - 'P' and 'Y' - 'P' */
+	    /*
+	     * read three corner points:
+	     * P1:
+	     * P2: -> P2-P1 defines x axis
+	     * P3: -> P3-P1 defines y axis
+	     */
+	    read_vector(this_t, "P1", P);
+	    read_vector(this_t, "P2", X);
+	    read_vector(this_t, "P3", Y);
 	    for (j = 0; j < 3; j++) {
 		X[j] -= P[j];
 		Y[j] -= P[j];
 	    }
 
-	    /* make 'P' point to center of square */
+	    /* make 'P1' point to center of square */
 	    for (j = 0; j < 3; j++)
 		P[j] += (X[j] + Y[j]) / 2.0;
 
 	    nX = normalize(X);
 	    nY = normalize(Y);
-	    /* N = X cross Y */
+	    /* surface normal N = X cross Y */
 	    cross_product(X, Y, N);
 
 	    /*
