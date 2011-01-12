@@ -234,7 +234,6 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray,
 	state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] =
 	    ppr;
 	state->n_data++;
-	state->last_was_hit = 1;	/* mark as hit */
 
 	/*
 	 * increase data size for next interception
@@ -257,8 +256,9 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray,
 	cblas_daxpy(3, -2.0 * t, state->normal, 1, in_ray->direction, 1);
 	memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
 
-	return in_ray;
+	state->last_was_hit = 1;	/* mark as hit */
 
+	return in_ray;
     }
 }
 
