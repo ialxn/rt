@@ -16,6 +16,7 @@
 extern void cross_product(const double a[3], const double b[3],
 			  double result[3]);
 extern double normalize(double a[3]);
+extern int orthonormalize(double x[3], double y[3], double z[3]);
 extern void reflect(ray_t * r, const double N[3], const double P[3]);
 
 extern void g2l(const double *mat, const double *origin, const double *g,

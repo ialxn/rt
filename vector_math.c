@@ -11,6 +11,7 @@
 #include <string.h>
 #include <gsl/gsl_cblas.h>
 
+#include "io_util.h"
 #include "vector_math.h"
 
 
@@ -27,6 +28,32 @@ double normalize(double a[3])
 
     cblas_dscal(3, 1.0 / norm, a, 1);
     return norm;
+}
+
+int orthonormalize(double x[3], double y[3], double z[3])
+/*
+ * make sure 'x', 'y', 'z' form a orthonormal basis.
+ * 1): 'z' is a given (maybe normalize).
+ * 2): 'y' = 'z' cross 'x' and normalize
+ * 3): verify that 'x' dot 'z' ('x' dot 'z' must be zero).
+ *     if this is not the case 'y' = 'z' cross 'x'.
+ *
+ * return NO_ERR / ERR if 'x' was not / was changed
+ */
+{
+    int status = NO_ERR;
+
+    normalize(z);
+
+    cross_product(z, x, y);
+    normalize(y);
+
+    if (cblas_ddot(3, x, 1, z, 1)) {	/* 'x' is not perpendicular to 'z' */
+	cross_product(y, z, x);
+	status = ERR;
+    }
+
+    return status;
 }
 
 void reflect(ray_t * r, const double N[3], const double P[3])
