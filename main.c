@@ -168,6 +168,31 @@ static void output_targets(const config_t * cfg)
 
 	    off_axes(name, P1, P2, Y, N);	/*local system */
 
+	} else if (!strcmp(type, "ellipsoid")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double axes[3];
+	    double z_min, z_max;
+
+	    read_vector(this_t, "center", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "z", Z);
+	    read_vector(this_t, "axes", axes);
+
+	    config_setting_lookup_float(this_t, "z_min", &z_min);
+	    config_setting_lookup_float(this_t, "z_max", &z_max);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw ellipsoid:
+	     *   inside: (white, reflecting) scaled by 1-'DZ'
+	     *   outside (black, absorbing)
+	     */
+	    off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0, 1.0,
+			  0.0, 0.0, 0.0, 1.0 - DZ);
+
 	}
     }				/* end all targets */
 }

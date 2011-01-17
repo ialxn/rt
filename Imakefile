@@ -12,6 +12,7 @@ SRCS= main.c \
       target_plane_screen.c \
       target_square.c \
       target_triangle.c \
+      target_ellipsoid.c \
       off.c \
       vector_math.c
 
@@ -26,6 +27,7 @@ OBJ= main.o \
      target_plane_screen.o \
      target_square.o \
      target_triangle.o \
+     target_ellipsoid.o \
      off.o \
      vector_math.o
 
