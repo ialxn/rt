@@ -236,6 +236,7 @@ static void run_simulation(source_list_t * source_list,
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
     int dump_flag = 0;
+    unsigned int n_lost = 0;
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
 
@@ -310,6 +311,7 @@ static void run_simulation(source_list_t * source_list,
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;
 		} else {	/* no target hit, 'ray' is lost */
+		    n_lost++;
 		    free(ray);
 		    ray = NULL;	/* mark as absorbed */
 		}
@@ -319,6 +321,8 @@ static void run_simulation(source_list_t * source_list,
 	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
     gsl_rng_free(r);
+
+    fprintf(stdout, "%u rays lost\n", n_lost);
 }
 
 static void help(void)
