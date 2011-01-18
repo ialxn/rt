@@ -27,8 +27,8 @@ typedef struct sq_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
     FILE *dump_file;
-    double point[3];		/* corner coordinate */
-    double dx;			/* square is 'dx' times 'dy' local coordinates */
+    double point[3];		/* center coordinate */
+    double dx;			/* square is '2*dx' times '2*dy' local coordinates */
     double dy;
     double reflectivity;	/* reflectivity of target */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
@@ -106,8 +106,8 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
     for (i = 0; i < 3; i++)
 	state->point[i] += (state->M[i] + state->M[3 + i]) / 2.0;
 
-    state->dx = normalize(state->M);
-    state->dy = normalize(&state->M[3]);
+    state->dx = normalize(state->M) / 2.0;
+    state->dy = normalize(&state->M[3]) / 2.0;
 
     /* state->normal = state->M[6,7,8] = z = x cross y */
     cross_product(state->M, &state->M[3], state->normal);
