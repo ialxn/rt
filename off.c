@@ -13,6 +13,7 @@
 
 #include <gsl/gsl_cblas.h>
 
+#include "vector_math.h"
 #include "off.h"
 
 static FILE *open_off(const char *name)
@@ -287,6 +288,47 @@ void off_plane(const char *name, const double *P, const double *N,
     fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
+}
+
+extern void off_square(const char *name, const double *P, const double *X,
+		       const double *Y, const double rf, const double gf,
+		       const double bf, const double rb, const double gb,
+		       const double bb, const double dz)
+{
+    double N[3];
+    FILE *outf = open_off(name);
+
+    cross_product(X, Y, N);
+    normalize(N);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "8 2 0\n\n");	/* 6 vertices, 2 faces */
+
+    /* front side */
+    fprintf(outf, "%f\t%f\t%f\n", P[0], P[1], P[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0], P[1] + X[1], P[2] + X[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0] + Y[0], P[1] + X[1] + Y[1],
+	    P[2] + X[2] + Y[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + Y[0], P[1] + Y[1], P[2] + Y[2]);
+
+    /* backside side: offset by 'dz' times 'N' */
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0], P[1] + dz * N[1],
+	    P[2] + dz * N[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + X[0],
+	    P[1] + dz * N[1] + X[1], P[2] + dz * N[2] + X[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + X[0] + Y[0],
+	    P[1] + dz * N[1] + X[1] + Y[1],
+	    P[2] + dz * N[2] + X[2] + Y[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + Y[0],
+	    P[1] + dz * N[1] + Y[1], P[2] + dz * N[2] + Y[2]);
+
+    /*
+     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
+     */
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
+    fclose(outf);
+
 }
 
 void off_triangle(const char *name, const double *P1,

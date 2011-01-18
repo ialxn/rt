@@ -111,6 +111,13 @@ static void output_targets(const config_t * cfg)
 		Y[j] -= P[j];
 	    }
 
+	    /*
+	     * draw plane:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_square(name, P, X, Y, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+
 	    /* make 'P1' point to center of square */
 	    for (j = 0; j < 3; j++)
 		P[j] += (X[j] + Y[j]) / 2.0;
@@ -119,14 +126,6 @@ static void output_targets(const config_t * cfg)
 	    nY = normalize(Y);
 	    /* surface normal N = X cross Y */
 	    cross_product(X, Y, N);
-
-	    /*
-	     * draw plane:
-	     *   front (white, mirror) at 'P'+'DZ'
-	     *   rear side (black, absorbs) at 'P'
-	     */
-	    off_plane(name, P, N, nX, nY, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-		      DZ);
 
 	    off_axes(name, P, X, Y, N);	/*local system */
 
