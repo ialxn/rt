@@ -131,6 +131,9 @@ int check_targets(config_t * cfg)
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
+	     *          - "ellipsoid"             : ellipsoid. specular reflection on
+	     *                                      inside surface, total absorption
+	     *                                      on outside surface.
 	     */
 	    status += check_string("targets", this_t, "name", i);
 
@@ -202,7 +205,26 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_float("targets", this_t, "reflectivity", i);
 
-	    }			/* end 'triangle' */
+	    } /* end 'triangle' */
+	    else if (!strcmp(type, "ellipsoid")) {
+		/*
+		 * ellipsoid:
+		 *  - array 'center' (center of ellipsoid) [x,y,z] / double
+		 *  - array 'x-axis' (direction of local x-axis) [x,y,z] / double
+		 *  - array 'z-axis' (direction of local z-axis) [x,y,z] / double
+		 *  - array 'axes' (half axes of ellipsoid) [a,b,c] / double
+		 *  - 'z-min', 'z-max' (ellipsoid only valid for 'z-min' <= z <= 'z-max' / doubles
+		 */
+		status += check_array("targets", this_t, "center", i);
+		status += check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "z", i);
+		status += check_array("targets", this_t, "axes", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status +=
+		    check_float("targets", this_t, "reflectivity", i);
+
+	    }			/* end 'ellipsoid' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 

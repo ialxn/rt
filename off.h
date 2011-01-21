@@ -31,12 +31,18 @@ extern void off_triangle(const char *name, const double *P1,
 			 const double *N, const double rf, const double gf,
 			 const double bf, const double rb, const double gb,
 			 const double bb, const double dz);
+extern void off_ellipsoid(const char *name, const double *origin,
+			  const double *Z, const double *axes,
+			  const double z_min, const double z_max,
+			  const double ri, const double gi,
+			  const double bi, const double ro,
+			  const double go, const double bo,
+			  const double dz);
 
 extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
 extern void l2g_off(const double *P, const double *L, double *G,
 		    const double alpha, const double beta);
-
 
 
 #endif				/* __OFF_H__ */

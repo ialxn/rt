@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 #include <gsl/gsl_cblas.h>
+#include <gsl/gsl_math.h>
 
 #include "vector_math.h"
 #include "off.h"
@@ -370,6 +371,124 @@ void off_triangle(const char *name, const double *P1,
     fprintf(outf, "4 3 4 5 0 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
+}
+
+void off_ellipsoid(const char *name, const double *origin, const double *Z,
+		   const double *axes, const double z_min,
+		   const double z_max, const double ri, const double gi,
+		   const double bi, const double ro, const double go,
+		   const double bo, const double dz)
+{
+#define N_TRANS 5
+#define N_ROT 12
+
+    int i, j;
+    double alpha, beta;
+    double O[] = { 0.0, 0.0, 0.0 };
+    const double delta_z = (z_max - z_min) / (N_TRANS - 1);
+    const double delta_phi = 2.0 * M_PI / N_ROT;
+    double l[3], g[3];
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "%d %d 0\n\n", 2 * N_TRANS * N_ROT,
+	    2 * (N_TRANS - 1) * N_ROT);
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'l'
+     */
+    g2l_off(O, Z, l, &alpha, &beta);
+
+    /*
+     * calculate and output vertices
+     * outside surface ('ro', 'go', 'bo')
+     */
+    for (i = 0; i < N_TRANS; i++) {
+	double r;
+
+	l[2] = z_min + i * delta_z;
+	r = 1.0 - l[2] * l[2] / (axes[2] * axes[2]);
+	if (r < GSL_SQRT_DBL_EPSILON)
+	    r = GSL_SQRT_DBL_EPSILON;
+
+	for (j = 0; j < N_ROT; j++) {
+	    const double phi = j * delta_phi;
+
+	    l[0] = r * axes[0] * sin(phi);
+	    l[1] = r * axes[1] * cos(phi);
+
+	    l2g_off(origin, l, g, alpha, beta);
+
+	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
+	}
+    }
+
+    /*
+     * calculate and output vertices
+     * inside surface scaled by 'dz' ('ri', 'gi', 'bi')
+     */
+    for (i = 0; i < N_TRANS; i++) {
+	double r;
+
+	l[2] = z_min + i * delta_z;
+	r = dz * (1.0 - l[2] * l[2] / (axes[2] * axes[2]));
+	if (r < GSL_SQRT_DBL_EPSILON)
+	    r = GSL_SQRT_DBL_EPSILON;
+
+	for (j = 0; j < N_ROT; j++) {
+	    const double phi = j * delta_phi;
+
+	    l[0] = r * axes[0] * sin(phi);
+	    l[1] = r * axes[1] * cos(phi);
+
+	    l2g_off(origin, l, g, alpha, beta);
+
+	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
+	}
+    }
+
+    /*
+     * outside surface
+     * output faces (N_ROT=12, N_TRANS=5)
+     *   0       1      13      12       0
+     *   1       2      14      13       1
+     *           .
+     *  10      11      23      22      10
+     *  11       0      12      23      11
+     *  12      13      25      24      12
+     *           .
+     *           .
+     *           .
+     *  46      47      59      58      46
+     *  47      36      48      59      47
+     */
+    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
+	if ((i + 1) % N_ROT)
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+		    i, i + 1, i + 1 + N_ROT, i + N_ROT, i, ro, go, bo);
+	else
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+		    i, i + 1 - N_ROT, i + 1, i + N_ROT, i, ro, go, bo);
+
+    /*
+     * same for inside surface
+     */
+    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
+	if ((i + 1) % N_ROT)
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+		    i + N_TRANS * N_ROT, i + 1 + N_TRANS * N_ROT,
+		    i + 1 + N_ROT + N_TRANS * N_ROT,
+		    i + N_ROT + N_TRANS * N_ROT, i + N_TRANS * N_ROT, ri,
+		    gi, bi);
+	else
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+		    i + N_TRANS * N_ROT, i + N_TRANS * N_ROT + 1 - N_ROT,
+		    i + N_TRANS * N_ROT + 1, i + N_TRANS * N_ROT + N_ROT,
+		    i + N_TRANS * N_ROT, ri, gi, bi);
+
+    fclose(outf);
+
 }
 
 void g2l_off(const double *P, const double *N, double *L,
