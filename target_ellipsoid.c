@@ -161,7 +161,6 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
     /*
      * calculate point of interception D
      */
-
     /*
      * transform 'in_ray' from global to local system
      * origin 'in_ray': rotate / translate by origin of local system
@@ -280,15 +279,11 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray,
     } else {			/* reflect 'in_ray' */
 	double l_N[3], N[3];
 	double O[] = { 0.0, 0.0, 0.0 };
-	double t;
 
 	ell_surf_normal(l_hit, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
-	t = cblas_ddot(3, N, 1, in_ray->direction, 1);	/* 'N' dot 'in_ray' */
 
-	/* 'in_ray' - 2 * 'N' dot 'in_ray' * 'N' */
-	cblas_daxpy(3, -2.0 * t, N, 1, in_ray->direction, 1);
-	memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
+	reflect(in_ray, N, hit);
 
 	return in_ray;
 

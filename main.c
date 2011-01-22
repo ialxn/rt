@@ -248,6 +248,7 @@ static void output_geometry(config_t * cfg)
     const double Z[] = { 0.0, 0.0, AXES_LENGTH };
 
     off_axes(NULL, O, X, Y, Z);
+
     output_sources(cfg);
     output_targets(cfg);
 }
@@ -432,10 +433,12 @@ int main(int argc, char **argv)
 	    break;
 
 	switch (c) {
+
 	case 'a':
 	    snprintf(file_mode, 2, "a");
 	    seed = atoi(optarg);
 	    break;
+
 	case 'm':
 	    mode = atoi(optarg);
 	    if ((mode > RUN) || (mode < CHECK_CONFIG)) {
@@ -443,6 +446,7 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	    }
 	    break;
+
 	case 'V':
 	    fprintf(stdout, " rt Version %s (AI52)\n", VERSION);
 	    exit(EXIT_SUCCESS);

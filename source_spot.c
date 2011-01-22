@@ -85,7 +85,7 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
 
-	if (state->cos_theta < 1.0) {	/* theta = 0.0 */
+	if (state->cos_theta < 1.0) {	/* theta != 0.0 */
 	    const double O[] = { 0.0, 0.0, 0.0 };
 	    double t;
 	    double l_ray[3];	/* direction of ray in local system */
@@ -104,7 +104,7 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 
 	    l2g_off(O, l_ray, ray->direction, state->alpha, state->beta);
 
-	} else			/* all rays in same direction */
+	} else			/* all rays in direction 'dir' */
 	    memcpy(ray->direction, state->dir, 3 * sizeof(double));
 
 	/* copy / initialize rest of structure */
