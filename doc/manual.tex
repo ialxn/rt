@@ -1,0 +1,243 @@
+\documentclass[10pt,a4paper,titlepage]{article}
+
+\newcommand{\rt}{{\tt rt} }
+
+\title{ {\Huge Manual for \\
+		\rt \\
+		Version 0.1 \\
+		\vspace{2cm}}}
+
+\author{Dr. Ivo Alxneit \\
+	Paul Scherrer Institute \\
+	CH-5232 Villigen PSI \\
+	SWITZERLAND \\
+	\\
+	phone: ++41 56 310 4092 \\
+	fax: ++41 56 310 4416 \\
+	e-mail: ivo.alxneit@psi.ch \\
+	\vspace{4cm}}
+
+
+\begin{document}
+
+\maketitle
+
+\pagenumbering{roman}
+\tableofcontents
+\pagebreak
+
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+
+
+\section{Installation}
+
+To compile and install \rt you need {\tt (I)make}, a C-compiler. In addition, the following libraries are needed: {\tt GSL} (Gnu Scientific Library), a C-version of BLAS (Basic Linear Algebra System) such as {\tt cblas} or {\tt Atlas}, and {\tt libconfig}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably you will make sure that {\tt -O2 -g } are set. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries \rt and {\rt-semistatic} (a semi statically linked version {\rt-semistatic}.
+
+Currently you will get the following (harmless) warnings:
+
+\begin{verbatim}
+target_plane_screen.c: In function ‘ps_get_intercept’:
+target_plane_screen.c:135: warning: unused parameter ‘r’
+\end{verbatim}
+
+
+
+\section{Command line parameters}
+
+{\bf Syntax:} \rt [options] {\tt <} input {\tt >} output 2 {\tt >} errors
+\vspace{1em}
+\begin{list}{}
+{\setlength{\leftmargin}{3.5cm}
+\setlength{\labelwidth}{3.0cm}
+\setlength{\rightmargin}{0.5cm}}
+
+\item[\tt [--append|-a]] Append to output files. A new seed value for the random number generator is supplied on the command line. This overrides the keyword {\tt seed} in the input file.
+
+\item[\tt [--mode|-m]] Select mode [012] for this run.
+\begin{itemize}
+\item[\tt -m0]{Check syntax of input [default]}
+\item[\tt -m1]{Output {\tt OFF} files useful to visualize the geometry\footnote{geomview}}
+\item[\tt -m2]{perform a ray traceing run}
+\end{itemize}
+
+\item[\tt [--help|-h]] prints a small help message.
+
+\item[\tt [--Version|-V]] Prints the version number.
+
+\end{list}
+
+
+\section{Structure in input file}
+Input is given by a series of 'keyword'='value' pairs using {\tt libconfig}\footnote{Version 1.4.6, www.xxx.yyy-}. Keywords and strings\footnote{in double quotes.} are case sensitive, float values must contain a decimal point. For details on the syntax of the configuration files, please consult the documentation of {\tt libconfig}. Note, that {\tt libconfig} treats everything after the \# character until the end of the line as comment, that {\tt libconfig} is white space agnostic, and that {\tt libconfig} allows up to ten levels of included files (via the {\tt @include "filename"} directive. The general structure of the input is as follows:
+
+\begin{verbatim}
+global_parameter_1 = value_1;
+global_parameter_2 = value_2;
+.
+global_parameter_n = value_n;
+
+sources = (
+{definition of source_1},
+{definition of source_2},
+.
+{definition of source_n}
+);
+
+targets = (
+{definition of target_1},
+{definition of target_2},
+.
+{definition of target_n},
+);
+
+\end{verbatim}
+
+All sources and all targets are identified by their {\tt type}. The common {\tt name} keyword\footnote{must be unique.} is used as base name for the various output files\footnote{{\tt axes\_NAME.off} and {\tt NAME.off} (mode 1)  and {\tt NAME.dat} for targets only (mode 2).}. The order of the keywords is not important.
+
+\subsection{Global Parameters}
+\begin{itemize}
+\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number.\\
+The value will be overridden by the {\tt -a} command line argument.}
+\end{itemize}
+
+
+
+\subsection{Sources}
+
+All sources define the keywords {\tt power} and {\tt n\_rays}, i.e.~the total power assigned to the source and the number of rays that start from it. Each ray thus represents a power of {\tt power}/{\tt n\_rays}.
+
+\subsubsection{Uniform Point Source}
+
+\noindent {\tt type="uniform point source";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt origin=[x,y,z];}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt n\_rays=N;}
+
+Defines an uniform point source located at {\tt origin}.
+
+
+\subsubsection{Spot Source}
+
+\noindent {\tt type="spot source";}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt origin=[x,y,z];}
+
+\noindent {\tt direction=[x,y,z];}
+
+\noindent {\tt theta=P.p;}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt n\_rays=N;}
+
+Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in direction {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in direction {\tt direction}. {\tt theta=180.0} defines an uniform point source.
+
+
+\subsection{Targets}
+
+\subsubsection{One-Side Plane Screen}
+
+\noindent {\tt type="one-sided plane screen";}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt point=[x,y,z];}
+
+\noindent {\tt normal=[x,y,z];}
+
+\noindent {\tt x=[x,y,z];}
+
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and its surface normal {\tt normal}. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. The one-side plane screen registers all rays that intercept the plane anti-parallel to its normal vector.
+
+
+\subsubsection{Two-Side Plane Screen}
+
+\noindent {\tt type="two-sided plane screen";}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt point=[x,y,z];}
+
+\noindent {\tt normal=[x,y,z];}
+
+\noindent {\tt x=[x,y,z];}
+
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and its surface normal {\tt normal}. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. The two-side plane screen registers all rays that intercept the plane.
+
+
+\subsubsection{Triangle}
+
+\noindent {\tt type="triangle";}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt P1=[x,y,z];}
+
+\noindent {\tt P2=[x,y,z];}
+
+\noindent {\tt P3=[x,y,z];}
+
+\noindent {\tt reflectivity=P.p;}
+
+Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local z axis.} defined in this way points away from the reflective surface with reflectivity {\tt reflectivity}. The opposite surface is non-reflecting and absorbs all radiation. The origin of the local, right handed coordinate system is located at {\tt P1} and $P2 - P1$ defines the local x axis. 
+
+
+\subsubsection{Square}
+
+\noindent {\tt type="square";}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt P1=[x,y,z];}
+
+\noindent {\tt P2=[x,y,z];}
+
+\noindent {\tt P3=[x,y,z];}
+
+\noindent {\tt reflectivity=P.p;}
+
+Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=P2-P1$, is parallel to the local x axis and $b=P3 - P1$ is parallel to the local y axis. The local origin is at the center of the rectangle. The local z axis follows from the right handedness of the local system. The surface from which the z-axis points points away is reflecting while the opposite surface absorbs all radiation.
+
+\subsubsection{Ellipsoid}
+
+\noindent {\tt type="ellipsoid;"}
+
+\noindent {\tt name="NAME,";}
+
+\noindent {\tt center=[x,y,z];}
+
+\noindent {\tt x=[x,y,z];}
+
+\noindent {\tt z=[x,y,z];}
+
+\noindent {\tt axes=[a,b,c];}
+
+\noindent {\tt z\_min=P.p;}
+
+\noindent {\tt z\_max=P.p;}
+
+\noindent {\tt reflectivity=P.p;}
+
+Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid AR given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation.
+
+
+\section{Availability}
+\rt is free and available upon request from the author (ivo.alxneit@psi.ch).
+
+
+
+\section{Bugs} Please send any bug report or fix or enhancement to the author. They probably will be include in a future version. However {\bf no} actual support will be available from the author.
+
+\end{document}
+
+
+
