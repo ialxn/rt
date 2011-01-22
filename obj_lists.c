@@ -27,11 +27,11 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
     for (i = 0; i < *n_sources; ++i) {	/* iterate through all sources */
 	source_list_t *new_entry;
 	source_t *new_source;
-	config_setting_t *this_source;
+	const config_setting_t *this_source =
+	    config_setting_get_elem(sources, (unsigned int) i);
 	const char *name;	/* name (identifier) of 'this_source' */
 	const char *type;	/* type (identifier) of 'this_source' */
 
-	this_source = config_setting_get_elem(sources, (unsigned int) i);
 	config_setting_lookup_string(this_source, "name", &name);
 
 	/*
@@ -77,11 +77,11 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
     for (i = 0; i < *n_targets; ++i) {	/* iterate through all targets */
 	target_list_t *new_entry;
 	target_t *new_target;
-	config_setting_t *this_target;
+	const config_setting_t *this_target =
+	    config_setting_get_elem(targets, (unsigned int) i);
 	const char *name;	/* name (identifier) of 'this_target' */
 	const char *type;	/* type (identifier) of 'this_target' */
 
-	this_target = config_setting_get_elem(targets, (unsigned int) i);
 	config_setting_lookup_string(this_target, "name", &name);
 
 	/*

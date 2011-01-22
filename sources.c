@@ -107,7 +107,6 @@ int check_sources(config_t * cfg)
 		continue;
 
 	    /* check source specific settings */
-
 	    if (!strcmp(type, "uniform point source")) {
 		/*
 		 * uniform point source:

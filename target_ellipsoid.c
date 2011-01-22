@@ -161,7 +161,6 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
     /*
      * calculate point of interception D
      */
-
     /*
      * transform 'in_ray' from global to local system
      * origin 'in_ray': rotate / translate by origin of local system
