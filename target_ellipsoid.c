@@ -182,49 +182,43 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 
     if (D < GSL_SQRT_DBL_EPSILON)	/* no or one (tangent ray) interception */
 	return NULL;
-    else {			/* two interceptions, 'h1' and 'h2' */
+    else {			/* two interceptions, h- and h+ */
 	const double t = sqrt(D);
-	const double h1 = (-B + t) / (2 * A);
-	const double h2 = (-B - t) / (2 * A);
-	const double *h = NULL;	/* points to correct solution */
-	double z1, z2, *z;
+	const double A2 = 2.0 * A;
+	double h, z;
 	/*
-	 * find valid interception:
-	 *    1) ray must travel forward (check 'h1' and 'h2')
-	 *    2) z component must be in proper range (z_min <= z <= z_max).
-	 *    3) if both, 'h1' and 'h2', are valid, choose the nearest.
-	 *       it hits the outside and is absorbed.
+	 * - 'A' must be positive as it is the sum of squares.
+	 * - the solution that contains the term '-t' must be smaller
+	 *   i.e. further towards -inf.
+	 * - the ray travels in forward direction thus only positive
+	 *   solutions are of interest.
+	 * thus:
+	 * 1) check if the solution (h-) with '-t' is positive and
+	 *    its z component 'z' is inside the allowed range, i.e.
+	 *    'z_min' <= 'z' <= 'z_max'.
+	 * 2) only if 1) does not produce a valid solution repeat with
+	 *    '+t' (h+)
+	 * 3) if 2) produces no valid solution return 'NULL'
 	 */
-	if ((h1 < 0.0) && (h2 < 0.0))	/* 1) no intercept */
+
+	h = (-B - t) / A2;
+	if (h <= GSL_SQRT_DBL_EPSILON)	/* h- not positive / valid */
+	    h = (-B + t) / A2;
+	if (h <= GSL_SQRT_DBL_EPSILON)	/* h+ not positive / valid */
 	    return NULL;
 
-	z1 = r_O[2] + h1 * r_N[2];	/* z component of h1 */
-	if (h1 > GSL_SQRT_DBL_EPSILON && z1 <= state->z_max
-	    && z1 >= state->z_min) {
-	    /* 1), 2a) */
-	    h = &h1;		/* at least 'h1' is valid */
-	    z = &z1;
-	}
-
-	z2 = r_O[2] + h2 * r_N[2];	/* z component of h2 */
-	if (h2 > GSL_SQRT_DBL_EPSILON && z2 <= state->z_max
-	    && z2 >= state->z_min && (h1 > h2)) {
-	    /* 1), 2b), 3) */
-	    h = &h2;		/* 'h2' is valid too but nearest intercept (if h1 was valid) */
-	    z = &z2;
-	}
-
-	if (!h)			/* no valid solution */
-	    return NULL;
+	z = r_O[2] + h * r_N[2];	/* z component of h */
+	if (z < state->z_min || z > state->z_max)
+	    return NULL;	/* z component outside range */
 	else {
 	    double dot;
 	    double l_intercept[3];
 	    double normal[3];
 	    double *intercept = (double *) malloc(3 * sizeof(double));
 
-	    l_intercept[0] = r_O[0] + *h * r_N[0];
-	    l_intercept[1] = r_O[1] + *h * r_N[1];
-	    l_intercept[2] = *z;	/* use precomputed value */
+	    l_intercept[0] = r_O[0] + h * r_N[0];
+	    l_intercept[1] = r_O[1] + h * r_N[1];
+	    l_intercept[2] = z;	/* use precomputed value */
 
 	    ell_surf_normal(l_intercept, state->axes, normal);
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
