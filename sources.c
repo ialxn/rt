@@ -91,10 +91,12 @@ int check_sources(config_t * cfg)
 	     *          - "uniform point_source": uniform point source
 	     * 'power': power [W] of source / double
 	     * 'n_rays': number of rays used for this source / int
+	     * 'spectrum': name of file containing spectrum of source
 	     */
 	    status += check_string("sources", this_s, "name", i);
 	    status += check_float("sources", this_s, "power", i);
 	    status += check_int("sources", this_s, "n_rays", i);
+	    status += check_string("sources", this_s, "spectrum", i);
 
 	    status +=
 		check_return_string("sources", this_s, "type", i, &type);
