@@ -15,6 +15,7 @@ typedef struct ray_t {
     double origin[3];
     double direction[3];
     double power;
+    double lambda;		/* wavelength */
 } ray_t;
 
 #endif				/* __RAY_H__ */
