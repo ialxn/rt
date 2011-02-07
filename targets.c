@@ -62,11 +62,11 @@ double *interception(const target_t * T, ray_t * in_ray, int *dump_flag,
     return (T->type->get_intercept) (T->state, in_ray, dump_flag, r);
 }
 
-ray_t *out_ray(const target_t * T, ray_t * in_ray, const double ppr,
-	       double *hit, int *dump_flag, const int n_targets)
+ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
+	       int *dump_flag, const int n_targets)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, ppr, hit,
-				   dump_flag, n_targets);
+    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag,
+				   n_targets);
 }
 
 const char *get_target_type(const target_t * T)

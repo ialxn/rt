@@ -94,13 +94,6 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
     return ray;
 }
 
-static double ups_get_ppr(void *vstate)
-{
-    ups_state_t *state = (ups_state_t *) vstate;
-
-    return state->ppr;
-}
-
 static const char *ups_get_source_name(void *vstate)
 {
     ups_state_t *state = (ups_state_t *) vstate;
@@ -115,7 +108,6 @@ static const source_type_t ups_t = {
     &ups_init_state,
     &ups_free_state,
     &ups_get_new_ray,
-    &ups_get_ppr,
     &ups_get_source_name
 };
 

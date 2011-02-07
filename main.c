@@ -272,7 +272,6 @@ static void run_simulation(source_list_t * source_list,
     list_for_each(s_pos, &(source_list->list)) {
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
-	const double ppr = get_ppr(current_source);	/* power per ray of 'current_source' */
 	ray_t *ray = new_ray(current_source, r);	/* get first 'ray' of 'current_source' */
 
 	fprintf(stdout, "        %s %s ... ",
@@ -331,8 +330,8 @@ static void run_simulation(source_list_t * source_list,
 
 		if (hits_target) {	/* 'ray' hits 'nearest_target' */
 		    ray =	/* 'out_ray' returns NULL if 'ray' is absorbed by target */
-			out_ray(nearest_target, ray, ppr,
-				nearest_intercept, &dump_flag, n_targets);
+			out_ray(nearest_target, ray, nearest_intercept,
+				&dump_flag, n_targets);
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;
 		} else {	/* no target hit, 'ray' is lost */

@@ -222,8 +222,7 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 
 }
 
-static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray,
-			     const double ppr, double *hit,
+static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			     int *dump_flag, const int n_targets)
 {
     sq_state_t *state = (sq_state_t *) vstate;
@@ -242,7 +241,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray,
 	memcpy(&(state->data[(N_COORDINATES + 1) * state->n_data]),
 	       hit_copy, N_COORDINATES * sizeof(double));
 	state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] =
-	    ppr;
+	    in_ray->power;
 	state->n_data++;
 
 	/*

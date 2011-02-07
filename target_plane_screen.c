@@ -205,8 +205,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
 }
 
-static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
-			     const double ppr, double *hit,
+static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			     int *dump_flag, const int n_targets)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -223,7 +222,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray,
      */
     memcpy(&(state->data[(N_COORDINATES + 1) * state->n_data]), hit_copy,
 	   N_COORDINATES * sizeof(double));
-    state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] = ppr;
+    state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] =
+	in_ray->power;
     state->n_data++;
     state->last_was_hit = 1;	/* mark as hit */
 

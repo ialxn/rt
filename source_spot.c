@@ -117,12 +117,6 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
     return ray;
 }
 
-static double sp_get_ppr(void *vstate)
-{
-    sp_state_t *state = (sp_state_t *) vstate;
-    return state->ppr;
-}
-
 static const char *sp_get_source_name(void
 				      *vstate)
 {
@@ -137,7 +131,6 @@ static const source_type_t sp_t = {
     &sp_init_state,
     &sp_free_state,
     &sp_get_new_ray,
-    &sp_get_ppr,
     &sp_get_source_name
 };
 

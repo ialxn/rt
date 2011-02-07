@@ -50,11 +50,6 @@ ray_t *new_ray(const source_t * S, const gsl_rng * r)
     return (S->type->get_new_ray) (S->state, r);
 }
 
-double get_ppr(const source_t * S)
-{
-    return (S->type->get_ppr) (S->state);
-}
-
 const char *get_source_type(const source_t * S)
 {
     return S->type->type;
