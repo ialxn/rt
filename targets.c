@@ -301,3 +301,25 @@ void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
 	}
     }
 }
+
+void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
+			gsl_interp_accel ** acc)
+{
+    FILE *spectrum;
+    double *lambda;
+    double *refl;
+    size_t n_lambda;
+
+    spectrum = fopen(f_name, "r");
+    read_data(spectrum, &lambda, &refl, &n_lambda);
+    fclose(spectrum);
+
+    /* cspline will be used to interpolate */
+    *acc = gsl_interp_accel_alloc();
+    *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
+
+    gsl_spline_init(*spline, lambda, refl, n_lambda);
+
+    free(lambda);
+    free(refl);
+}

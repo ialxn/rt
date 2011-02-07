@@ -12,6 +12,7 @@
 #define __TARGETS_H__
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_spline.h>
 
 #include <libconfig.h>
 
@@ -79,5 +80,7 @@ extern void try_increase_memory(double **data, size_t * n_data,
 				size_t * n_alloc, const size_t N,
 				FILE * dump_file, int *dump_flag,
 				const int n_targets);
+extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
+			       gsl_interp_accel ** acc);
 
 #endif				/* __TARGETS_H__ */

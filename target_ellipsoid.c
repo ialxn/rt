@@ -14,6 +14,7 @@
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_spline.h>
 
 #include "io_util.h"
 #include "ray.h"
@@ -28,7 +29,8 @@ typedef struct ell_state_t {
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
-    double reflectivity;	/* reflectivity of target */
+    gsl_spline *spline;		/* for interpolated reflectivity spectrum */
+    gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated that ray was absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
     size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
@@ -120,8 +122,11 @@ static void ell_init_state(void *vstate, config_t * cfg, const char *name,
 
     config_setting_lookup_float(this_target, "z_min", &state->z_min);
     config_setting_lookup_float(this_target, "z_max", &state->z_max);
-    config_setting_lookup_float(this_target, "reflectivity",
-				&state->reflectivity);
+
+    /* initialize reflectivity spectrum */
+    config_setting_lookup_string(this_target, "reflectivity", &S);
+    init_refl_spectrum(S, &state->spline, &state->acc);
+
     state->absorbed = 0;
     state->n_data = 0;
 }
@@ -137,6 +142,8 @@ static void ell_free_state(void *vstate)
 
     free(state->name);
     free(state->data);
+    gsl_spline_free(state->spline);
+    gsl_interp_accel_free(state->acc);
 }
 
 static double *ell_get_intercept(void *vstate, ray_t * in_ray,
@@ -224,7 +231,9 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
 	    if (dot < 0.0)	/* anti-parallel. hits outside, absorbed */
 		state->absorbed = 1;
-	    else if (gsl_rng_uniform(r) > state->reflectivity)	/* hits inside */
+	    else if (gsl_rng_uniform(r) >
+		     gsl_spline_eval(state->spline, in_ray->lambda,
+				     state->acc))
 		state->absorbed = 1;
 
 	    /* convert to global coordinates, origin is 'state->center' */

@@ -14,6 +14,7 @@
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_spline.h>
 
 #include "io_util.h"
 #include "ray.h"
@@ -30,7 +31,8 @@ typedef struct sq_state_t {
     double point[3];		/* center coordinate */
     double dx;			/* square is '2*dx' times '2*dy' local coordinates */
     double dy;
-    double reflectivity;	/* reflectivity of target */
+    gsl_spline *spline;		/* for interpolated reflectivity spectrum */
+    gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
@@ -113,8 +115,10 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
     cross_product(state->M, &state->M[3], state->normal);
     memcpy(&state->M[6], state->normal, 3 * sizeof(double));
 
-    config_setting_lookup_float(this_target, "reflectivity",
-				&state->reflectivity);
+    /* initialize reflectivity spectrum */
+    config_setting_lookup_string(this_target, "reflectivity", &S);
+    init_refl_spectrum(S, &state->spline, &state->acc);
+
     state->last_was_hit = 0;
     state->absorbed = 0;
     state->n_data = 0;
@@ -131,6 +135,8 @@ static void sq_free_state(void *vstate)
 
     free(state->name);
     free(state->data);
+    gsl_spline_free(state->spline);
+    gsl_interp_accel_free(state->acc);
 }
 
 static double *sq_get_intercept(void *vstate, ray_t * in_ray,
@@ -211,8 +217,9 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 
 	    if (t1 > 0.0)	/* hits rear side, absorbed */
 		state->absorbed = 1;
-	    else /* hits front */ if (gsl_rng_uniform(r) >
-				      state->reflectivity)
+	    else if (gsl_rng_uniform(r) >
+		     gsl_spline_eval(state->spline, in_ray->lambda,
+				     state->acc))
 		state->absorbed = 1;
 
 	    return intercept;
