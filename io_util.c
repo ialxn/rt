@@ -8,6 +8,9 @@
  *
  */
 
+#include <stdlib.h>
+#include <string.h>
+
 #include <gsl/gsl_cblas.h>
 
 #include "io_util.h"
@@ -131,4 +134,79 @@ void read_vector_normalize(const config_setting_t * s, const char *name,
 {
     read_vector(s, name, vec);
     normalize(vec);
+}
+
+static int inc_buffers(size_t * n_alloc, double **x, double **y)
+{
+    double *t;
+
+    (*n_alloc) += BSIZE;
+
+
+    if ((t = (double *) realloc(*x, (*n_alloc) * sizeof(double))) == NULL) {
+	fprintf(stderr, "could not (re)allocate buffer\n");
+	return ERR;
+    }
+    *x = t;
+
+    if ((t = (double *) realloc(*y, (*n_alloc) * sizeof(double))) == NULL) {
+	fprintf(stderr, "could not (re)allocate buffer\n");
+	return ERR;
+    }
+    *y = t;
+
+    return NO_ERR;
+}
+
+
+int read_data(FILE * f, double **x, double **y, size_t * n)
+{
+    size_t n_alloc = 0;
+    char line[LINE_LEN];
+    int line_number = 1;
+
+    *n = 0;
+    *x = NULL;
+    *y = NULL;
+
+    fgets(line, LINE_LEN, f);
+    while (!feof(f)) {
+
+	if (strncmp(line, "#", 1) != 0) {	/* not a comment */
+	    int n_read;
+	    double tx, ty;
+
+	    if ((n_read = sscanf(line, "%lg%lg", &tx, &ty)) > 0) {	/* not a blank line */
+
+		if (n_read != 2) {	/* insufficient data */
+		    fprintf(stderr,
+			    "insufficient data (%d items instead of 2) read on line %d\n",
+			    n_read, line_number);
+		    free(*x);
+		    free(*y);
+		    return ERR;
+		}
+
+		if (*n >= n_alloc)
+		    if (inc_buffers(&n_alloc, x, y)) {
+			free(*x);
+			free(*y);
+			return ERR;
+		    }
+
+		(*x)[(*n)] = tx;
+		(*y)[(*n)] = ty;
+
+		(*n)++;
+	    }
+
+	}
+
+	fgets(line, LINE_LEN, f);
+	line_number++;
+
+    }
+
+    return NO_ERR;
+
 }
