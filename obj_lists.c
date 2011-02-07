@@ -147,7 +147,7 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 		dump_string(new_target, string);
 	    }
 	    snprintf(string, 256,
-		     "#\n# x\ty\t[z]\tpower\t\t(z component is missing for plane targets!)\n#\n");
+		     "#\n# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n#\n");
 	    dump_string(new_target, string);
 	}
 
