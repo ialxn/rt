@@ -11,6 +11,8 @@
 #include <math.h>
 #include <string.h>
 
+#include <gsl/gsl_spline.h>
+#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_rng.h>
 
 #include "io_util.h"
@@ -23,6 +25,8 @@ typedef struct ups_state_t {
     int n_rays;			/* number of rays remaining until source is exhausted */
     double power;		/* power of source */
     double ppr;			/* power allotted to one ray */
+    gsl_spline *spline;		/* spline holding cdf of source spectrum */
+    gsl_interp_accel *acc;	/* cached data for spline interpolation */
 } ups_state_t;
 
 
@@ -32,6 +36,10 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
     unsigned int i = 0;
     const char *S;
+    FILE *spectrum;
+    double *lambda;
+    double *cumul_I;
+    size_t n_lambda;
     config_setting_t *this_s;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
@@ -53,6 +61,32 @@ static void ups_init_state(void *vstate, config_t * cfg, const char *name)
 
     read_vector(this_s, "origin", state->origin);
 
+    /* read source spectrum */
+    config_setting_lookup_string(this_s, "spectrum", &S);
+    spectrum = fopen(S, "r");
+    read_data(spectrum, &lambda, &cumul_I, &n_lambda);
+    fclose(spectrum);
+
+    /*
+     * calculate normalized cumulative spectrum.
+     * this will be the cumulative distribution function
+     * needed to obtain a random wavelength.
+     */
+    for (i = 1; i < n_lambda; i++)
+	cumul_I[i] += cumul_I[i - 1];
+    for (i = 0; i < n_lambda; i++)
+	cumul_I[i] /= cumul_I[n_lambda - 1];
+
+    /* cspline will be used to interpolate */
+    state->acc = gsl_interp_accel_alloc();
+    state->spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
+
+    /* 'cumul_I' -> x and 'lambda' -> y */
+    gsl_spline_init(state->spline, cumul_I, lambda, n_lambda);
+
+    free(lambda);
+    free(cumul_I);
+
 }
 
 static void ups_free_state(void *vstate)
@@ -60,6 +94,8 @@ static void ups_free_state(void *vstate)
     ups_state_t *state = (ups_state_t *) vstate;
 
     free(state->name);
+    gsl_spline_free(state->spline);
+    gsl_interp_accel_free(state->acc);
 }
 
 static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
@@ -87,6 +123,9 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 	memcpy(ray->origin, state->origin, 3 * sizeof(double));
 
 	ray->power = state->ppr;
+	t = gsl_rng_uniform(r);
+	ray->lambda = gsl_spline_eval(state->spline, t, state->acc);
+
 
 	state->n_rays--;
     }
