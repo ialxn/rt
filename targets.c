@@ -185,7 +185,7 @@ int check_targets(config_t * cfg)
 		status += check_array("targets", this_t, "P2", i);
 		status += check_array("targets", this_t, "P3", i);
 		status +=
-		    check_float("targets", this_t, "reflectivity", i);
+		    check_string("targets", this_t, "reflectivity", i);
 
 	    } /* end 'square' */
 	    else if (!strcmp(type, "triangle")) {
@@ -203,7 +203,7 @@ int check_targets(config_t * cfg)
 		status += check_array("targets", this_t, "P2", i);
 		status += check_array("targets", this_t, "P3", i);
 		status +=
-		    check_float("targets", this_t, "reflectivity", i);
+		    check_string("targets", this_t, "reflectivity", i);
 
 	    } /* end 'triangle' */
 	    else if (!strcmp(type, "ellipsoid")) {
@@ -222,7 +222,7 @@ int check_targets(config_t * cfg)
 		status += check_float("targets", this_t, "z_min", i);
 		status += check_float("targets", this_t, "z_min", i);
 		status +=
-		    check_float("targets", this_t, "reflectivity", i);
+		    check_string("targets", this_t, "reflectivity", i);
 
 	    }			/* end 'ellipsoid' */
 	}			/* end 'this_t', check next target */
