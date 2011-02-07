@@ -12,6 +12,8 @@
 #define __SOURCES_H__
 
 #include <gsl/gsl_rng.h>
+#include <gsl/gsl_spline.h>
+#include <gsl/gsl_cblas.h>
 
 #include <libconfig.h>
 
@@ -54,5 +56,7 @@ extern const char *get_source_name(const source_t * S);
  * utility functions
  */
 extern int check_sources(config_t * cfg);
+extern void init_spectrum(const char *f_name, gsl_spline ** spline,
+			  gsl_interp_accel ** acc);
 
 #endif				/* __SOURCES_H__ */

@@ -43,10 +43,6 @@ static void sp_init_state(void *vstate, config_t * cfg, const char *name)
     double t[3];
     unsigned int i = 0;
     const char *S;
-    FILE *spectrum;
-    double *lambda;
-    double *cumul_I;
-    size_t n_lambda;
     config_setting_t *this_s;
     const config_setting_t *s = config_lookup(cfg, "sources");
 
@@ -74,32 +70,9 @@ static void sp_init_state(void *vstate, config_t * cfg, const char *name)
     /* determine alpha, beta. discard t */
     g2l_off(O, state->dir, t, &state->alpha, &state->beta);
 
-    /* read source spectrum */
+    /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
-    spectrum = fopen(S, "r");
-    read_data(spectrum, &lambda, &cumul_I, &n_lambda);
-    fclose(spectrum);
-
-    /*
-     * calculate normalized cumulative spectrum.
-     * this will be the cumulative distribution function
-     * needed to obtain a random wavelength.
-     */
-    for (i = 1; i < n_lambda; i++)
-	cumul_I[i] += cumul_I[i - 1];
-    for (i = 0; i < n_lambda; i++)
-	cumul_I[i] /= cumul_I[n_lambda - 1];
-
-    /* cspline will be used to interpolate */
-    state->acc = gsl_interp_accel_alloc();
-    state->spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
-
-    /* 'cumul_I' -> x and 'lambda' -> y */
-    gsl_spline_init(state->spline, cumul_I, lambda, n_lambda);
-
-    free(lambda);
-    free(cumul_I);
-
+    init_spectrum(S, &state->spline, &state->acc);
 }
 
 static void sp_free_state(void *vstate)

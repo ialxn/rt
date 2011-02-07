@@ -128,3 +128,37 @@ int check_sources(config_t * cfg)
 
     return status;
 }
+
+void init_spectrum(const char *f_name, gsl_spline ** spline,
+		   gsl_interp_accel ** acc)
+{
+    FILE *spectrum;
+    double *lambda;
+    double *cumul_I;
+    size_t n_lambda;
+    size_t i;
+
+    spectrum = fopen(f_name, "r");
+    read_data(spectrum, &lambda, &cumul_I, &n_lambda);
+    fclose(spectrum);
+
+    /*
+     * calculate normalized cumulative spectrum.
+     * this will be the cumulative distribution function
+     * needed to obtain a random wavelength.
+     */
+    for (i = 1; i < n_lambda; i++)
+	cumul_I[i] += cumul_I[i - 1];
+    for (i = 0; i < n_lambda; i++)
+	cumul_I[i] /= cumul_I[n_lambda - 1];
+
+    /* cspline will be used to interpolate */
+    *acc = gsl_interp_accel_alloc();
+    *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
+
+    /* 'cumul_I' -> x and 'lambda' -> y */
+    gsl_spline_init(*spline, cumul_I, lambda, n_lambda);
+
+    free(lambda);
+    free(cumul_I);
+}
