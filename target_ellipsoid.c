@@ -56,10 +56,10 @@ static int ell_alloc_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    /* 4 items per data set (x,y,z,ppr) */
+    /* 5 items per data set (x,y,z,ppr,lambda) */
     if (!
 	(state->data =
-	 (double *) malloc((N_COORDINATES + 1) * BLOCK_SIZE *
+	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
 			   sizeof(double))))
 	return ERR;
 
@@ -130,9 +130,9 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    /* first write remaining data to file. 3 items per data (x,y,ppr) */
+    /* first write remaining data to file. 5 items per data (x,y,z,ppr,lambda) */
     dump_data(state->dump_file, state->data, state->n_data,
-	      N_COORDINATES + 1);
+	      N_COORDINATES + 2);
     fclose(state->dump_file);
 
     free(state->name);
@@ -246,13 +246,15 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     if (state->absorbed) {
 	/*
-	 * store 4 items per data set (x,y,ppr)
-	 * first x,y,z then ppr
+	 * store 5 items per data set (x,y,z,ppr,lambda)
+	 * first x,y,z then ppr,lambda
 	 */
-	memcpy(&(state->data[(N_COORDINATES + 1) * state->n_data]),
+	memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]),
 	       l_hit, N_COORDINATES * sizeof(double));
-	state->data[(N_COORDINATES + 1) * state->n_data + N_COORDINATES] =
+	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
 	    in_ray->power;
+	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES +
+		    1] = in_ray->lambda;
 	state->n_data++;
 
 	/*
@@ -262,7 +264,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 */
 	if (state->n_data == state->n_alloc)	/* buffer full */
 	    try_increase_memory(&(state->data), &(state->n_data),
-				&(state->n_alloc), N_COORDINATES + 1,
+				&(state->n_alloc), N_COORDINATES + 2,
 				state->dump_file, dump_flag, n_targets);
 
 	state->absorbed = 0;	/* reset flag */
