@@ -109,7 +109,7 @@ The value will be overridden by the {\tt -a} command line argument. Using this o
 
 \subsection{Sources}
 
-All sources define the keywords {\tt power} (double) and {\tt n\_rays} (unsigned integer), i.e.~the total power assigned to the source and the number of rays that start from it. Each ray thus represents a power of {\tt power}/{\tt n\_rays}.
+All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string)i.e.~the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
 
 \subsubsection{Uniform Point Source}
 
@@ -123,7 +123,9 @@ All sources define the keywords {\tt power} (double) and {\tt n\_rays} (unsigned
 
 \noindent {\tt n\_rays=N;}
 
-Defines an uniform point source located at {\tt origin}.
+\noindent {\tt spectrum="FILE\_NAME";}
+
+Defines an uniform point source located at {\tt origin}. 
 
 
 \subsubsection{Spot Source}
@@ -141,6 +143,8 @@ Defines an uniform point source located at {\tt origin}.
 \noindent {\tt power=P.p;}
 
 \noindent {\tt n\_rays=N;}
+
+\noindent {\tt spectrum="FILE\_NAME";}
 
 Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} needs not be normalized.
 
@@ -189,9 +193,9 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 
 \noindent {\tt P3=[X.x, Y.y, Z.z];}
 
-\noindent {\tt reflectivity=R.r;}
+\noindent {\tt reflectivity="FILE\_NAME";}
 
-Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local z axis.} defined in this way points away from the reflective surface with reflectivity {\tt reflectivity}. The opposite surface is non-reflecting and absorbs all rays that hit it. The origin of the local, right handed coordinate system is located at {\tt P1} and $P2 - P1$ defines the local x axis. 
+Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local z axis.} defined in this way points away from the reflective surface with reflectivity spectrum given by the file {\tt reflectivity}\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast}. The opposite surface is non-reflecting and absorbs all rays that hit it. The origin of the local, right handed coordinate system is located at {\tt P1} and $P2 - P1$ defines the local x axis. 
 
 
 \subsubsection{Square}
@@ -206,9 +210,9 @@ Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define
 
 \noindent {\tt P3=[X.x, Y.y, Z.z];}
 
-\noindent {\tt reflectivity=R.r;}
+\noindent {\tt reflectivity="FILE\_NAME";}
 
-Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=P2-P1$, is parallel to the local x axis and $b=P3 - P1$ is parallel to the local y axis. The local origin is at the center of the rectangle. The local z axis follows from the right handedness of the local system. The surface from which the z-axis points away is reflecting while the opposite surface absorbs all rays that hit it.
+Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=P2-P1$, is parallel to the local x axis and $b=P3 - P1$ is parallel to the local y axis. The local origin is at the center of the rectangle. The local z axis follows from the right handedness of the local system. The surface from which the z-axis points away is reflecting while the opposite surface absorbs all rays that hit it. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
 
 \subsubsection{Ellipsoid}
 
@@ -228,9 +232,9 @@ Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\
 
 \noindent {\tt z\_max=A.a;}
 
-\noindent {\tt reflectivity=R.r;}
+\noindent {\tt reflectivity="FILE\_NAME";}
 
-Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation.
+Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
 
 
 \section{Availability}
