@@ -257,6 +257,27 @@ Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the lo
 
 \end{list}
 
+\subsection{{\tt flux\_2D}}
+{\tt flux\_2D} outputs the flux distribution (2D histogram) of planar targets. Statistical data including the number of rays missed and the total power contained in those is reported in the header.
+
+{\bf Syntax:} {\tt flux\_2D} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
+\vspace{1em}
+\begin{list}{}
+{\setlength{\leftmargin}{3.5cm}
+\setlength{\labelwidth}{3.0cm}
+\setlength{\rightmargin}{0.5cm}}
+
+\item[\tt [--nx|-a]] Number of bins in x direction used [10].
+\item[\tt [--ny|-b]] Number of bins in y direction used [10].
+\item[\tt [--minx|-x]] Minimum x value of histogram [-10.0].
+\item[\tt [--maxx|-X]] Maximum x value of histogram [10.0].
+\item[\tt [--miny|-y]] Minimum y value of histogram [-10.0].
+\item[\tt [--maxy|-Y]] Maximum y value of histogram [10.0].
+\item[\tt [--help|-h]] prints a help message.
+\item[\tt [--Version|-V]] Prints the version number.
+
+\end{list}
+
 
 
 \section{Availability}
