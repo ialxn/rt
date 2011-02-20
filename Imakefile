@@ -10,7 +10,7 @@ SRCS= main.c \
       source_uniform_point_source.c \
       source_spot.c \
       target_plane_screen.c \
-      target_square.c \
+      target_rectangle.c \
       target_triangle.c \
       target_ellipsoid.c \
       off.c \
@@ -25,7 +25,7 @@ OBJ= main.o \
      source_uniform_point_source.o \
      source_spot.o \
      target_plane_screen.o \
-     target_square.o \
+     target_rectangle.o \
      target_triangle.o \
      target_ellipsoid.o \
      off.o \

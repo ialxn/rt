@@ -91,7 +91,7 @@ static void output_targets(const config_t * cfg)
 	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
 		      DZ);
 
-	} else if (!strcmp(type, "square")) {
+	} else if (!strcmp(type, "rectangle")) {
 	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];
@@ -116,9 +116,9 @@ static void output_targets(const config_t * cfg)
 	     *   front (white, mirror) at 'P'+'DZ'
 	     *   rear side (black, absorbs) at 'P'
 	     */
-	    off_square(name, P, X, Y, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+	    off_rectangle(name, P, X, Y, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
 
-	    /* make 'P1' point to center of square */
+	    /* make 'P1' point to center of rectangle */
 	    for (j = 0; j < 3; j++)
 		P[j] += (X[j] + Y[j]) / 2.0;
 

@@ -123,7 +123,7 @@ int check_targets(config_t * cfg)
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides
 	     *                                      are counted
-	     *          - "square":                 specular reflection on front surface
+	     *          - "rectangle":              specular reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
@@ -168,18 +168,18 @@ int check_targets(config_t * cfg)
 		status += check_array("targets", this_t, "x", i);
 
 	    } /* end 'two-sided plane_screen' */
-	    else if (!strcmp(type, "square")) {
+	    else if (!strcmp(type, "rectangle")) {
 		/*
-		 * square
-		 *  - array 'P1' (corner point of square) [x,y,z] / double
-		 *  - array 'P2' (corner point of square) [x,y,z] / double
+		 * rectangle
+		 *  - array 'P1' (corner point of rectangle) [x,y,z] / double
+		 *  - array 'P2' (corner point of rectangle) [x,y,z] / double
 		 *               direction of local x-axis of plane: 'P2'-'P1'
-		 *  - array 'P3' (corner point of square) [x,y,z] / double
+		 *  - array 'P3' (corner point of rectangle) [x,y,z] / double
 		 *               direction of local y-axis of plane: 'P2'-'P1'
 		 *
 		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
 		 *       anti-parallel to normal are reflected. ray impiging
-		 *       parallel to square hit its back side and are absorbed
+		 *       parallel to rectangle hit its back side and are absorbed
 		 */
 		status += check_array("targets", this_t, "P1", i);
 		status += check_array("targets", this_t, "P2", i);
@@ -188,7 +188,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 
-	    } /* end 'square' */
+	    } /* end 'rectangle' */
 	    else if (!strcmp(type, "triangle")) {
 		/*
 		 * triangle

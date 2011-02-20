@@ -100,8 +100,9 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	    new_target =
 		target_alloc(target_plane_screen_two_sided, cfg, name,
 			     file_mode);
-	else if (!strcmp(type, "square"))
-	    new_target = target_alloc(target_square, cfg, name, file_mode);
+	else if (!strcmp(type, "rectangle"))
+	    new_target =
+		target_alloc(target_rectangle, cfg, name, file_mode);
 	else if (!strcmp(type, "triangle"))
 	    new_target =
 		target_alloc(target_triangle, cfg, name, file_mode);

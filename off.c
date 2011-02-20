@@ -291,10 +291,12 @@ void off_plane(const char *name, const double *P, const double *N,
     fclose(outf);
 }
 
-extern void off_square(const char *name, const double *P, const double *X,
-		       const double *Y, const double rf, const double gf,
-		       const double bf, const double rb, const double gb,
-		       const double bb, const double dz)
+extern void off_rectangle(const char *name, const double *P,
+			  const double *X, const double *Y,
+			  const double rf, const double gf,
+			  const double bf, const double rb,
+			  const double gb, const double bb,
+			  const double dz)
 {
     double N[3];
     FILE *outf = open_off(name);

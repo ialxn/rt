@@ -1,4 +1,4 @@
-/*	target_square.c
+/*	target_rectangle.c
  *
  * Copyright (C) 2010, 2011 Ivo Alxneit
  *
@@ -29,7 +29,7 @@ typedef struct sq_state_t {
     char last_was_hit;		/* flag */
     FILE *dump_file;
     double point[3];		/* center coordinate */
-    double dx;			/* square is '2*dx' times '2*dy' local coordinates */
+    double dx;			/* rectangle is '2*dx' times '2*dy' local coordinates */
     double dy;
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     gsl_interp_accel *acc;	/* cache for spline */
@@ -104,7 +104,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
 	state->M[3 + i] -= state->point[i];
     }
 
-    /* make 'point' point to center of square */
+    /* make 'point' point to center of rectangle */
     for (i = 0; i < 3; i++)
 	state->point[i] += (state->M[i] + state->M[3 + i]) / 2.0;
 
@@ -299,7 +299,7 @@ static double *sq_M(void *vstate)
 
 
 static const target_type_t sq_t = {
-    "square",
+    "rectangle",
     sizeof(struct sq_state_t),
     &sq_alloc_state,
     &sq_init_state,
@@ -311,4 +311,4 @@ static const target_type_t sq_t = {
     &sq_M
 };
 
-const target_type_t *target_square = &sq_t;
+const target_type_t *target_rectangle = &sq_t;
