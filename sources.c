@@ -108,10 +108,21 @@ int check_sources(config_t * cfg)
 	    if (!strcmp(type, "uniform point source")) {
 		/*
 		 * uniform point source:
-		 *  - array 'origin' [x,y,z] / double            */
+		 *  - array 'origin' [x,y,z] / double
+		 */
 		status += check_array("sources", this_s, "origin", i);
 
 	    } /* end 'uniform point source' */
+	    else if (!strcmp(type, "sphere")) {
+		/*
+		 * sphere:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - 'radius' / double
+		 */
+		status += check_array("sources", this_s, "origin", i);
+		status += check_float("sources", this_s, "radius", i);
+
+	    } /* end 'sphere' */
 	    else if (!strcmp(type, "spot source")) {
 		/*
 		 * spot source:
