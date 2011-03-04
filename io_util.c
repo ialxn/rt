@@ -119,6 +119,26 @@ int check_int(const char *section, const config_setting_t * s,
     return status;
 }
 
+int check_file(const char *section, const config_setting_t * s,
+	       const char *name, const int nr)
+{
+    int status = NO_ERR;
+    const char *S;
+    FILE *f;
+
+    config_setting_lookup_string(s, name, &S);
+
+    if ((f = fopen(S, "r")) == NULL) {
+	fprintf(stderr,
+		"could not open file '%s' defined by keyword '%s' in section '%s' (%d)\n",
+		S, name, section, nr + 1);
+	status = ERR;
+    } else
+	fclose(f);
+
+    return status;
+}
+
 void read_vector(const config_setting_t * s, const char *name,
 		 double *const vec)
 {
