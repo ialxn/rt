@@ -133,9 +133,44 @@ int check_file(const char *section, const config_setting_t * s,
 		"could not open file '%s' defined by keyword '%s' in section '%s' (%d)\n",
 		S, name, section, nr + 1);
 	status = ERR;
-    } else
-	fclose(f);
+    } else {			/* sufficient data ? */
 
+#define N_DATA_MIN 3
+
+	char line[LINE_LEN];
+	int line_number = 1;
+	int n_data = 0;
+
+	fgets(line, LINE_LEN, f);
+	while (!feof(f) && (n_data < N_DATA_MIN)) {
+
+	    if (strncmp(line, "#", 1) != 0) {	/* not a comment */
+		int n_read;
+		double tx, ty;
+
+		if ((n_read = sscanf(line, "%lg%lg", &tx, &ty)) > 0) {	/* not a blank line */
+		    if (n_read != 2) {	/* insufficient data on line */
+			fprintf(stderr,
+				"insufficient data (%d items instead of 2) read on line %d of file '%s'\n",
+				n_read, line_number, S);
+			status = ERR;
+		    } else	/* line with correct data */
+			n_data++;
+		}
+	    }
+	    fgets(line, LINE_LEN, f);
+	    line_number++;
+	}
+
+	if (n_data != N_DATA_MIN) {	/* insufficient data  */
+	    fprintf(stderr,
+		    "insufficient data (%d items instead of %d) in file '%s'\n",
+		    n_data, N_DATA_MIN, S);
+	    status = ERR;
+	}
+
+	fclose(f);
+    }
     return status;
 }
 
