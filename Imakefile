@@ -33,13 +33,18 @@ OBJ= main.o \
 SRC_SPECTRUM= spectrum.c
 OBJ_SPECTRUM= spectrum.o
 
+SRC_FLUX= flux_2D.c
+OBJ_FLUX= flux_2D.o
+
+
 
 #LIBS= -lgsl -lgslcblas -lconfig -lm
 LIBS= -lgsl -lcblas -latlas -lconfig -lm
 LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
 
-AllTarget(rt rt-semistatic spectrum)
+AllTarget(rt rt-semistatic spectrum flux_2D)
 NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))
 NormalProgramTarget(rt-semistatic,$(OBJ),NullParameter,NullParameter, $(LIBS-SEMISTATIC))
 NormalProgramTarget(spectrum,$(OBJ_SPECTRUM),NullParameter,NullParameter, $(LIBS))
+NormalProgramTarget(flux_2D,$(OBJ_FLUX),NullParameter,NullParameter, $(LIBS))
 DependTarget()
