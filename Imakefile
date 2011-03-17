@@ -16,7 +16,6 @@ SRCS= main.c \
       off.c \
       vector_math.c
 
-
 OBJ= main.o \
      io_util.o \
      obj_lists.o \
@@ -31,11 +30,16 @@ OBJ= main.o \
      off.o \
      vector_math.o
 
+SRC_SPECTRUM= spectrum.c
+OBJ_SPECTRUM= spectrum.o
+
+
 #LIBS= -lgsl -lgslcblas -lconfig -lm
 LIBS= -lgsl -lcblas -latlas -lconfig -lm
 LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
 
-AllTarget(rt rt-semistatic)
+AllTarget(rt rt-semistatic spectrum)
 NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))
 NormalProgramTarget(rt-semistatic,$(OBJ),NullParameter,NullParameter, $(LIBS-SEMISTATIC))
+NormalProgramTarget(spectrum,$(OBJ_SPECTRUM),NullParameter,NullParameter, $(LIBS))
 DependTarget()
