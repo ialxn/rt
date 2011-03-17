@@ -222,6 +222,20 @@ static void output_sources(const config_t * cfg)
 	     */
 	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
 	} /* end 'uniform point source' */
+	else if (!strcmp(type, "sphere")) {
+	    double O[3];
+	    double radius;
+
+	    read_vector(this_s, "origin", O);
+	    config_setting_lookup_float(this_s, "radius", &radius);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
+	     * with size 'radius'
+	     * at origin 'O'
+	     */
+	    off_sphere(name, O, radius, 1.0, 1.0, 0.0);
+	} /* end 'sphere' */
 	else if (!strcmp(type, "spot source")) {
 	    double O[3], dir[3];
 

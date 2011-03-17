@@ -45,6 +45,8 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	if (!strcmp(type, "uniform point source"))
 	    new_source =
 		source_alloc(source_uniform_point_source, cfg, name);
+	else if (!strcmp(type, "sphere"))
+	    new_source = source_alloc(source_sphere, cfg, name);
 	else if (!strcmp(type, "spot source"))
 	    new_source = source_alloc(source_spot, cfg, name);
 	else {
