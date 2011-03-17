@@ -148,6 +148,26 @@ Defines an uniform point source located at {\tt origin}.
 
 Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} needs not be normalized.
 
+\subsubsection{Sphere}
+
+\noindent {\tt type="sphere";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt radius=R.r;}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt n\_rays=N;}
+
+\noindent {\tt spectrum="FILE\_NAME";}
+
+Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Ray start randomly inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
+
+
+
 
 \subsection{Targets}
 
