@@ -504,7 +504,7 @@ void g2l_off(const double *P, const double *N, double *L,
  * 3a) determine alpha
  * 3b) rotation around y axis onto z axis (alpha)
  *
- * return alpha, beta, and resulting vecmtor in L
+ * return alpha, beta, and resulting vector in L
  */
 {
     int i;

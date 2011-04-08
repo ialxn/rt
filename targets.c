@@ -178,7 +178,7 @@ int check_targets(config_t * cfg)
 		 *               direction of local y-axis of plane: 'P2'-'P1'
 		 *
 		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
-		 *       anti-parallel to normal are reflected. ray impiging
+		 *       anti-parallel to normal are reflected. ray impinging
 		 *       parallel to rectangle hit its back side and are absorbed
 		 */
 		status += check_array("targets", this_t, "P1", i);
@@ -197,7 +197,7 @@ int check_targets(config_t * cfg)
 		 *  - array 'P3' (corner point of triangle) [x,y,z] / double
 		 *
 		 * NOTE: normal of triangle is defined by ('P2'-'P1') cross ('P3'-'P1').
-		 *       only rays anti-parallel to normal are reflected. ray impiging
+		 *       only rays anti-parallel to normal are reflected. ray impinging
 		 *       parallel to the triangle hit its back side and are absorbed
 		 */
 		status += check_array("targets", this_t, "P1", i);

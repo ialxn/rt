@@ -90,12 +90,12 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	 * select random point inside unit sphere.
 	 * there are two possible algorithms:
 	 * 1) choose random 'r', 'theta', 'phi' and then
-	 *    convert these to carthesian coordinates.
+	 *    convert these to cartesian coordinates.
 	 *    this requires the calculation of four
 	 *    trigonometric functions (as below for
 	 *    the direction vector) and one cube root
 	 *    in addition to the three random numbers.
-	 * 2) select random carthesian coordinates in
+	 * 2) select random cartesian coordinates in
 	 *    the range +-1 and discard numbers that
 	 *    lie outside of the sphere. taking the
 	 *    square root of the result is not needed

@@ -93,7 +93,7 @@ static void sq_init_state(void *vstate, config_t * cfg, const char *name,
      */
     /*
      * get the other two corner points that define the 'x' and 'y'
-     * axis of ther plane. note for the axes 'x'='P2'-'P1',
+     * axis of the plane. note for the axes 'x'='P2'-'P1',
      * 'y'='P3'-'P1'.
      */
     read_vector(this_target, "P2", state->M);
