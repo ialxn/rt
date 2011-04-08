@@ -1,4 +1,4 @@
-/*	io_lists.h
+/*	io_util.h
  *
  * Copyright (C) 2011 Ivo Alxneit
  *
@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef __IO_LISTS_H__
-#define __IO_LISTS_H__
+#ifndef __IO_UTIL_H__
+#define __IO_UTIL_H__
 
 #include <libconfig.h>
 
@@ -41,4 +41,4 @@ extern void read_vector_normalize(const config_setting_t * s,
 extern int read_data(FILE * f, double **x, double **y, size_t * n);
 
 
-#endif				/* __IO_LISTS_H__ */
+#endif				/* __IO_UTIL_H__ */
