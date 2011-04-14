@@ -35,29 +35,17 @@ typedef struct sp_state_t {
 } sp_state_t;
 
 
-static void sp_init_state(void *vstate, config_t * cfg, const char *name)
+static void sp_init_state(void *vstate, config_setting_t * this_s,
+			  config_t * cfg)
 {
     sp_state_t *state = (sp_state_t *) vstate;
 
     const double O[] = { 0.0, 0.0, 0.0 };
     double t[3];
-    unsigned int i = 0;
     const char *S;
-    config_setting_t *this_s;
-    const config_setting_t *s = config_lookup(cfg, "sources");
 
-    state->name = strdup(name);
-
-    while (1) {			/* find setting for source 'name' */
-	this_s = config_setting_get_elem(s, i);
-
-	config_setting_lookup_string(this_s, "name", &S);
-	if (strstr(S, name))
-	    break;
-
-	i++;
-    }
-
+    config_setting_lookup_string(this_s, "name", &S);
+    state->name = strdup(S);
     config_setting_lookup_int(this_s, "n_rays", &state->n_rays);
     config_setting_lookup_float(this_s, "power", &state->power);
     state->ppr = state->power / state->n_rays;

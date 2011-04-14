@@ -13,8 +13,8 @@
 #include "io_util.h"
 #include "sources.h"
 
-source_t *source_alloc(const source_type_t * T, config_t * cfg,
-		       const char *name)
+source_t *source_alloc(const source_type_t * T, config_setting_t * this_s,
+		       config_t * cfg)
 {
     source_t *S;
 
@@ -33,7 +33,7 @@ source_t *source_alloc(const source_type_t * T, config_t * cfg,
 
     S->type = T;
 
-    (S->type->init_state) (S->state, cfg, name);	/* initialize data structures */
+    (S->type->init_state) (S->state, this_s, cfg);	/* initialize data structures */
 
     return S;
 }

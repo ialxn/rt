@@ -27,7 +27,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
     for (i = 0; i < *n_sources; ++i) {	/* iterate through all sources */
 	source_list_t *new_entry;
 	source_t *new_source;
-	const config_setting_t *this_source =
+	config_setting_t *this_source =
 	    config_setting_get_elem(sources, (unsigned int) i);
 	const char *name;	/* name (identifier) of 'this_source' */
 	const char *type;	/* type (identifier) of 'this_source' */
@@ -44,11 +44,12 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	config_setting_lookup_string(this_source, "type", &type);
 	if (!strcmp(type, "uniform point source"))
 	    new_source =
-		source_alloc(source_uniform_point_source, cfg, name);
+		source_alloc(source_uniform_point_source, this_source,
+			     NULL);
 	else if (!strcmp(type, "sphere"))
-	    new_source = source_alloc(source_sphere, cfg, name);
+	    new_source = source_alloc(source_sphere, this_source, NULL);
 	else if (!strcmp(type, "spot source"))
-	    new_source = source_alloc(source_spot, cfg, name);
+	    new_source = source_alloc(source_spot, this_source, NULL);
 	else {
 	    fprintf(stderr,
 		    "Unknown source type (%s) found. Ignoring source %s\n",
