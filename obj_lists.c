@@ -80,7 +80,7 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
     for (i = 0; i < *n_targets; ++i) {	/* iterate through all targets */
 	target_list_t *new_entry;
 	target_t *new_target;
-	const config_setting_t *this_target =
+	config_setting_t *this_target =
 	    config_setting_get_elem(targets, (unsigned int) i);
 	const char *name;	/* name (identifier) of 'this_target' */
 	const char *type;	/* type (identifier) of 'this_target' */
@@ -97,21 +97,24 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	config_setting_lookup_string(this_target, "type", &type);
 	if (!strcmp(type, "one-sided plane screen"))
 	    new_target =
-		target_alloc(target_plane_screen_one_sided, cfg, name,
-			     file_mode);
+		target_alloc(target_plane_screen_one_sided, this_target,
+			     NULL, file_mode);
 	else if (!strcmp(type, "two-sided plane screen"))
 	    new_target =
-		target_alloc(target_plane_screen_two_sided, cfg, name,
-			     file_mode);
+		target_alloc(target_plane_screen_two_sided, this_target,
+			     NULL, file_mode);
 	else if (!strcmp(type, "rectangle"))
 	    new_target =
-		target_alloc(target_rectangle, cfg, name, file_mode);
+		target_alloc(target_rectangle, this_target, NULL,
+			     file_mode);
 	else if (!strcmp(type, "triangle"))
 	    new_target =
-		target_alloc(target_triangle, cfg, name, file_mode);
+		target_alloc(target_triangle, this_target, NULL,
+			     file_mode);
 	else if (!strcmp(type, "ellipsoid"))
 	    new_target =
-		target_alloc(target_ellipsoid, cfg, name, file_mode);
+		target_alloc(target_ellipsoid, this_target, NULL,
+			     file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

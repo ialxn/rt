@@ -58,31 +58,20 @@ static int sq_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void sq_init_state(void *vstate, config_t * cfg, const char *name,
-			  const char *file_mode)
+static void sq_init_state(void *vstate, config_setting_t * this_target,
+			  config_t * cfg, const char *file_mode)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    unsigned int i = 0;
+    int i;
     const char *S;
     char f_name[256];
-    config_setting_t *this_target;
-    const config_setting_t *targets = config_lookup(cfg, "targets");
 
-    state->name = strdup(name);
+    config_setting_lookup_string(this_target, "name", &S);
+    state->name = strdup(S);
 
-    snprintf(f_name, 256, "%s.dat", name);
+    snprintf(f_name, 256, "%s.dat", state->name);
     state->dump_file = fopen(f_name, file_mode);
-
-    while (1) {			/* find setting for target 'name' */
-	this_target = config_setting_get_elem(targets, i);
-
-	config_setting_lookup_string(this_target, "name", &S);
-	if (!strcmp(S, name))
-	    break;
-
-	i++;
-    }
 
     read_vector(this_target, "P1", state->point);
     /*

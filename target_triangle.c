@@ -58,47 +58,35 @@ static int tr_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void tr_init_state(void *vstate, config_t * cfg, const char *name,
-			  const char *file_mode)
+static void tr_init_state(void *vstate, config_setting_t * this_target,
+			  config_t * cfg, const char *file_mode)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    unsigned int i = 0;
+    int i;
     const char *S;
     char f_name[256];
-    int j;
+    config_setting_t *point;
 
-    config_setting_t *this_target, *point;
-    const config_setting_t *targets = config_lookup(cfg, "targets");
+    config_setting_lookup_string(this_target, "name", &S);
+    state->name = strdup(S);
 
-    state->name = strdup(name);
-
-    state->last_was_hit = 0;
-
-    snprintf(f_name, 256, "%s.dat", name);
+    snprintf(f_name, 256, "%s.dat", state->name);
     state->dump_file = fopen(f_name, file_mode);
 
-    while (1) {			/* find setting for target 'name' */
-	this_target = config_setting_get_elem(targets, i);
-
-	config_setting_lookup_string(this_target, "name", &S);
-	if (!strcmp(S, name))
-	    break;
-
-	i++;
-    }
+    state->last_was_hit = 0;
 
     read_vector(this_target, "P1", state->P1);
 
     point = config_setting_get_member(this_target, "P2");
-    for (j = 0; j < 3; j++)
-	state->E2[j] =
-	    config_setting_get_float_elem(point, j) - state->P1[j];
+    for (i = 0; i < 3; i++)
+	state->E2[i] =
+	    config_setting_get_float_elem(point, i) - state->P1[i];
 
     point = config_setting_get_member(this_target, "P3");
-    for (j = 0; j < 3; j++)
-	state->E3[j] =
-	    config_setting_get_float_elem(point, j) - state->P1[j];
+    for (i = 0; i < 3; i++)
+	state->E3[i] =
+	    config_setting_get_float_elem(point, i) - state->P1[i];
 
     /*
      * generate transform matrix M to convert
@@ -107,8 +95,8 @@ static void tr_init_state(void *vstate, config_t * cfg, const char *name,
      * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
      */
     /* x = 'E2' */
-    for (j = 0; j < 3; j++)
-	state->M[j] = state->E2[j];
+    for (i = 0; i < 3; i++)
+	state->M[i] = state->E2[i];
     normalize(state->M);
 
     /* z = 'E2' cross 'E3' */

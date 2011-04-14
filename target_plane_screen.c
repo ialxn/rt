@@ -53,33 +53,21 @@ static int ps_alloc_state(void *vstate)
     return NO_ERR;
 }
 
-static void ps_init_state(void *vstate, config_t * cfg, const char *name,
-			  const char *file_mode)
+static void ps_init_state(void *vstate, config_setting_t * this_target,
+			  config_t * cfg, const char *file_mode)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    unsigned int i = 0;
     const char *S;
     char f_name[256];
-    config_setting_t *this_target;
-    const config_setting_t *targets = config_lookup(cfg, "targets");
 
-    state->name = strdup(name);
+    config_setting_lookup_string(this_target, "name", &S);
+    state->name = strdup(S);
 
     state->last_was_hit = 0;
 
-    snprintf(f_name, 256, "%s.dat", name);
+    snprintf(f_name, 256, "%s.dat", state->name);
     state->dump_file = fopen(f_name, file_mode);
-
-    while (1) {			/* find setting for target 'name' */
-	this_target = config_setting_get_elem(targets, i);
-
-	config_setting_lookup_string(this_target, "name", &S);
-	if (!strcmp(S, name))
-	    break;
-
-	i++;
-    }
 
     read_vector(this_target, "point", state->point);
     /*
@@ -100,21 +88,21 @@ static void ps_init_state(void *vstate, config_t * cfg, const char *name,
     state->n_data = 0;
 }
 
-static void ps1_init_state(void *vstate, config_t * cfg, const char *name,
-			   const char *file_name)
+static void ps1_init_state(void *vstate, config_setting_t * this_target,
+			   config_t * cfg, const char *file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, cfg, name, file_name);
+    ps_init_state(vstate, this_target, cfg, file_name);
     state->one_sided = 1;
 }
 
-static void ps2_init_state(void *vstate, config_t * cfg, const char *name,
-			   const char *file_name)
+static void ps2_init_state(void *vstate, config_setting_t * this_target,
+			   config_t * cfg, const char *file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, cfg, name, file_name);
+    ps_init_state(vstate, this_target, cfg, file_name);
     state->one_sided = 0;
 }
 
