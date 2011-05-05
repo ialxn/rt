@@ -239,7 +239,9 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 				&(state->n_alloc), N_COORDINATES + 2,
 				state->dump_file, dump_flag, n_targets);
 
-	state->absorbed = 0;	/* reset flag */
+	state->absorbed = 0;	/* reset flags */
+	state->last_was_hit = 0;
+
 	free(in_ray);
 	return NULL;
 

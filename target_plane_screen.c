@@ -215,7 +215,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES + 1] =
 	in_ray->lambda;
     state->n_data++;
-    state->last_was_hit = 1;	/* mark as hit */
 
     /*
      * increase data size for next interception
@@ -226,6 +225,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	try_increase_memory(&(state->data), &(state->n_data),
 			    &(state->n_alloc), N_COORDINATES + 2,
 			    state->dump_file, dump_flag, n_targets);
+
+    state->last_was_hit = 1;	/* mark as hit */
 
     memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
     return in_ray;
