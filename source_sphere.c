@@ -39,6 +39,8 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
 
     const char *S;
 
+    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
+
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);
     config_setting_lookup_int(this_s, "n_rays", &state->n_rays);

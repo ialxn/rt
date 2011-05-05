@@ -67,6 +67,8 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
     char f_name[256];
 
+    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
+
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 

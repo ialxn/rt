@@ -61,6 +61,8 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
     char f_name[256];
 
+    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
+
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
@@ -127,6 +129,8 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
     double t1, t2[3], t3;
     double d;
     double *intercept;
+
+    (void) r;			/* avoid warning: unused parameter 'r' */
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
 	dump_data(state->dump_file, state->data, state->n_data,

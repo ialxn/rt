@@ -37,13 +37,6 @@
 
 To compile and install \rt you need a C-compiler\footnote{\rt is only tested with gcc} and ,ideally, {\tt (I)make}. In addition, the following libraries are needed: {\tt GSL}\footnote{Gnu Scientific Library}, a C-version of BLAS (Basic Linear Algebra System) such as {\tt cblas} or {\tt Atlas}, and {\tt libconfig}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably, you will make sure that {\tt -O2 -g} is set. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries \rt and {\rt-semistatic} (a semi statically linked version {\rt-semistatic}.
 
-Currently you will get the following (harmless) warnings:
-
-\begin{verbatim}
-target_plane_screen.c: In function 'ps_get_intercept':
-target_plane_screen.c:135: warning: unused parameter 'r'
-\end{verbatim}
-
 
 
 \section{Command line parameters}

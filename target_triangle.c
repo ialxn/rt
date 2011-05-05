@@ -68,6 +68,8 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     char f_name[256];
     config_setting_t *point;
 
+    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
+
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
