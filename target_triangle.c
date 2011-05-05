@@ -74,8 +74,6 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     snprintf(f_name, 256, "%s.dat", state->name);
     state->dump_file = fopen(f_name, file_mode);
 
-    state->last_was_hit = 0;
-
     read_vector(this_target, "P1", state->P1);
 
     point = config_setting_get_member(this_target, "P2");
