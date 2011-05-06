@@ -31,9 +31,10 @@ typedef struct target_type_t {
 													   from
 													   configuration */
     void (*free_state) (void *state);	/* free */
-    double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag, const gsl_rng * r);	/* point of intersection */
+    double *(*get_intercept) (void *state, ray_t * in_ray, int *dump_flag);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, double *hit,
-			   int *dump_flag, const int n_targets);
+			   const gsl_rng * r, int *dump_flag,
+			   const int n_targets);
     const char *(*get_target_name) (void *state);
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
     double *(*M) (void *state);	/* returns pointer to M matrix */
@@ -60,9 +61,10 @@ extern target_t *target_alloc(const target_type_t * type,
 			      const char *file_mode);
 extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray,
-			    int *dump_flag, const gsl_rng * r);
+			    int *dump_flag);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
-		      int *dump_flag, const int n_targets);
+		      const gsl_rng * r, int *dump_flag,
+		      const int n_targets);
 extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);
 extern void dump_string(const target_t * T, const char *str);

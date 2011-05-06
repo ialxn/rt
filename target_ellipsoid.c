@@ -138,7 +138,7 @@ static void ell_free_state(void *vstate)
 }
 
 static double *ell_get_intercept(void *vstate, ray_t * in_ray,
-				 int *dump_flag, const gsl_rng * r)
+				 int *dump_flag)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -222,10 +222,6 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
 	    if (dot < 0.0)	/* anti-parallel. hits outside, absorbed */
 		state->absorbed = 1;
-	    else if (gsl_rng_uniform(r) >
-		     gsl_spline_eval(state->spline, in_ray->lambda,
-				     state->acc))
-		state->absorbed = 1;
 
 	    /* convert to global coordinates, origin is 'state->center' */
 	    l2g(state->M, state->center, l_intercept, intercept);
@@ -236,7 +232,8 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			      int *dump_flag, const int n_targets)
+			      const gsl_rng * r, int *dump_flag,
+			      const int n_targets)
 {
     ell_state_t *state = (ell_state_t *) vstate;
     double l_hit[3];
@@ -244,7 +241,18 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     /* transform to local coordinates */
     g2l(state->M, state->center, hit, l_hit);
 
-    if (state->absorbed) {
+    if (state->absorbed
+	|| (gsl_rng_uniform(r) >
+	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
+	/*
+	 * if 'state->absorbed'is true we know ray has been absorbed
+	 * because it wass intercepted by a surface with absorptivity=1
+	 * (reflectivity=0) e.g. the backside of the target. this was
+	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * above.
+	 * then we check if ray is absorbed because the reflectivity of
+	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
+	 */
 	/*
 	 * store 5 items per data set (x,y,z,ppr,lambda)
 	 * first x,y,z then ppr,lambda

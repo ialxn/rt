@@ -134,7 +134,7 @@ static void tr_free_state(void *vstate)
 }
 
 static double *tr_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag, const gsl_rng * r)
+				int *dump_flag)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -199,20 +199,29 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
 
     if (det < 0.0)		/* hits rear side (parallel to surface normal) */
 	state->absorbed = 1;
-    else if (gsl_rng_uniform(r) >
-	     gsl_spline_eval(state->spline, in_ray->lambda, state->acc))
-	state->absorbed = 1;
 
     return intercept;
 
 }
 
 static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     int *dump_flag, const int n_targets)
+			     const gsl_rng * r, int *dump_flag,
+			     const int n_targets)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    if (state->absorbed) {	/* rear surface was hit */
+    if (state->absorbed
+	|| (gsl_rng_uniform(r) >
+	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
+	/*
+	 * if 'state->absorbed'is true we know ray has been absorbed
+	 * because it wass intercepted by a surface with absorptivity=1
+	 * (reflectivity=0) e.g. the backside of the target. this was
+	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * above.
+	 * then we check if ray is absorbed because the reflectivity of
+	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
+	 */
 	double hit_copy[3];
 
 	/* transform to local coordinates */

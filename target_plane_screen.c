@@ -122,15 +122,13 @@ static void ps_free_state(void *vstate)
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag, const gsl_rng * r)
+				int *dump_flag)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     double t1, t2[3], t3;
     double d;
     double *intercept;
-
-    (void) r;			/* avoid warning: unused parameter 'r' */
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
 	dump_data(state->dump_file, state->data, state->n_data,
@@ -198,11 +196,14 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     int *dump_flag, const int n_targets)
+			     const gsl_rng * r, int *dump_flag,
+			     const int n_targets)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     double hit_copy[3];
+
+    (void) r;			/* avoid warning : unused parameter 'r' */
 
     /* transform to local coordinates */
     memcpy(hit_copy, hit, 3 * sizeof(double));

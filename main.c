@@ -312,7 +312,7 @@ static void run_simulation(source_list_t * source_list,
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 		    double *current_intercept =
-			interception(current_target, ray, &dump_flag, r);
+			interception(current_target, ray, &dump_flag);
 
 		    if (current_intercept) {	/* 'ray' hits 'current_target' */
 			int i;
@@ -344,7 +344,7 @@ static void run_simulation(source_list_t * source_list,
 
 		if (hits_target) {	/* 'ray' hits 'nearest_target' */
 		    ray =	/* 'out_ray' returns NULL if 'ray' is absorbed by target */
-			out_ray(nearest_target, ray, nearest_intercept,
+			out_ray(nearest_target, ray, nearest_intercept, r,
 				&dump_flag, n_targets);
 		    free(nearest_intercept);
 		    nearest_intercept = NULL;

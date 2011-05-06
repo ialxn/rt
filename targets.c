@@ -57,16 +57,15 @@ void target_free(target_t * T)
     free(T);
 }
 
-double *interception(const target_t * T, ray_t * in_ray, int *dump_flag,
-		     const gsl_rng * r)
+double *interception(const target_t * T, ray_t * in_ray, int *dump_flag)
 {
-    return (T->type->get_intercept) (T->state, in_ray, dump_flag, r);
+    return (T->type->get_intercept) (T->state, in_ray, dump_flag);
 }
 
 ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
-	       int *dump_flag, const int n_targets)
+	       const gsl_rng * r, int *dump_flag, const int n_targets)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, hit, dump_flag,
+    return (T->type->get_out_ray) (T->state, in_ray, hit, r, dump_flag,
 				   n_targets);
 }
 
