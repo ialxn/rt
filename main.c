@@ -267,6 +267,18 @@ static void output_geometry(config_t * cfg)
     output_targets(cfg);
 }
 
+static double distance(const double a[3], const double b[3])
+{
+    size_t i;
+    double dist = 0.0;
+    for (i = 0; i < 3; i++) {
+	const double t = a[i] - b[i];
+	dist += t * t;
+    }
+    return (sqrt(dist));
+
+}
+
 static void run_simulation(source_list_t * source_list,
 			   target_list_t * target_list, const int seed,
 			   const int n_targets)
@@ -315,16 +327,10 @@ static void run_simulation(source_list_t * source_list,
 			interception(current_target, ray, &dump_flag);
 
 		    if (current_intercept) {	/* 'ray' hits 'current_target' */
-			int i;
-			double dist = 0;
+			const double dist =
+			    distance(current_intercept, ray->origin);
 
 			hits_target = 1;
-			for (i = 0; i < 3; i++) {
-			    const double t =
-				current_intercept[i] - ray->origin[i];
-			    dist += t * t;
-			}
-			dist = sqrt(dist);	/* absolute distance origin of ray to intercept */
 
 			if (dist < min_dist) {	/* 'current targets' is closest target found until now */
 
