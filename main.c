@@ -334,10 +334,8 @@ static void run_simulation(source_list_t * source_list,
 
 			if (dist < min_dist) {	/* 'current targets' is closest target found until now */
 
+			    free(nearest_intercept);
 			    nearest_target = current_target;
-			    if (nearest_intercept)
-				free(nearest_intercept);
-
 			    nearest_intercept = current_intercept;
 			    min_dist = dist;
 
