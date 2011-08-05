@@ -298,14 +298,14 @@ static void run_simulation(source_list_t * source_list,
     list_for_each(s_pos, &(source_list->list)) {
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
-	ray_t *ray = new_ray(current_source, r);	/* get first 'ray' of 'current_source' */
+	ray_t *ray;
 
 	fprintf(stdout, "        %s %s ... ",
 		get_source_type(current_source),
 		get_source_name(current_source));
 	fflush(stdout);
 
-	while (ray) {		/* loop until 'current_source' is exhausted */
+	while ((ray = new_ray(current_source, r))) {
 
 	    while (ray) {	/* loop until 'ray' is absorbed or leaves system */
 		struct list_head *t_pos;
@@ -358,7 +358,6 @@ static void run_simulation(source_list_t * source_list,
 		    ray = NULL;	/* mark as absorbed */
 		}
 	    }			/* 'ray' absorbed or lost */
-	    ray = new_ray(current_source, r);	/* start next ray */
 	}			/* 'current_source' is exhausted */
 	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
