@@ -286,8 +286,11 @@ static void run_simulation(source_list_t * source_list,
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    int dump_flag = 0;
-    unsigned int n_lost = 0;
+    int dump_flag = 0;		/* indicates dump cycle (1) */
+    unsigned int n_lost = 0;	/* number of rays lost i.e. rays that
+				   are not absorbed anywhere. they may
+				   have hit some targets and have been
+				   reflected several times, however. */
 
     gsl_rng_set(r, (unsigned long int) abs(seed));
 
@@ -296,6 +299,9 @@ static void run_simulation(source_list_t * source_list,
 	    gsl_rng_name(r));
 
     list_for_each(s_pos, &(source_list->list)) {
+	/*
+	 * iterate through all sources
+	 */
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
 	ray_t *ray;
@@ -306,56 +312,99 @@ static void run_simulation(source_list_t * source_list,
 	fflush(stdout);
 
 	while ((ray = new_ray(current_source, r))) {
+	    /*
+	     * loop until 'current_source' is exhausted indicated
+	     * by 'new_ray()' returning 'NULL'.
+	     */
 
-	    while (ray) {	/* loop until 'ray' is absorbed or leaves system */
+	    while (ray) {
+		/*
+		 * loop until 'ray' is absorbed or leaves system
+		 */
 		struct list_head *t_pos;
 		/*
-		 * keep track of nearest target being hit by 'ray'.
-		 * 'nearest_intercept' is used in calculation of
-		 * 'ray' leaving 'nearest_target'.
+		 * keep track of target closest to origin of the
+		 * current ray that is intercepted by it.
+		 * 'closest_intercept' is later used in the calculation
+		 * of 'ray' leaving 'closest_target' in 'out_ray()' as
+		 * origin of the new ray.
 		 */
-		target_t *nearest_target;
-		double *nearest_intercept = NULL;
+		target_t *closest_target;
+		double *closest_intercept = NULL;
 		double min_dist = GSL_DBL_MAX;
-		int hits_target = 0;	/* flag indicating that 'ray' hits any target */
+		int hits_target = 0;	/* indicator that 'ray' intercepts
+					   any target at all */
 
-		list_for_each(t_pos, &(target_list->list)) {	/* find closest target intercepted by 'ray' */
+		list_for_each(t_pos, &(target_list->list)) {
+		    /*
+		     * iterate through all targets.
+		     * calculate point of interception on each target
+		     * to identify target closest to origin of 'ray'.
+		     * this is the actual target that is hit by 'ray'.
+		     */
 		    target_list_t *this_t =
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 		    double *current_intercept =
 			interception(current_target, ray, &dump_flag);
 
-		    if (current_intercept) {	/* 'ray' hits 'current_target' */
+		    if (current_intercept) {
+			/*
+			 * 'ray' is intercepted by 'current_target'
+			 */
 			const double dist =
 			    distance(current_intercept, ray->origin);
 
 			hits_target = 1;
 
-			if (dist < min_dist) {	/* 'current targets' is closest target found until now */
+			if (dist < min_dist) {
+			    /*
+			     * 'current_target' is target closest
+			     * to origin of 'ray' found so far.
+			     */
 
-			    free(nearest_intercept);
-			    nearest_target = current_target;
-			    nearest_intercept = current_intercept;
+			    free(closest_intercept);
+			    closest_target = current_target;
+			    closest_intercept = current_intercept;
 			    min_dist = dist;
 
-			} else	/* hit on far target. not used */
+			} else
+			    /*
+			     * 'ray' has been intercepted by a target
+			     * placed at a larger distance to origin of
+			     * 'ray' that 'closest_target'.
+			     */
 			    free(current_intercept);
 
-		    }
-		    /* end 'if(current_intercept)' */
+		    }		/* end 'if(current_intercept)' */
 		}		/* all targets tried */
 
-		if (hits_target) {	/* 'ray' hits 'nearest_target' */
-		    ray =	/* 'out_ray' returns NULL if 'ray' is absorbed by target */
-			out_ray(nearest_target, ray, nearest_intercept, r,
+		if (hits_target) {
+		    /*
+		     * 'ray' has been intercepted by a target.
+		     * update 'ray'.
+		     * Note: 'out_ray' returns NULL if 'ray' is
+		     *        absorbed by target. this will terminate
+		     *        the "while (ray) {}" loop and a new
+		     *        ray will be emitted by the current source.
+		     */
+		    ray =
+			out_ray(closest_target, ray, closest_intercept, r,
 				&dump_flag, n_targets);
-		    free(nearest_intercept);
-		    nearest_intercept = NULL;
-		} else {	/* no target hit, 'ray' is lost */
+		    free(closest_intercept);
+		    closest_intercept = NULL;
+
+		} else {
+		    /*
+		     * 'ray' has not been intercepted by any target.
+		     * thus, 'ray' is lost and terminates.
+		     * trigger emmision of new ray from current source
+		     * by assigning NULL to 'ray'
+		     */
 		    n_lost++;
 		    free(ray);
-		    ray = NULL;	/* mark as absorbed */
+		    ray = NULL;
+
 		}
 	    }			/* 'ray' absorbed or lost */
 	}			/* 'current_source' is exhausted */
