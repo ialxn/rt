@@ -40,6 +40,10 @@ extern void off_ellipsoid(const char *name, const double *origin,
 			  const double bi, const double ro,
 			  const double go, const double bo,
 			  const double dz);
+extern void off_disk(const char *name, const double *origin,
+		     const double *dir, const double r, const double rf,
+		     const double gf, const double bf, const double rb,
+		     const double gb, const double bb, const double dz);
 
 extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
