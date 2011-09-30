@@ -109,7 +109,7 @@ static void output_hist(FILE * f_out, gsl_histogram * h,
 
     fprintf(stdout, "#\n#   histogram statistics\n");
 
-    fprintf(stdout, "#       number of data point not included: %d\n",
+    fprintf(stdout, "#      number of data points not included: %d\n",
 	    n_missed);
     fprintf(stdout, "#                      total power missed: %e\n#\n",
 	    p_missed);
