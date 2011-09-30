@@ -191,8 +191,8 @@ int main(int argc, char **argv)
     double stop_wl = 1000.0;
     gsl_histogram *h;
     int idx_p, idx_l;
-    int n_missed;
-    double p_missed;
+    int n_missed = 0;
+    double p_missed = 0.0;
 
     while (1) {
 	int c;
