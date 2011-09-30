@@ -134,6 +134,10 @@ int check_targets(config_t * cfg)
 	     *          - "ellipsoid"             : ellipsoid. specular reflection on
 	     *                                      inside surface, total absorption
 	     *                                      on outside surface.
+	     *          - "annulus":                specular reflection on front surface
+	     *                                      defined by direction of surface
+	     *                                      normal. total absorption on rear
+	     *                                      surface.
 	     */
 	    status += check_string("targets", this_t, "name", i);
 
@@ -227,7 +231,26 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 
-	    }			/* end 'ellipsoid' */
+	    } /* end 'ellipsoid' */
+	    else if (!strcmp(type, "annulus")) {
+		/*
+		 * disk:
+		 *  - array 'P' (center of ellipsoid) [x,y,z] / double
+		 *  - array 'N' (direction of local x-axis) [x,y,z] / double
+		 *  - 'r' (radius of disk) double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 */
+		status += check_array("targets", this_t, "P", i);
+		status += check_array("targets", this_t, "N", i);
+		status += check_float("targets", this_t, "R", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+
+	    }			/* end 'annulus' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
