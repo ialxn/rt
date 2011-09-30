@@ -14,6 +14,7 @@ SRCS= main.c \
       target_rectangle.c \
       target_triangle.c \
       target_ellipsoid.c \
+      target_disk.c \
       off.c \
       vector_math.c
 
@@ -29,6 +30,7 @@ OBJ= main.o \
      target_rectangle.o \
      target_triangle.o \
      target_ellipsoid.o \
+     target_disk.o \
      off.o \
      vector_math.o
 
