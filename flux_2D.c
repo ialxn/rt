@@ -37,6 +37,8 @@ static int wrong_target_type(FILE * f_in)
 	status = NO_ERR;
     else if (strstr(line, "(triangle)"))
 	status = NO_ERR;
+    else if (strstr(line, "(disk)"))
+	status = NO_ERR;
     else
 	fprintf(stderr, "Unknown target type %s\n", line);
 

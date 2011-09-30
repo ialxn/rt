@@ -42,6 +42,9 @@ static int get_idx(FILE * f_in, int *idx_lambda, int *idx_power)
     } else if (strcmp(line, "(ellipsoid)")) {
 	*idx_lambda = 4;
 	*idx_power = 3;
+    } else if (strcmp(line, "(disk)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
     } else {
 	fprintf(stderr, "Unknown target type (%s) found\n", line);
 	status = ERR;
