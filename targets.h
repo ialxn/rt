@@ -54,6 +54,7 @@ const target_type_t *target_rectangle;
 const target_type_t *target_triangle;
 const target_type_t *target_ellipsoid;
 const target_type_t *target_annulus;
+const target_type_t *target_disk;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */

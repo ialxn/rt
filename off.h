@@ -41,7 +41,12 @@ extern void off_ellipsoid(const char *name, const double *origin,
 			  const double go, const double bo,
 			  const double dz);
 extern void off_annulus(const char *name, const double *origin,
-		     const double *dir, const double R, const double r, const double rf,
+			const double *dir, const double R, const double r,
+			const double rf, const double gf, const double bf,
+			const double rb, const double gb, const double bb,
+			const double dz);
+extern void off_disk(const char *name, const double *origin,
+		     const double *dir, const double r, const double rf,
 		     const double gf, const double bf, const double rb,
 		     const double gb, const double bb, const double dz);
 

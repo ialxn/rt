@@ -493,6 +493,73 @@ void off_ellipsoid(const char *name, const double *origin, const double *Z,
 
 }
 
+void off_disk(const char *name, const double *origin, const double *dir,
+	      const double r, const double rf,
+	      const double gf, const double bf, const double rb,
+	      const double gb, const double bb, const double dz)
+/*
+ * writes 'OFF' file to 'name.off' for disk. the disk is defined by its
+ * center 'origin', normal vector 'dir' and radius 'r'.
+ * two planes are actually draw:
+ *	- front side (offset by 'dz') colored 'rf','gf','bf'
+ *	- back side colored rb,gb,bb
+ */
+{
+    double P[3], g_P[3];
+    const double O[] = { 0.0, 0.0, 0.0 };
+    double alpha, beta;
+    int i;
+
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "24 2 0\n\n");	/* 2*12 vertices, 2 faces */
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off(O, dir, P, &alpha, &beta);
+
+    /*
+     * vertices at center
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	P[0] = r * sin(arg);
+	P[1] = r * cos(arg);
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * vertices at center + 'dz'
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	P[0] = r * sin(arg);
+	P[1] = r * cos(arg);
+	P[2] = dz;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+    /*
+     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
+     */
+    fprintf(outf, "13 ");
+    for (i = 0; i < 12; i++)
+	fprintf(outf, "%d ", i);
+    fprintf(outf, "0 %f\t%f\t%f\n", rb, gb, bb);
+
+    fprintf(outf, "13 ");
+    for (i = 12; i < 24; i++)
+	fprintf(outf, "%d ", i);
+    fprintf(outf, "12 %f\t%f\t%f\n", rf, gf, bf);
+
+    fclose(outf);
+}
+
 void off_annulus(const char *name, const double *origin, const double *dir,
 		 const double R, const double r, const double rf,
 		 const double gf, const double bf, const double rb,

@@ -192,6 +192,26 @@ static void output_targets(const config_t * cfg)
 	    off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0, 1.0,
 			  0.0, 0.0, 0.0, 1.0 - DZ);
 
+	} else if (!strcmp(type, "disk")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double r;
+
+	    read_vector(this_t, "P", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "N", Z);
+	    config_setting_lookup_float(this_t, "r", &r);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw disk:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_disk(name, O, Z, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+
 	} else if (!strcmp(type, "annulus")) {
 	    double O[3], X[3], Y[3], Z[3];
 	    double R, r;

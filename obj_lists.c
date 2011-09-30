@@ -118,6 +118,10 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	else if (!strcmp(type, "annulus"))
 	    new_target =
 		target_alloc(target_annulus, this_target, NULL, file_mode);
+	else if (!strcmp(type, "disk"))
+	    new_target =
+		target_alloc(target_disk, this_target, NULL,
+			     file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",
