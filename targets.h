@@ -53,6 +53,7 @@ const target_type_t *target_plane_screen_two_sided;
 const target_type_t *target_rectangle;
 const target_type_t *target_triangle;
 const target_type_t *target_ellipsoid;
+const target_type_t *target_annulus;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */
