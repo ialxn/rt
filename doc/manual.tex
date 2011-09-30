@@ -94,7 +94,7 @@ All sources and all targets are identified by their {\tt type}. The common {\tt 
 
 \subsection{Global Parameters}
 \begin{itemize}
-\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identtical output.\\
+\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\\
 The value will be overridden by the {\tt -a} command line argument. Using this option, existing results can be improved by tracing additional rays.}
 \end{itemize}
 
@@ -271,7 +271,7 @@ Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the lo
 \end{list}
 
 \subsection{{\tt flux\_2D}}
-{\tt flux\_2D} outputs the flux distribution (2D histogram) of planar targets. Statistical data including the number of rays missed and the total power contained in those is reported in the header.
+{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed and the total power contained in those is reported in the header.
 
 {\bf Syntax:} {\tt flux\_2D} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
