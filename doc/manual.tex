@@ -249,6 +249,26 @@ Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\
 
 Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
 
+\subsubsection{Annulus}
+
+\noindent {\tt type="annulus;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt P=[X.x, Y.y, Z.z];}
+
+\noindent {\tt N=[X.x, Y.y, Z.z];}
+
+\noindent {\tt R=R.r;}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the annulus has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
+
 
 \section{Utilities}
 \subsection{{\tt spectrum}}
