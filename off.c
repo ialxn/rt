@@ -634,14 +634,14 @@ void off_annulus(const char *name, const double *origin, const double *dir,
 	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f\n", base, base + 1,
 		base + 3, base + 2, base, rb, gb, bb);
     }
-	fprintf(outf, "5 22 23 1 0 22 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 22 23 1 0 22 %f\t%f\t%f\n", rb, gb, bb);
 
     for (i = 12; i < 23; i++) {
 	const int base = 2 * i;
 	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f\n", base, base + 1,
 		base + 3, base + 2, base, rf, gf, bf);
     }
-	fprintf(outf, "5 46 47 25 24 46 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "5 46 47 25 24 46 %f\t%f\t%f\n", rf, gf, bf);
 
     fclose(outf);
 }

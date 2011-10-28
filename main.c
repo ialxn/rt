@@ -231,7 +231,8 @@ static void output_targets(const config_t * cfg)
 	     *   front (white, mirror) at 'P'+'DZ'
 	     *   rear side (black, absorbs) at 'P'
 	     */
-	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+			DZ);
 
 	}
     }				/* end all targets */

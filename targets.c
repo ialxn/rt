@@ -253,7 +253,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 
-	    }			/* end 'disk' */
+	    } /* end 'disk' */
 	    else if (!strcmp(type, "annulus")) {
 		/*
 		 * annulus:
