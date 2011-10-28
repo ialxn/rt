@@ -58,6 +58,6 @@ extern const char *get_source_name(const source_t * S);
  */
 extern int check_sources(config_t * cfg);
 extern void init_spectrum(const char *f_name, gsl_spline ** spline,
-			  gsl_interp_accel ** acc);
+			  gsl_interp_accel ** acc, double *lambda_min);
 
 #endif				/* __SOURCES_H__ */

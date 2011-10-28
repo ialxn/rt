@@ -142,35 +142,58 @@ int check_sources(config_t * cfg)
 }
 
 void init_spectrum(const char *f_name, gsl_spline ** spline,
-		   gsl_interp_accel ** acc)
+		   gsl_interp_accel ** acc, double *lambda_min)
 {
     FILE *spectrum;
     double *lambda;
-    double *cumul_I;
+    double *I;
+    double *CDF;
     size_t n_lambda;
     size_t i;
 
     spectrum = fopen(f_name, "r");
-    read_data(spectrum, &lambda, &cumul_I, &n_lambda);
+    read_data(spectrum, &lambda, &I, &n_lambda);
     fclose(spectrum);
 
     /*
-     * calculate normalized cumulative spectrum.
+     * calculate normalized cumulative spectrum (CDF).
      * this will be the cumulative distribution function
      * needed to obtain a random wavelength.
+     *
+     * careful: we have to make sure that the interval
+     *          of the random varialble (0..1) is
+     *          mapped to the interval (lambda_min
+     *          to lambda_max). thus shift 'lambda'
+     *          by 'lambda_min' (this will be reversed
+     *          in 'get_new_ray()' by adding 'lambda_min')
+     *          and shift 'cumul_I' by 'cumul_I[0]' (to
+     *          make the CDF fall into the range 0..1
+     *          after normalization.
      */
-    for (i = 1; i < n_lambda; i++)
-	cumul_I[i] += cumul_I[i - 1];
+    *lambda_min = lambda[0];
+    CDF = (double *) malloc(n_lambda * sizeof(double));
+
+    /* shift 'lambda' by lambda_min */
     for (i = 0; i < n_lambda; i++)
-	cumul_I[i] /= cumul_I[n_lambda - 1];
+	lambda[i] -= *lambda_min;
+
+    /* calculate CDF. include offset by 'I[0]' */
+    CDF[0] = 0.0;
+    for (i = 1; i < n_lambda; i++)
+	CDF[i] = CDF[i - 1] + (I[i] - I[0]) * (lambda[i] - lambda[i - 1]);
+
+    /* normalize 'CDF' */
+    for (i = 0; i < n_lambda; i++)
+	CDF[i] /= CDF[n_lambda - 1];
 
     /* cspline will be used to interpolate */
     *acc = gsl_interp_accel_alloc();
     *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
 
-    /* 'cumul_I' -> x and 'lambda' -> y */
-    gsl_spline_init(*spline, cumul_I, lambda, n_lambda);
+    /* 'CDF' -> x and 'lambda' -> y */
+    gsl_spline_init(*spline, CDF, lambda, n_lambda);
 
     free(lambda);
-    free(cumul_I);
+    free(I);
+    free(CDF);
 }
