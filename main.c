@@ -373,8 +373,6 @@ static void run_simulation(source_list_t * source_list,
 		target_t *closest_target;
 		double *closest_intercept = NULL;
 		double min_dist = GSL_DBL_MAX;
-		int hits_target = 0;	/* indicator that 'ray' intercepts
-					   any target at all */
 
 		list_for_each(t_pos, &(target_list->list)) {
 		    /*
@@ -395,8 +393,6 @@ static void run_simulation(source_list_t * source_list,
 			 */
 			const double dist =
 			    distance(current_intercept, ray->origin);
-
-			hits_target = 1;
 
 			if (dist < min_dist) {
 			    /*
@@ -420,7 +416,7 @@ static void run_simulation(source_list_t * source_list,
 		    }		/* end 'if(current_intercept)' */
 		}		/* all targets tried */
 
-		if (hits_target) {
+		if (closest_intercept) {
 		    /*
 		     * 'ray' has been intercepted by a target.
 		     * update 'ray'.
