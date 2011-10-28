@@ -95,7 +95,6 @@ static void output_targets(const config_t * cfg)
 	    int j;
 	    double P[3], N[3];
 	    double X[3], Y[3];
-	    double nX, nY;
 
 	    /*
 	     * read three corner points:
@@ -122,8 +121,8 @@ static void output_targets(const config_t * cfg)
 	    for (j = 0; j < 3; j++)
 		P[j] += (X[j] + Y[j]) / 2.0;
 
-	    nX = normalize(X);
-	    nY = normalize(Y);
+	    normalize(X);
+	    normalize(Y);
 	    /* surface normal N = X cross Y */
 	    cross_product(X, Y, N);
 
