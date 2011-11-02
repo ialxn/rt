@@ -141,6 +141,40 @@ int check_sources(config_t * cfg)
     return status;
 }
 
+static double *calc_CDF(const double *I, const double *lambda,
+			const size_t n_lambda)
+/*
+ * calculate normalized cumulative spectrum (CDF).
+ * this will be the cumulative distribution function
+ * needed to obtain a random wavelength.
+ *
+ * careful: we have to make sure that the interval
+ *          of the random varialble (0..1) is
+ *          mapped to the interval (lambda_min
+ *          to lambda_max). thus
+ *          0 <= lambda_min < l <= lambda_max-lambda_min
+ *          'lambda' has been shifted by 'lambda_min'
+ *          by caller (this will be reversed
+ *          in 'get_new_ray()' by adding 'lambda_min')
+ *          make the CDF fall into the range 0..1
+ *          after normalization and shift.
+ */
+{
+    size_t i;
+    double *CDF = (double *) malloc(n_lambda * sizeof(double));
+
+    /* calculate CDF. include offset by 'I[0]' */
+    CDF[0] = 0.0;
+    for (i = 1; i < n_lambda; i++)
+	CDF[i] = CDF[i - 1] + (I[i] - I[0]) * (lambda[i] - lambda[i - 1]);
+
+    /* normalize 'CDF' */
+    for (i = 0; i < n_lambda; i++)
+	CDF[i] /= CDF[n_lambda - 1];
+
+    return CDF;
+}
+
 void init_spectrum(const char *f_name, gsl_spline ** spline,
 		   gsl_interp_accel ** acc, double *lambda_min)
 {
@@ -155,36 +189,12 @@ void init_spectrum(const char *f_name, gsl_spline ** spline,
     read_data(spectrum, &lambda, &I, &n_lambda);
     fclose(spectrum);
 
-    /*
-     * calculate normalized cumulative spectrum (CDF).
-     * this will be the cumulative distribution function
-     * needed to obtain a random wavelength.
-     *
-     * careful: we have to make sure that the interval
-     *          of the random varialble (0..1) is
-     *          mapped to the interval (lambda_min
-     *          to lambda_max). thus shift 'lambda'
-     *          by 'lambda_min' (this will be reversed
-     *          in 'get_new_ray()' by adding 'lambda_min')
-     *          and shift 'cumul_I' by 'cumul_I[0]' (to
-     *          make the CDF fall into the range 0..1
-     *          after normalization.
-     */
-    *lambda_min = lambda[0];
-    CDF = (double *) malloc(n_lambda * sizeof(double));
-
     /* shift 'lambda' by lambda_min */
+    *lambda_min = lambda[0];
     for (i = 0; i < n_lambda; i++)
 	lambda[i] -= *lambda_min;
 
-    /* calculate CDF. include offset by 'I[0]' */
-    CDF[0] = 0.0;
-    for (i = 1; i < n_lambda; i++)
-	CDF[i] = CDF[i - 1] + (I[i] - I[0]) * (lambda[i] - lambda[i - 1]);
-
-    /* normalize 'CDF' */
-    for (i = 0; i < n_lambda; i++)
-	CDF[i] /= CDF[n_lambda - 1];
+    CDF = calc_CDF(I, lambda, n_lambda);
 
     /* cspline will be used to interpolate */
     *acc = gsl_interp_accel_alloc();
