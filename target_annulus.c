@@ -175,10 +175,7 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray,
 	double *intercept = (double *) malloc(3 * sizeof(double));
 	double r_intercept;
 
-	intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
-	intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
-	intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
-
+	v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
 	/* convert to local coordinates, origin is 'state->point' */
 	g2l(state->M, state->point, intercept, l_intercept);
 

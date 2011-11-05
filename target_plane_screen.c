@@ -184,9 +184,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 
     intercept = (double *) malloc(3 * sizeof(double));
 
-    intercept[0] = in_ray->origin[0] + d * in_ray->direction[0];
-    intercept[1] = in_ray->origin[1] + d * in_ray->direction[1];
-    intercept[2] = in_ray->origin[2] + d * in_ray->direction[2];
+    v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
 
     return intercept;
 

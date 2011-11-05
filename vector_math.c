@@ -15,7 +15,19 @@
 #include "vector_math.h"
 
 
-extern void v_diff(double result[3], const double a[3], const double b[3])
+void v_a_plus_cb(double result[3], const double a[3], const double c,
+		 const double b[3])
+/*
+ * 'result' = 'a' + 'c' * 'b'
+ */
+{
+    size_t i;
+
+    for (i = 0; i < 3; i++)
+	result[i] = a[i] + c * b[i];
+}
+
+void v_diff(double result[3], const double a[3], const double b[3])
 /*
  * calculate difference of vectors 'a' and 'b'
  * 'result' = 'a' - 'b'

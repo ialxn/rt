@@ -13,6 +13,8 @@
 
 #include "ray.h"
 
+extern void v_a_plus_cb(double result[3], const double a[3],
+			const double c, const double b[3]);
 extern void v_diff(double result[3], const double a[3], const double b[3]);
 extern void cross_product(const double a[3], const double b[3],
 			  double result[3]);
