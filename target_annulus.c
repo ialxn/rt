@@ -162,10 +162,7 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray,
     if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
 	return NULL;
 
-    t2[0] = state->point[0] - in_ray->origin[0];	/* p_0 - l_0 */
-    t2[1] = state->point[1] - in_ray->origin[1];
-    t2[2] = state->point[2] - in_ray->origin[2];
-
+    v_diff(t2, state->point, in_ray->origin);	/* p_0 - l_0 */
     t3 = cblas_ddot(3, t2, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
     if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
 	return NULL;

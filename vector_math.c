@@ -15,6 +15,18 @@
 #include "vector_math.h"
 
 
+extern void v_diff(double result[3], const double a[3], const double b[3])
+/*
+ * calculate difference of vectors 'a' and 'b'
+ * 'result' = 'a' - 'b'
+ */
+{
+    size_t i;
+
+    for (i = 0; i < 3; i++)
+	result[i] = a[i] - b[i];
+}
+
 void cross_product(const double a[3], const double b[3], double result[3])
 {
     result[0] = a[1] * b[2] - a[2] * b[1];
@@ -74,8 +86,7 @@ void g2l(const double *mat, const double *origin, const double *g,
     int i;
     double t[3];
 
-    for (i = 0; i < 3; i++)
-	t[i] = g[i] - origin[i];
+    v_diff(t, g, origin);
 
     for (i = 0; i < 3; i++)
 	l[i] = cblas_ddot(3, t, 1, &mat[3 * i], 1);

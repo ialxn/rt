@@ -143,7 +143,6 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
     double u, v;
     double t;
     double det;
-    int i;
 
     if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
 	dump_data(state->dump_file, state->data, state->n_data,
@@ -170,9 +169,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
     if (fabs(det) < GSL_SQRT_DBL_EPSILON)	/* parallel to triangle */
 	return NULL;
 
-    for (i = 0; i < 3; i++)
-	T[i] = in_ray->origin[i] - state->P1[i];
-
+    v_diff(T, in_ray->origin, state->P1);
     u = cblas_ddot(3, T, 1, P, 1);
     if (u < 0.0 || u > det)	/* outside */
 	return NULL;
