@@ -464,6 +464,8 @@ static void help(void)
     fprintf(stdout,
 	    "                         1: output geometry (OFF files).\n");
     fprintf(stdout, "                         2: run simulation.\n");
+    fprintf(stdout,
+	    "       --threads, -t     number of threads to use [1]\n");
     fprintf(stdout, "       --Version, -V     Print version number\n");
     fprintf(stdout, "       --help, -h        Print this help message\n");
     fprintf(stdout, "\n");
@@ -516,6 +518,7 @@ int main(int argc, char **argv)
     config_t cfg;
     int mode = CHECK_CONFIG;
     int seed;			/* seed for rng */
+    int n_threads = 1;		/* default single threaded */
     char file_mode[2] = "w";	/* default file mode for output per target */
 
     while (1) {
@@ -524,12 +527,14 @@ int main(int argc, char **argv)
 	static struct option long_options[] = {
 	    {"append", required_argument, 0, 'a'},
 	    {"mode", required_argument, 0, 'm'},
+	    {"threads", required_argument, 0, 't'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:m:Vh", long_options, &option_index);
+	c = getopt_long(argc, argv, "a:m:t:Vh", long_options,
+			&option_index);
 
 	if (c == -1)
 	    break;
@@ -547,6 +552,10 @@ int main(int argc, char **argv)
 		fprintf(stderr, "unknown 'mode' (%d) given.\n", mode);
 		exit(EXIT_FAILURE);
 	    }
+	    break;
+
+	case 't':
+	    n_threads = atoi(optarg);
 	    break;
 
 	case 'V':
