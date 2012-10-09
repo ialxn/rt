@@ -122,9 +122,6 @@ static void tr_free_state(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    /* first write remaining data to file. 4 items per data (x,y,ppr,lambda) */
-    dump_data(state->dump_file, state->data, state->n_data,
-	      N_COORDINATES + 2);
     fclose(state->dump_file);
 
     free(state->name);
@@ -143,14 +140,6 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
     double u, v;
     double t;
     double det;
-
-    if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data,
-		  N_COORDINATES + 2);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
-		      N_COORDINATES + 2);
-	(*dump_flag)--;
-    }
 
     if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
 	state->last_was_hit = 0;

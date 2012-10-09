@@ -77,14 +77,6 @@ extern double *M(const target_t * T);
  * utility functions
  */
 extern int check_targets(config_t * cfg);
-extern void dump_data(FILE * f, double *data, const size_t n_data,
-		      const size_t n_items);
-extern void shrink_memory(double **data, size_t * n_data,
-			  size_t * n_alloc, const size_t N);
-extern void try_increase_memory(double **data, size_t * n_data,
-				size_t * n_alloc, const size_t N,
-				FILE * dump_file, int *dump_flag,
-				const int n_targets);
 extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
 			       gsl_interp_accel ** acc);
 

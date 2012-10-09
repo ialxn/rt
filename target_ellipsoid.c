@@ -126,9 +126,6 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    /* first write remaining data to file. 5 items per data (x,y,z,ppr,lambda) */
-    dump_data(state->dump_file, state->data, state->n_data,
-	      N_COORDINATES + 2);
     fclose(state->dump_file);
 
     free(state->name);
@@ -147,14 +144,6 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
     double O[] = { 0.0, 0.0, 0.0 };
     double A = 0.0, B = 0.0, C = -1.0;
     double D;
-
-    if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data,
-		  N_COORDINATES + 1);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
-		      N_COORDINATES + 1);
-	(*dump_flag)--;
-    }
 
     /*
      * calculate point of interception D
