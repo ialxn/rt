@@ -35,6 +35,13 @@
 #define DZ 0.005
 #define AXES_LENGTH 5.0
 
+struct run_simulation_args {
+    source_list_t *source_list;
+    target_list_t *target_list;
+    int seed_base;
+    int seed_incr;
+};
+
 static void output_targets(const config_t * cfg)
 {
     int i;
@@ -320,9 +327,10 @@ static double distance(const double a[3], const double b[3])
 
 }
 
-static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list, const int seed)
+static void run_simulation(void *args)
 {
+    struct run_simulation_args *a = (struct run_simulation_args *) args;
+
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
@@ -331,13 +339,13 @@ static void run_simulation(source_list_t * source_list,
 				   have hit some targets and have been
 				   reflected several times, however. */
 
-    gsl_rng_set(r, (unsigned long int) abs(seed));
+    gsl_rng_set(r, (unsigned long int) abs(a->seed_base + a->seed_incr));
 
     fprintf(stdout,
 	    "    using random number generator %s from Gnu Scientif Library\n",
 	    gsl_rng_name(r));
 
-    list_for_each(s_pos, &(source_list->list)) {
+    list_for_each(s_pos, &(a->source_list->list)) {
 	/*
 	 * iterate through all sources
 	 */
@@ -372,7 +380,7 @@ static void run_simulation(source_list_t * source_list,
 		double *closest_intercept = NULL;
 		double min_dist = GSL_DBL_MAX;
 
-		list_for_each(t_pos, &(target_list->list)) {
+		list_for_each(t_pos, &(a->target_list->list)) {
 		    /*
 		     * iterate through all targets.
 		     * calculate point of interception on each target
@@ -517,6 +525,7 @@ int main(int argc, char **argv)
     int seed;			/* seed for rng */
     int n_threads = 1;		/* default single threaded */
     char file_mode[2] = "w";	/* default file mode for output per target */
+    struct run_simulation_args *rs_args;
 
     while (1) {
 	int c;
@@ -627,8 +636,16 @@ int main(int argc, char **argv)
 
 	config_destroy(&cfg);
 
-	run_simulation(source_list, target_list, seed);
+	rs_args = (struct run_simulation_args *)
+	    malloc(sizeof(struct run_simulation_args));
+	rs_args->source_list = source_list;
+	rs_args->target_list = target_list;
+	rs_args->seed_base = seed;
+	rs_args->seed_incr = 0;
 
+	run_simulation((void *) rs_args);
+
+	free(rs_args);
 	source_list_free(source_list);
 	target_list_free(target_list);
 	free(source_list);
