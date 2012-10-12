@@ -31,14 +31,11 @@ typedef struct ups_state_t {
 } ups_state_t;
 
 
-static void ups_init_state(void *vstate, config_setting_t * this_s,
-			   config_t * cfg)
+static void ups_init_state(void *vstate, config_setting_t * this_s)
 {
     ups_state_t *state = (ups_state_t *) vstate;
 
     const char *S;
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);

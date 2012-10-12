@@ -23,8 +23,8 @@ typedef struct source_type_t {
     const char *type;		/* type of source */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the source. */
-    void (*init_state) (void *state, config_setting_t * this_s, config_t * cfg);	/* initialize internal data
-											   from configuration */
+    void (*init_state) (void *state, config_setting_t * this_s);	/* initialize internal data
+									   from configuration */
     void (*free_state) (void *state);	/* free */
     ray_t *(*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
     const char *(*get_source_name) (void *state);	/* get name of source */
@@ -45,8 +45,7 @@ const source_type_t *source_sphere;
 /*
  *  public functions to access / manipulate the sources (found in sources.c)
  */
-extern source_t *source_alloc(const source_type_t * T,
-			      config_setting_t * this_s, config_t * cfg);
+extern source_t *source_alloc(const source_type_t * T, config_setting_t * this_s);
 extern void source_free(source_t * S);
 extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
 extern double get_ppr(const source_t * S);

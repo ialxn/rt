@@ -36,16 +36,13 @@ typedef struct sp_state_t {
 } sp_state_t;
 
 
-static void sp_init_state(void *vstate, config_setting_t * this_s,
-			  config_t * cfg)
+static void sp_init_state(void *vstate, config_setting_t * this_s)
 {
     sp_state_t *state = (sp_state_t *) vstate;
 
     const double O[] = { 0.0, 0.0, 0.0 };
     double t[3];
     const char *S;
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);

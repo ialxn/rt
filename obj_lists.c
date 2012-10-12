@@ -44,12 +44,11 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	config_setting_lookup_string(this_source, "type", &type);
 	if (!strcmp(type, "uniform point source"))
 	    new_source =
-		source_alloc(source_uniform_point_source, this_source,
-			     NULL);
+		source_alloc(source_uniform_point_source, this_source);
 	else if (!strcmp(type, "sphere"))
-	    new_source = source_alloc(source_sphere, this_source, NULL);
+	    new_source = source_alloc(source_sphere, this_source);
 	else if (!strcmp(type, "spot source"))
-	    new_source = source_alloc(source_spot, this_source, NULL);
+	    new_source = source_alloc(source_spot, this_source);
 	else {
 	    fprintf(stderr,
 		    "Unknown source type (%s) found. Ignoring source %s\n",
