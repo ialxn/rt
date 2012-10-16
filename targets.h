@@ -18,14 +18,11 @@
 
 #include "ray.h"
 
-#define BLOCK_SIZE 32768
-#define MAX_BLOCK_SIZE 262144
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
-    int (*alloc_state) (void *state);	/* allocate */
     void (*init_state) (void *state, config_setting_t * this_t, config_t * cfg, const char *file_mode);	/* initialize
 													   internal data
 													   from

@@ -22,8 +22,6 @@
 #include "vector_math.h"
 
 
-#define N_COORDINATES 2		/* store only x,y */
-
 typedef struct tr_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
@@ -36,27 +34,8 @@ typedef struct tr_state_t {
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     gsl_interp_accel *acc;	/* cache for spline */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } tr_state_t;
 
-
-static int tr_alloc_state(void *vstate)
-{
-    tr_state_t *state = (tr_state_t *) vstate;
-
-    /* 4 items per data set (x,y,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
-}
 
 static void tr_init_state(void *vstate, config_setting_t * this_target,
 			  config_t * cfg, const char *file_mode)
@@ -115,7 +94,6 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
 
     state->last_was_hit = 0;
     state->absorbed = 0;
-    state->n_data = 0;
 }
 
 static void tr_free_state(void *vstate)
@@ -125,7 +103,6 @@ static void tr_free_state(void *vstate)
     fclose(state->dump_file);
 
     free(state->name);
-    free(state->data);
     gsl_spline_free(state->spline);
     gsl_interp_accel_free(state->acc);
 }
@@ -257,7 +234,6 @@ static double *tr_M(void *vstate)
 static const target_type_t tr_t = {
     "triangle",
     sizeof(struct tr_state_t),
-    &tr_alloc_state,
     &tr_init_state,
     &tr_free_state,
     &tr_get_intercept,

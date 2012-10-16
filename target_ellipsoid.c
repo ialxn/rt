@@ -21,8 +21,6 @@
 #include "targets.h"
 #include "vector_math.h"
 
-#define N_COORDINATES 3		/* store x,y,z */
-
 typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
     FILE *dump_file;
@@ -33,9 +31,6 @@ typedef struct ell_state_t {
     gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated that ray was absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } ell_state_t;
 
 
@@ -52,22 +47,6 @@ static void ell_surf_normal(const double *point, const double *axes,
     norm = sqrt(norm);
     cblas_dscal(3, 1.0 / norm, normal, 1);
 
-}
-
-static int ell_alloc_state(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    /* 5 items per data set (x,y,z,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
 }
 
 static void ell_init_state(void *vstate, config_setting_t * this_target,
@@ -119,7 +98,6 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     init_refl_spectrum(S, &state->spline, &state->acc);
 
     state->absorbed = 0;
-    state->n_data = 0;
 }
 
 static void ell_free_state(void *vstate)
@@ -129,7 +107,6 @@ static void ell_free_state(void *vstate)
     fclose(state->dump_file);
 
     free(state->name);
-    free(state->data);
     gsl_spline_free(state->spline);
     gsl_interp_accel_free(state->acc);
 }
@@ -291,7 +268,6 @@ static double *ell_M(void *vstate)
 static const target_type_t ell_t = {
     "ellipsoid",
     sizeof(struct ell_state_t),
-    &ell_alloc_state,
     &ell_init_state,
     &ell_free_state,
     &ell_get_intercept,

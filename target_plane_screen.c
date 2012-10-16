@@ -21,8 +21,6 @@
 #include "vector_math.h"
 
 
-#define N_COORDINATES 2		/* store only x,y */
-
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
@@ -31,27 +29,8 @@ typedef struct ps_state_t {
     double point[3];		/* point on plane */
     double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } ps_state_t;
 
-
-static int ps_alloc_state(void *vstate)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    /* 4 items per data set (x,y,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
-}
 
 static void ps_init_state(void *vstate, config_setting_t * this_target,
 			  config_t * cfg, const char *file_mode)
@@ -87,7 +66,6 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 
     /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
-    state->n_data = 0;
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,
@@ -115,7 +93,6 @@ static void ps_free_state(void *vstate)
     fclose(state->dump_file);
 
     free(state->name);
-    free(state->data);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * in_ray)
@@ -230,7 +207,6 @@ static double *ps_M(void *vstate)
 static const target_type_t ps1_t = {
     "one-sided plane screen",
     sizeof(struct ps_state_t),
-    &ps_alloc_state,
     &ps1_init_state,
     &ps_free_state,
     &ps_get_intercept,
@@ -243,7 +219,6 @@ static const target_type_t ps1_t = {
 static const target_type_t ps2_t = {
     "two-sided plane screen",
     sizeof(struct ps_state_t),
-    &ps_alloc_state,
     &ps2_init_state,
     &ps_free_state,
     &ps_get_intercept,

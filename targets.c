@@ -36,15 +36,6 @@ target_t *target_alloc(const target_type_t * type,
 
     T->type = type;
 
-    /* specific part for target 'type' */
-    if ((T->type->alloc_state) (T->state) == ERR) {
-	fprintf(stderr,
-		"failed to allocate space for specific internal state of target\n");
-	free(T->state);
-	free(T);
-	return NULL;
-    }
-
     (T->type->init_state) (T->state, this_t, cfg, file_mode);	/* initialize data structures */
 
     return T;

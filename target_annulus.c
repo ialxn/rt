@@ -22,8 +22,6 @@
 #include "vector_math.h"
 
 
-#define N_COORDINATES 2		/* store only x,y */
-
 typedef struct ann_state_t {
     char *name;			/* name (identifier) of target */
     char last_was_hit;		/* flag */
@@ -36,27 +34,8 @@ typedef struct ann_state_t {
     gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } ann_state_t;
 
-
-static int ann_alloc_state(void *vstate)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    /* 4 items per data set (x,y,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
-}
 
 static void ann_init_state(void *vstate, config_setting_t * this_target,
 			   config_t * cfg, const char *file_mode)
@@ -100,7 +79,6 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
 
     state->last_was_hit = 0;
     state->absorbed = 0;
-    state->n_data = 0;
 }
 
 static void ann_free_state(void *vstate)
@@ -110,7 +88,6 @@ static void ann_free_state(void *vstate)
     fclose(state->dump_file);
 
     free(state->name);
-    free(state->data);
     gsl_spline_free(state->spline);
     gsl_interp_accel_free(state->acc);
 }
@@ -264,7 +241,6 @@ static double *ann_M(void *vstate)
 static const target_type_t ann_t = {
     "annulus",
     sizeof(struct ann_state_t),
-    &ann_alloc_state,
     &ann_init_state,
     &ann_free_state,
     &ann_get_intercept,
