@@ -30,7 +30,7 @@ typedef struct disk_state_t {
     FILE *dump_file;
     double point[3];		/* center coordinate of disk */
     double normal[3];		/* normal vector of disk */
-    double r;			/* radius of disk */
+    double r2;			/* radius^2 of disk */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
@@ -64,6 +64,7 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
 
     const char *S;
     char f_name[256];
+    double t;
 
     (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
@@ -94,7 +95,8 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline, &state->acc);
 
-    config_setting_lookup_float(this_target, "r", &state->r);
+    config_setting_lookup_float(this_target, "r", &t);
+    state->r2 = t * t;
 
     state->last_was_hit = 0;
     state->absorbed = 0;
@@ -171,12 +173,21 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray,
     else {			/* 'in_ray' intercepts target plane */
 	double l_intercept[3];
 	double *intercept = (double *) malloc(3 * sizeof(double));
+	double r2_intercept;
 
 	v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
 	/* convert to local coordinates, origin is 'state->point' */
 	g2l(state->M, state->point, intercept, l_intercept);
 
-	if (cblas_dnrm2(3, intercept, 1) > state->r) {
+	/*
+	 * r2_intercep is sqared distance from center of annulus to intercept
+	 * in the plane of the annulus. we are in local system that
+	 * is offset by intercept[2], so leave the latter out.
+	 * compare r^2 to avoid sqrt()
+	 */
+	r2_intercept =
+	    intercept[0] * intercept[0] + intercept[1] * intercept[1];
+	if (r2_intercept > state->r2) {
 
 	    /* hit not within boundaries */
 	    free(intercept);
