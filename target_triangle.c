@@ -130,8 +130,7 @@ static void tr_free_state(void *vstate)
     gsl_interp_accel_free(state->acc);
 }
 
-static double *tr_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+static double *tr_get_intercept(void *vstate, ray_t * in_ray)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 

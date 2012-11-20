@@ -113,8 +113,7 @@ static void disk_free_state(void *vstate)
     gsl_interp_accel_free(state->acc);
 }
 
-static double *disk_get_intercept(void *vstate, ray_t * in_ray,
-				  int *dump_flag)
+static double *disk_get_intercept(void *vstate, ray_t * in_ray)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
@@ -184,8 +183,7 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			       const gsl_rng * r, int *dump_flag,
-			       const int n_targets)
+			       const gsl_rng * r)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 

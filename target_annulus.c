@@ -115,8 +115,7 @@ static void ann_free_state(void *vstate)
     gsl_interp_accel_free(state->acc);
 }
 
-static double *ann_get_intercept(void *vstate, ray_t * in_ray,
-				 int *dump_flag)
+static double *ann_get_intercept(void *vstate, ray_t * in_ray)
 {
     ann_state_t *state = (ann_state_t *) vstate;
 
@@ -196,8 +195,7 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ann_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			      const gsl_rng * r, int *dump_flag,
-			      const int n_targets)
+			      const gsl_rng * r)
 {
     ann_state_t *state = (ann_state_t *) vstate;
 

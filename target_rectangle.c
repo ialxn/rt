@@ -127,8 +127,7 @@ static void sq_free_state(void *vstate)
     gsl_interp_accel_free(state->acc);
 }
 
-static double *sq_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+static double *sq_get_intercept(void *vstate, ray_t * in_ray)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
@@ -200,8 +199,7 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     const gsl_rng * r, int *dump_flag,
-			     const int n_targets)
+			     const gsl_rng * r)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 

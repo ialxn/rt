@@ -118,8 +118,7 @@ static void ps_free_state(void *vstate)
     free(state->data);
 }
 
-static double *ps_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+static double *ps_get_intercept(void *vstate, ray_t * in_ray)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -180,8 +179,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     const gsl_rng * r, int *dump_flag,
-			     const int n_targets)
+			     const gsl_rng * r)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 

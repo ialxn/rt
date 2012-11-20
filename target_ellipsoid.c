@@ -134,8 +134,7 @@ static void ell_free_state(void *vstate)
     gsl_interp_accel_free(state->acc);
 }
 
-static double *ell_get_intercept(void *vstate, ray_t * in_ray,
-				 int *dump_flag)
+static double *ell_get_intercept(void *vstate, ray_t * in_ray)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -221,8 +220,7 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			      const gsl_rng * r, int *dump_flag,
-			      const int n_targets)
+			      const gsl_rng * r)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 

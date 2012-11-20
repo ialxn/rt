@@ -321,13 +321,11 @@ static double distance(const double a[3], const double b[3])
 }
 
 static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list, const int seed,
-			   const int n_targets)
+			   target_list_t * target_list, const int seed)
 {
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    int dump_flag = 0;		/* indicates dump cycle (1) */
     unsigned int n_lost = 0;	/* number of rays lost i.e. rays that
 				   are not absorbed anywhere. they may
 				   have hit some targets and have been
@@ -385,7 +383,7 @@ static void run_simulation(source_list_t * source_list,
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 		    double *current_intercept =
-			interception(current_target, ray, &dump_flag);
+			interception(current_target, ray);
 
 		    if (current_intercept) {
 			/*
@@ -426,8 +424,7 @@ static void run_simulation(source_list_t * source_list,
 		     *        ray will be emitted by the current source.
 		     */
 		    ray =
-			out_ray(closest_target, ray, closest_intercept, r,
-				&dump_flag, n_targets);
+			out_ray(closest_target, ray, closest_intercept, r);
 		    free(closest_intercept);
 		    closest_intercept = NULL;
 
@@ -630,7 +627,7 @@ int main(int argc, char **argv)
 
 	config_destroy(&cfg);
 
-	run_simulation(source_list, target_list, seed, n_targets);
+	run_simulation(source_list, target_list, seed);
 
 	source_list_free(source_list);
 	target_list_free(target_list);
