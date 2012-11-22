@@ -71,7 +71,6 @@ extern double *M(const target_t * T);
  * utility functions
  */
 extern int check_targets(config_t * cfg);
-extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
-			       gsl_interp_accel ** acc);
+extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline);
 
 #endif				/* __TARGETS_H__ */

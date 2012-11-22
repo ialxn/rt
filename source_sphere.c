@@ -28,7 +28,6 @@ typedef struct sp_state_t {
     double power;		/* power of source */
     double ppr;			/* power allotted to one ray */
     gsl_spline *spline;		/* spline holding cdf of source spectrum */
-    gsl_interp_accel *acc;	/* cached data for spline interpolation */
     double lambda_min;		/* minimum wavelength in spectrum */
 } sp_state_t;
 
@@ -53,7 +52,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
-    init_spectrum(S, &state->spline, &state->acc, &state->lambda_min);
+    init_spectrum(S, &state->spline, &state->lambda_min);
 }
 
 static void sp_free_state(void *vstate)
@@ -62,7 +61,6 @@ static void sp_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
-    gsl_interp_accel_free(state->acc);
 }
 
 static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
@@ -118,13 +116,12 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	ray->direction[1] = sin_theta * sin(phi);
 	ray->direction[2] = cos_theta;
 
-	/* choose random wavelength */
 	ray->power = state->ppr;
+
+	/* choose random wavelength */
 	ray->lambda =
 	    state->lambda_min + gsl_spline_eval(state->spline,
-						gsl_rng_uniform(r),
-						state->acc);
-
+						gsl_rng_uniform(r), NULL);
 	state->n_rays--;
     }
 

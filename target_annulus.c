@@ -31,7 +31,6 @@ typedef struct ann_state_t {
     double R;			/* inner radius of annulus */
     double r;			/* inner radius of annulus */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    gsl_interp_accel *acc;	/* cache for spline */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
 } ann_state_t;
@@ -72,7 +71,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->spline, &state->acc);
+    init_refl_spectrum(S, &state->spline);
 
     config_setting_lookup_float(this_target, "R", &state->R);
     config_setting_lookup_float(this_target, "r", &state->r);
@@ -89,7 +88,6 @@ static void ann_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
-    gsl_interp_accel_free(state->acc);
 }
 
 static double *ann_get_intercept(void *vstate, ray_t * in_ray)
@@ -178,7 +176,7 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     if (state->absorbed
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
+	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
 	 * if 'state->absorbed'is true we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1

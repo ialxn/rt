@@ -176,7 +176,7 @@ static double *calc_CDF(const double *I, const double *lambda,
 }
 
 void init_spectrum(const char *f_name, gsl_spline ** spline,
-		   gsl_interp_accel ** acc, double *lambda_min)
+		   double *lambda_min)
 {
     FILE *spectrum;
     double *lambda;
@@ -197,7 +197,6 @@ void init_spectrum(const char *f_name, gsl_spline ** spline,
     CDF = calc_CDF(I, lambda, n_lambda);
 
     /* cspline will be used to interpolate */
-    *acc = gsl_interp_accel_alloc();
     *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
 
     /* 'CDF' -> x and 'lambda' -> y */

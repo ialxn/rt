@@ -270,8 +270,7 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
-			gsl_interp_accel ** acc)
+void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
 {
     FILE *spectrum;
     double *lambda;
@@ -283,7 +282,6 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
     fclose(spectrum);
 
     /* cspline will be used to interpolate */
-    *acc = gsl_interp_accel_alloc();
     *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
 
     gsl_spline_init(*spline, lambda, refl, n_lambda);
