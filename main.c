@@ -556,7 +556,7 @@ int main(int argc, char **argv)
     int mode = CHECK_CONFIG;
     int seed;			/* seed for rng */
     int n_threads = 1;		/* default single threaded */
-    char file_mode[2] = "w";	/* default file mode for output per target */
+    int file_mode = O_TRUNC;	/* default file mode for output per target */
 
     struct run_simulation_args *rs_args;	/* arguments for worker threads */
     pthread_t *tids;		/* vector with thread ids */
@@ -585,7 +585,7 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'a':
-	    snprintf(file_mode, 2, "a");
+	    file_mode = O_APPEND;
 	    seed = atoi(optarg);
 	    break;
 
@@ -659,7 +659,7 @@ int main(int argc, char **argv)
 	target_list = init_targets(&cfg, &n_targets, file_mode);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
-	if (file_mode[0] == 'w') {	/* use seed from cfg, otherwise from command line */
+	if (file_mode == O_TRUNC) {	/* use seed from cfg, otherwise from command line */
 	    config_lookup_int(&cfg, "seed", &seed);
 	    fprintf(stdout,
 		    "    using %d as seed for random number generator from config file\n",

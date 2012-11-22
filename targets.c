@@ -17,7 +17,7 @@
 
 target_t *target_alloc(const target_type_t * type,
 		       config_setting_t * this_t, config_t * cfg,
-		       const char *file_mode)
+		       const int file_mode)
 {
     target_t *T;
 

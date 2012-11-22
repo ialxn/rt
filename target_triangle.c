@@ -25,7 +25,7 @@
 typedef struct tr_state_t {
     char *name;			/* name (identifier) of target */
     pthread_key_t flags_key;	/* flags see target.h */
-    FILE *dump_file;
+    int dump_file;
     double P1[3];		/* corner point of triangle */
     double E2[3];		/* edge 'P2' - 'P1' */
     double E3[3];		/* edge 'P3' - 'P1' */
@@ -36,7 +36,7 @@ typedef struct tr_state_t {
 
 
 static void tr_init_state(void *vstate, config_setting_t * this_target,
-			  config_t * cfg, const char *file_mode)
+			  config_t * cfg, const int file_mode)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -51,7 +51,8 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     state->name = strdup(S);
 
     snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file = fopen(f_name, file_mode);
+    state->dump_file =
+	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
 
     read_vector(this_target, "P1", state->P1);
 
@@ -97,7 +98,7 @@ static void tr_free_state(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    fclose(state->dump_file);
+    close(state->dump_file);
 
     free(state->name);
     gsl_spline_free(state->spline);
@@ -192,8 +193,9 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 4 items per data set (x,y,ppr,lambda)
 	 * first x,y then ppr,lambda
 	 */
-	fprintf(state->dump_file, "%g\t%g\t%g\t%g\n", hit_local[0],
-		hit_local[1], in_ray->power, in_ray->lambda);
+	write(state->dump_file, hit_local, sizeof(double) * 2);
+	write(state->dump_file, &in_ray->power, sizeof(double));
+	write(state->dump_file, &in_ray->lambda, sizeof(double));
 
 	*flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 	pthread_setspecific(state->flags_key, flag);
@@ -222,7 +224,7 @@ static void tr_dump_string(void *vstate, const char *str)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    fprintf(state->dump_file, "%s", str);
+    write(state->dump_file, str, strlen(str));
 }
 
 static double *tr_M(void *vstate)

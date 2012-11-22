@@ -12,6 +12,10 @@
 #define __TARGETS_H__
 
 #include <pthread.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_spline.h>
@@ -28,7 +32,7 @@ typedef struct target_type_t {
     const char *type;		/* type of target */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
-    void (*init_state) (void *state, config_setting_t * this_t, config_t * cfg, const char *file_mode);	/* initialize
+    void (*init_state) (void *state, config_setting_t * this_t, config_t * cfg, const int file_mode);	/* initialize
 													   internal data
 													   from
 													   configuration */
@@ -62,7 +66,7 @@ const target_type_t *target_disk;
  */
 extern target_t *target_alloc(const target_type_t * type,
 			      config_setting_t * this_t, config_t * cfg,
-			      const char *file_mode);
+			      const int file_mode);
 extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray);
 extern ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,

@@ -24,7 +24,7 @@
 typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
     pthread_key_t flags_key;	/* flags see target.h */
-    FILE *dump_file;
+    int dump_file;
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
@@ -49,7 +49,7 @@ static void ell_surf_normal(const double *point, const double *axes,
 }
 
 static void ell_init_state(void *vstate, config_setting_t * this_target,
-			   config_t * cfg, const char *file_mode)
+			   config_t * cfg, const int file_mode)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -63,7 +63,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     state->name = strdup(S);
 
     snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file = fopen(f_name, file_mode);
+    state->dump_file =
+	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
 
     read_vector(this_target, "center", state->center);
     /*
@@ -103,7 +104,7 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    fclose(state->dump_file);
+    close(state->dump_file);
 
     free(state->name);
     gsl_spline_free(state->spline);
@@ -224,8 +225,9 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 5 items per data set (x,y,z,ppr,lambda)
 	 * first x,y,z then ppr,lambda
 	 */
-	fprintf(state->dump_file, "%g\t%g\t%g\t%g\t%g\n", hit_local[0],
-		hit_local[1], hit_local[2], in_ray->power, in_ray->lambda);
+	write(state->dump_file, hit_local, sizeof(double) * 3);
+	write(state->dump_file, &in_ray->power, sizeof(double));
+	write(state->dump_file, &in_ray->lambda, sizeof(double));
 
 	*flag &= ~ABSORBED;	/* clear flag */
 	pthread_setspecific(state->flags_key, flag);
@@ -258,7 +260,7 @@ static void ell_dump_string(void *vstate, const char *str)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    fprintf(state->dump_file, "%s", str);
+    write(state->dump_file, str, strlen(str));
 }
 
 static double *ell_M(void *vstate)
