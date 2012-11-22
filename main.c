@@ -346,6 +346,7 @@ static void init_PTD(source_list_t * source_list,
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
 
+	init_rays_remain(current_source);
     }
 }
 

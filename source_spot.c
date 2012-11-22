@@ -28,6 +28,8 @@ typedef struct sp_state_t {
     double alpha;		/* used to convert from local to global system */
     double beta;		/* used to convert from local to global system */
     int n_rays;			/* number of rays remaining until source is exhausted */
+    pthread_mutex_t mutex_n_rays;	/* protect n_rays */
+    pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
     double power;		/* power of source */
     double ppr;			/* power allotted to one ray */
     gsl_spline *spline;		/* spline holding cdf of source spectrum */
@@ -49,6 +51,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);
     config_setting_lookup_int(this_s, "n_rays", &state->n_rays);
+    pthread_mutex_init(&state->mutex_n_rays, NULL);
     config_setting_lookup_float(this_s, "power", &state->power);
     state->ppr = state->power / state->n_rays;
     config_setting_lookup_float(this_s, "theta", &state->cos_theta);
@@ -63,6 +66,8 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
     init_spectrum(S, &state->spline, &state->lambda_min);
+
+    pthread_key_create(&state->rays_remain_key, free);
 }
 
 static void sp_free_state(void *vstate)
@@ -77,9 +82,35 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 {
     sp_state_t *state = (sp_state_t *) vstate;
     ray_t *ray = NULL;
-    double t;
+    int *rays_remain = pthread_getspecific(state->rays_remain_key);
 
-    if (state->n_rays) {	/* source not exhausted */
+    if (!*rays_remain) {
+	/*
+	 * group of rays has been consumed. check if source is not
+	 * yet exhausted
+	 */
+	int work_needed;
+
+	pthread_mutex_lock(&state->mutex_n_rays);
+	work_needed = state->n_rays;
+
+	if (work_needed >= RAYS_PER_GROUP) {	/* get new group */
+	    state->n_rays -= RAYS_PER_GROUP;
+	    *rays_remain = RAYS_PER_GROUP;
+	} else {		/* make source empty */
+	    state->n_rays = 0;
+	    *rays_remain = work_needed;
+	    /*
+	     * if source was already exhausted, work_needed is zero
+	     * and no ray will be emitted
+	     */
+	}
+	pthread_mutex_unlock(&state->mutex_n_rays);
+    }
+
+    if (*rays_remain > 0) {	/* rays still available in group */
+	(*rays_remain)--;
+	pthread_setspecific(state->rays_remain_key, rays_remain);
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
 
@@ -87,6 +118,7 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	    const double O[] = { 0.0, 0.0, 0.0 };
 	    double l_ray[3];	/* direction of ray in local system */
 	    double sin_theta, cos_theta, phi;
+	    double t;
 
 	    t = gsl_rng_uniform(r);
 	    cos_theta = t * (state->cos_theta - 1.0) + 1.0;	/* theta: random 0 .. theta */
@@ -112,7 +144,6 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	ray->lambda =
 	    state->lambda_min + gsl_spline_eval(state->spline,
 						gsl_rng_uniform(r), NULL);
-	state->n_rays--;
     }
 
     return ray;
@@ -125,6 +156,16 @@ static const char *sp_get_source_name(void
     return state->name;
 }
 
+static void sp_init_rays_remain(void *vstate)
+{
+    sp_state_t *state = (sp_state_t *) vstate;
+
+    int *rays_remain = (int *) malloc(sizeof(int));
+
+    *rays_remain = 0;
+    pthread_setspecific(state->rays_remain_key, rays_remain);
+}
+
 
 static const source_type_t sp_t = {
     "spot source",
@@ -132,7 +173,8 @@ static const source_type_t sp_t = {
     &sp_init_state,
     &sp_free_state,
     &sp_get_new_ray,
-    &sp_get_source_name
+    &sp_get_source_name,
+    &sp_init_rays_remain
 };
 
 const source_type_t *source_spot = &sp_t;

@@ -60,6 +60,10 @@ const char *get_source_name(const source_t * S)
     return (S->type->get_source_name) (S->state);
 }
 
+void init_rays_remain(const source_t * S)
+{
+    (S->type->init_rays_remain) (S->state);
+}
 
 
 int check_sources(config_t * cfg)
