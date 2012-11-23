@@ -20,10 +20,13 @@
 #include "targets.h"
 #include "vector_math.h"
 
+#define NO_ITEMS 4
+
 
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
     pthread_key_t flags_key;	/* flags see target.h */
+    pthread_key_t outbuf_key;	/* access to output buffer for each target */
     char one_sided;		/* flag [one-sided|two-sided] */
     int dump_file;
     double point[3];		/* point on plane */
@@ -67,6 +70,7 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     cross_product(&state->M[6], state->M, &state->M[3]);
 
     pthread_key_create(&state->flags_key, free);
+    pthread_key_create(&state->outbuf_key, free_outbuf);
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,
@@ -164,6 +168,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     ps_state_t *state = (ps_state_t *) vstate;
     int *flag = pthread_getspecific(state->flags_key);
     double hit_local[3];
+    outbuf_t *out = pthread_getspecific(state->outbuf_key);
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
@@ -175,9 +180,15 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
      * store 4 items per data set (x,y,ppr,lambda)
      * first x,y then ppr,lambda
      */
-    write(state->dump_file, hit_local, sizeof(double) * 2);
-    write(state->dump_file, &in_ray->power, sizeof(double));
-    write(state->dump_file, &in_ray->lambda, sizeof(double));
+    if (out->i == BUF_SIZE * NO_ITEMS) {
+	write(state->dump_file, out->buf, sizeof(float) * out->i);
+	out->i = 0;
+    }
+
+    out->buf[out->i++] = (float) hit_local[0];
+    out->buf[out->i++] = (float) hit_local[1];
+    out->buf[out->i++] = (float) in_ray->power;
+    out->buf[out->i++] = (float) in_ray->lambda;
 
     *flag |= LAST_WAS_HIT;	/* mark as hit */
     pthread_setspecific(state->flags_key, flag);
@@ -218,6 +229,26 @@ static void ps_init_flags(void *vstate)
     pthread_setspecific(state->flags_key, flag);
 }
 
+static void ps_init_outbuf(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+    outbuf_t *out = (outbuf_t *) malloc(sizeof(outbuf_t));
+
+    out->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
+    out->i = 0;
+
+    pthread_setspecific(state->outbuf_key, out);
+}
+
+static void ps_flush_outbuf(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+    outbuf_t *out = pthread_getspecific(state->outbuf_key);
+
+    if (out->i != 0)		/* write rest of buffer to file. */
+	write(state->dump_file, out->buf, sizeof(float) * out->i);
+}
+
 
 static const target_type_t ps1_t = {
     "one-sided plane screen",
@@ -229,7 +260,9 @@ static const target_type_t ps1_t = {
     &ps_get_target_name,
     &ps_dump_string,
     &ps_M,
-    &ps_init_flags
+    &ps_init_flags,
+    &ps_init_outbuf,
+    &ps_flush_outbuf
 };
 
 static const target_type_t ps2_t = {
@@ -242,7 +275,9 @@ static const target_type_t ps2_t = {
     &ps_get_target_name,
     &ps_dump_string,
     &ps_M,
-    &ps_init_flags
+    &ps_init_flags,
+    &ps_init_outbuf,
+    &ps_flush_outbuf
 };
 
 const target_type_t *target_plane_screen_one_sided = &ps1_t;

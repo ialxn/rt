@@ -27,6 +27,12 @@
 #define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
 
+#define BUF_SIZE 4096
+
+typedef struct outbuf_t {
+    float *buf;
+    size_t i;
+} outbuf_t;
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
@@ -44,6 +50,8 @@ typedef struct target_type_t {
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
     double *(*M) (void *state);	/* returns pointer to M matrix */
     void (*init_flags) (void *state);	/* allocate and zero per thread flags */
+    void (*init_outbuf) (void *state);	/* allocate per thread buffer */
+    void (*flush_outbuf) (void *state);	/* flush per thread buffer */
 } target_type_t;
 
 typedef struct target_t {
@@ -76,6 +84,9 @@ extern const char *get_target_name(const target_t * T);
 extern void dump_string(const target_t * T, const char *str);
 extern double *M(const target_t * T);
 extern void init_flags(const target_t * T);
+extern void init_outbuf(const target_t * T);
+extern void flush_outbuf(const target_t * T);
+extern void free_outbuf(void *p);
 
 
 /*

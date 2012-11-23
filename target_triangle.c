@@ -21,10 +21,13 @@
 #include "targets.h"
 #include "vector_math.h"
 
+#define NO_ITEMS 4
+
 
 typedef struct tr_state_t {
     char *name;			/* name (identifier) of target */
     pthread_key_t flags_key;	/* flags see target.h */
+    pthread_key_t outbuf_key;	/* access to output buffer for each target */
     int dump_file;
     double P1[3];		/* corner point of triangle */
     double E2[3];		/* edge 'P2' - 'P1' */
@@ -92,6 +95,7 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     init_refl_spectrum(S, &state->spline);
 
     pthread_key_create(&state->flags_key, free);
+    pthread_key_create(&state->outbuf_key, free_outbuf);
 }
 
 static void tr_free_state(void *vstate)
@@ -184,6 +188,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 	double hit_local[3];
+	outbuf_t *out = pthread_getspecific(state->outbuf_key);
 
 	/* transform to local coordinates */
 	memcpy(hit_local, hit, 3 * sizeof(double));
@@ -193,9 +198,15 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 4 items per data set (x,y,ppr,lambda)
 	 * first x,y then ppr,lambda
 	 */
-	write(state->dump_file, hit_local, sizeof(double) * 2);
-	write(state->dump_file, &in_ray->power, sizeof(double));
-	write(state->dump_file, &in_ray->lambda, sizeof(double));
+	if (out->i == BUF_SIZE * NO_ITEMS) {
+	    write(state->dump_file, out->buf, sizeof(float) * out->i);
+	    out->i = 0;
+	}
+
+	out->buf[out->i++] = (float) hit_local[0];
+	out->buf[out->i++] = (float) hit_local[1];
+	out->buf[out->i++] = (float) in_ray->power;
+	out->buf[out->i++] = (float) in_ray->lambda;
 
 	*flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 	pthread_setspecific(state->flags_key, flag);
@@ -244,6 +255,26 @@ static void tr_init_flags(void *vstate)
     pthread_setspecific(state->flags_key, flag);
 }
 
+static void tr_init_outbuf(void *vstate)
+{
+    tr_state_t *state = (tr_state_t *) vstate;
+    outbuf_t *out = (outbuf_t *) malloc(sizeof(outbuf_t));
+
+    out->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
+    out->i = 0;
+
+    pthread_setspecific(state->outbuf_key, out);
+}
+
+static void tr_flush_outbuf(void *vstate)
+{
+    tr_state_t *state = (tr_state_t *) vstate;
+    outbuf_t *out = pthread_getspecific(state->outbuf_key);
+
+    if (out->i != 0)		/* write rest of buffer to file. */
+	write(state->dump_file, out->buf, sizeof(float) * out->i);
+}
+
 
 static const target_type_t tr_t = {
     "triangle",
@@ -255,7 +286,9 @@ static const target_type_t tr_t = {
     &tr_get_target_name,
     &tr_dump_string,
     &tr_M,
-    &tr_init_flags
+    &tr_init_flags,
+    &tr_init_outbuf,
+    &tr_flush_outbuf
 };
 
 const target_type_t *target_triangle = &tr_t;
