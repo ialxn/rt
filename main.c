@@ -43,6 +43,14 @@ struct run_simulation_args {
     int seed_incr;
 };
 
+struct worker_retval {
+    unsigned int n_lost;	/* number of rays lost i.e. rays that
+				   are not absorbed anywhere. they may
+				   have hit some targets and have been
+				   reflected several times, however. */
+    double p_lost;		/* total power of all lost rays */
+};
+
 static pthread_mutex_t mutex_seed_incr = PTHREAD_MUTEX_INITIALIZER;
 
 static pthread_mutex_t mutex_print1 = PTHREAD_MUTEX_INITIALIZER;
@@ -404,10 +412,11 @@ static void *run_simulation(void *args)
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    unsigned int n_lost = 0;	/* number of rays lost i.e. rays that
-				   are not absorbed anywhere. they may
-				   have hit some targets and have been
-				   reflected several times, however. */
+    struct worker_retval *retval =
+	(struct worker_retval *) malloc(sizeof(struct worker_retval));
+
+    retval->n_lost = 0;
+    retval->p_lost = 0.0;
 
     pthread_mutex_lock(&mutex_seed_incr);	/* begin critical section */
 
@@ -516,7 +525,8 @@ static void *run_simulation(void *args)
 		     * trigger emmision of new ray from current source
 		     * by assigning NULL to 'ray'
 		     */
-		    n_lost++;
+		    retval->n_lost++;
+		    retval->p_lost += get_ppr(current_source);
 		    free(ray);
 		    ray = NULL;
 
@@ -527,9 +537,7 @@ static void *run_simulation(void *args)
     gsl_rng_free(r);
     flush_outbufs(a->target_list);
 
-    fprintf(stdout, "%u rays lost\n", n_lost);
-
-    return NULL;
+    return retval;
 }
 
 static void help(void)
@@ -680,6 +688,9 @@ int main(int argc, char **argv)
 	int n_sources;
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
+	struct worker_retval *retval;
+	unsigned int n_lost;
+	double p_lost;
 
     case CHECK_CONFIG:		/* print parsed input */
 	config_write(&cfg, stdout);
@@ -718,7 +729,6 @@ int main(int argc, char **argv)
 		    "    starting %d threads (seed %d, %d, ...) \n",
 		    n_threads, seed, seed + 1);
 
-
 	config_destroy(&cfg);
 
 	rs_args = (struct run_simulation_args *)
@@ -739,9 +749,18 @@ int main(int argc, char **argv)
 			   (void *) rs_args);
 
 	/* Wait for the other threads */
+	n_lost = 0;
+	p_lost = 0.0;
 
-	for (i = 0; i < n_threads; i++)
-	    pthread_join(tids[i], NULL);
+	for (i = 0; i < n_threads; i++) {
+	    pthread_join(tids[i], (void **) &retval);
+	    n_lost += retval->n_lost;
+	    p_lost += retval->p_lost;
+	    free(retval);
+	}
+
+	fprintf(stdout, "%u rays lost with total power of %e\n", n_lost,
+		p_lost);
 
 	free(tids);
 	free(rs_args);

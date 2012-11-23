@@ -32,6 +32,7 @@ typedef struct source_type_t {
     void (*free_state) (void *state);	/* free */
     ray_t *(*get_new_ray) (void *state, const gsl_rng * r);	/* returns a new ray, or NULL if exhausted */
     const char *(*get_source_name) (void *state);	/* get name of source */
+    double (*get_source_ppr) (void *state);	/* get power per ray of source */
     void (*init_rays_remain) (void *state);	/* init PTD variable */
 } source_type_t;
 
