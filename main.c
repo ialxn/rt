@@ -333,15 +333,15 @@ static void output_geometry(config_t * cfg)
     output_targets(cfg);
 }
 
-static double distance(const double a[3], const double b[3])
+static double d_sqr(const double a[3], const double b[3])
 {
     size_t i;
-    double dist = 0.0;
+    double d = 0.0;
     for (i = 0; i < 3; i++) {
 	const double t = a[i] - b[i];
-	dist += t * t;
+	d += t * t;
     }
-    return (sqrt(dist));
+    return (d);
 
 }
 
@@ -460,7 +460,7 @@ static void *run_simulation(void *args)
 		 */
 		target_t *closest_target;
 		double *closest_intercept = NULL;
-		double min_dist = GSL_DBL_MAX;
+		double min_d_sqrd = GSL_DBL_MAX;
 
 		list_for_each(t_pos, &(a->target_list->list)) {
 		    /*
@@ -479,19 +479,21 @@ static void *run_simulation(void *args)
 			/*
 			 * 'ray' is intercepted by 'current_target'
 			 */
-			const double dist =
-			    distance(current_intercept, ray->origin);
+			const double d_sqrd =
+			    d_sqr(current_intercept, ray->origin);
 
-			if (dist < min_dist) {
+			if (d_sqrd < min_d_sqrd) {
 			    /*
 			     * 'current_target' is target closest
 			     * to origin of 'ray' found so far.
+			     * no need to take sqrt:
+			     *   if d1 > d2 then also d1^2 > d2^2
 			     */
 
 			    free(closest_intercept);
 			    closest_target = current_target;
 			    closest_intercept = current_intercept;
-			    min_dist = dist;
+			    min_d_sqrd = d_sqrd;
 
 			} else
 			    /*

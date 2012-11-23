@@ -30,8 +30,8 @@ typedef struct ann_state_t {
     int dump_file;
     double point[3];		/* center coordinate of annulus */
     double normal[3];		/* normal vector of annulus */
-    double R;			/* inner radius of annulus */
-    double r;			/* inner radius of annulus */
+    double R2;			/* inner radius^2 of annulus */
+    double r2;			/* inner radius^2 of annulus */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
@@ -45,6 +45,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
 
     const char *S;
     char f_name[256];
+    double t;
 
     (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
@@ -77,8 +78,10 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
 
-    config_setting_lookup_float(this_target, "R", &state->R);
-    config_setting_lookup_float(this_target, "r", &state->r);
+    config_setting_lookup_float(this_target, "R", &t);
+    state->R2 = t * t;
+    config_setting_lookup_float(this_target, "r", &t);
+    state->r2 = t * t;
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 }
@@ -140,22 +143,22 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray)
     else {			/* 'in_ray' intercepts target plane */
 	double l_intercept[3];
 	double *intercept = (double *) malloc(3 * sizeof(double));
-	double r_intercept;
+	double r2_intercept;
 
 	v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
 	/* convert to local coordinates, origin is 'state->point' */
 	g2l(state->M, state->point, intercept, l_intercept);
 
 	/*
-	 * r_intercep is distance from center of annulus to intercept
+	 * r2_intercep is sqared distance from center of annulus to intercept
 	 * in the plane of the annulus. we are in local system that
-	 * is offset by intercept[2], so leave the latter out
+	 * is offset by intercept[2], so leave the latter out.
+	 * compare r^2 to avoid sqrt()
 	 */
-	r_intercept =
-	    sqrt(intercept[0] * intercept[0] +
-		 intercept[1] * intercept[1]);
-	if ((r_intercept > state->R)
-	    || (r_intercept < state->r)) {
+	r2_intercept =
+	    intercept[0] * intercept[0] + intercept[1] * intercept[1];
+	if ((r2_intercept > state->R2)
+	    || (r2_intercept < state->r2)) {
 
 	    /* hit not within boundaries */
 	    free(intercept);
