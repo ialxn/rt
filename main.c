@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <libconfig.h>
 
@@ -41,6 +42,7 @@ struct run_simulation_args {
     int seed_base;
     int seed_incr;
 };
+static pthread_mutex_t mutex_seed_incr = PTHREAD_MUTEX_INITIALIZER;
 
 static void output_targets(const config_t * cfg)
 {
@@ -339,7 +341,14 @@ static void run_simulation(void *args)
 				   have hit some targets and have been
 				   reflected several times, however. */
 
+    pthread_mutex_lock(&mutex_seed_incr);	/* begin critical section */
+
     gsl_rng_set(r, (unsigned long int) abs(a->seed_base + a->seed_incr));
+    a->seed_incr++;
+
+    pthread_mutex_unlock(&mutex_seed_incr);	/* end critical section */
+
+
 
     fprintf(stdout,
 	    "    using random number generator %s from Gnu Scientif Library\n",
