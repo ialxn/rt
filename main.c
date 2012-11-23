@@ -42,7 +42,15 @@ struct run_simulation_args {
     int seed_base;
     int seed_incr;
 };
+
 static pthread_mutex_t mutex_seed_incr = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t mutex_print1 = PTHREAD_MUTEX_INITIALIZER;
+static int print1 = 0;
+
+static pthread_mutex_t mutex_print2 = PTHREAD_MUTEX_INITIALIZER;
+static int print2 = 0;
+static int n_threads = 1;	/* default single threaded */
 
 static void output_targets(const config_t * cfg)
 {
@@ -362,6 +370,32 @@ static void flush_outbufs(target_list_t * target_list)
     }
 }
 
+static void print1_once(const char *rng_name)
+{
+    pthread_mutex_lock(&mutex_print1);
+
+    if (!print1)		/* only true during first call */
+	fprintf(stdout,
+		"    using random number generator %s from Gnu Scientif Library\n",
+		rng_name);
+
+    print1++;
+    pthread_mutex_unlock(&mutex_print1);
+}
+
+static void print2_once(const char *s_type, const char *s_name)
+{
+    pthread_mutex_lock(&mutex_print2);
+
+    if (print2 % n_threads == 0) {	/* only true during first call */
+	fprintf(stdout, "        %s (%s) started\n", s_name, s_type);
+	fflush(stdout);
+    }
+
+    print2++;
+    pthread_mutex_unlock(&mutex_print2);
+}
+
 
 static void *run_simulation(void *args)
 {
@@ -384,9 +418,7 @@ static void *run_simulation(void *args)
 
     init_PTD(a->source_list, a->target_list);	/* initialize per thread data */
 
-    fprintf(stdout,
-	    "    using random number generator %s from Gnu Scientif Library\n",
-	    gsl_rng_name(r));
+    print1_once(gsl_rng_name(r));
 
     list_for_each(s_pos, &(a->source_list->list)) {
 	/*
@@ -396,10 +428,8 @@ static void *run_simulation(void *args)
 	source_t *current_source = this_s->s;
 	ray_t *ray;
 
-	fprintf(stdout, "        %s %s ... ",
-		get_source_type(current_source),
-		get_source_name(current_source));
-	fflush(stdout);
+	print2_once(get_source_type(current_source),
+		    get_source_name(current_source));
 
 	while ((ray = new_ray(current_source, r))) {
 	    /*
@@ -493,7 +523,6 @@ static void *run_simulation(void *args)
 		}
 	    }			/* 'ray' absorbed or lost */
 	}			/* 'current_source' is exhausted */
-	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
     gsl_rng_free(r);
     flush_outbufs(a->target_list);
@@ -569,7 +598,6 @@ int main(int argc, char **argv)
     config_t cfg;
     int mode = CHECK_CONFIG;
     int seed;			/* seed for rng */
-    int n_threads = 1;		/* default single threaded */
     int file_mode = O_TRUNC;	/* default file mode for output per target */
 
     struct run_simulation_args *rs_args;	/* arguments for worker threads */
@@ -684,6 +712,12 @@ int main(int argc, char **argv)
 		    "    using %d as seed for random number generator from command line\n",
 		    seed);
 	}
+
+	if (n_threads > 1)
+	    fprintf(stdout,
+		    "    starting %d threads (seed %d, %d, ...) \n",
+		    n_threads, seed, seed + 1);
+
 
 	config_destroy(&cfg);
 
