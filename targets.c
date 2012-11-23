@@ -17,7 +17,7 @@
 
 target_t *target_alloc(const target_type_t * type,
 		       config_setting_t * this_t, config_t * cfg,
-		       const char *file_mode)
+		       const int file_mode)
 {
     target_t *T;
 
@@ -36,15 +36,6 @@ target_t *target_alloc(const target_type_t * type,
 
     T->type = type;
 
-    /* specific part for target 'type' */
-    if ((T->type->alloc_state) (T->state) == ERR) {
-	fprintf(stderr,
-		"failed to allocate space for specific internal state of target\n");
-	free(T->state);
-	free(T);
-	return NULL;
-    }
-
     (T->type->init_state) (T->state, this_t, cfg, file_mode);	/* initialize data structures */
 
     return T;
@@ -57,16 +48,15 @@ void target_free(target_t * T)
     free(T);
 }
 
-double *interception(const target_t * T, ray_t * in_ray, int *dump_flag)
+double *interception(const target_t * T, ray_t * in_ray)
 {
-    return (T->type->get_intercept) (T->state, in_ray, dump_flag);
+    return (T->type->get_intercept) (T->state, in_ray);
 }
 
 ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
-	       const gsl_rng * r, int *dump_flag, const int n_targets)
+	       const gsl_rng * r)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, hit, r, dump_flag,
-				   n_targets);
+    return (T->type->get_out_ray) (T->state, in_ray, hit, r);
 }
 
 const char *get_target_type(const target_t * T)
@@ -87,6 +77,24 @@ void dump_string(const target_t * T, const char *str)
 double *M(const target_t * T)
 {
     return (T->type->M) (T->state);
+}
+
+void init_PTDT(const target_t * T)
+{
+    (T->type->init_PTDT) (T->state);
+}
+
+void flush_PTDT_outbuf(const target_t * T)
+{
+    (T->type->flush_PTDT_outbuf) (T->state);
+}
+
+void free_PTDT(void *p)
+{
+    PTDT_t *data = (PTDT_t *) p;
+
+    free(data->buf);
+    free(data);
 }
 
 
@@ -280,79 +288,7 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-void dump_data(FILE * f, double *data, const size_t n_data,
-	       const size_t n_items)
-{
-    /*
-     * writes 'n_data' lines with 'n_items' items per line
-     * to file 'f' (tab separated).
-     */
-    size_t i, j;
-
-    for (i = 0; i < n_data; i++) {
-	const size_t N = i * n_items;
-
-	for (j = 0; j < n_items; j++) {
-	    fprintf(f, "%g", data[N + j]);
-	    if (j == n_items - 1)
-		fputc('\n', f);
-	    else
-		fputc('\t', f);
-	}
-    }
-}
-
-void shrink_memory(double **data, size_t * n_data, size_t * n_alloc,
-		   const size_t N)
-{
-    /*
-     * shrink memory to minimum (BLOCK_SIZE)
-     * 'N' doubles per data set
-     */
-    double *t = (double *) realloc(*data, N * BLOCK_SIZE * sizeof(double));
-
-    *data = t;
-    *n_data = 0;
-    *n_alloc = BLOCK_SIZE;
-}
-
-void try_increase_memory(double **data, size_t * n_data, size_t * n_alloc,
-			 const size_t N, FILE * dump_file, int *dump_flag,
-			 const int n_targets)
-{
-    /*
-     * we try to increase the size of the '**data' buffer by
-     * BLOCK_SIZE*'N' ('N' items per data set). if
-     * memory can not be allocated of if the buffer already
-     * has reached the maximum size MAX_BLOCK_SIZE*'N', '**data'
-     * is written to the 'dump_file' and the size of the buffer
-     * is decreased to BLOCK_SIZE*'N'. this initiates a dump cycle
-     * as all targets will dump their data and decrease their
-     * buffer too during the next call of 'interception()' in
-     * 'run_simulation()'
-     */
-    if (*n_alloc == MAX_BLOCK_SIZE) {	/* max size reached, initiate dump cycle */
-	dump_data(dump_file, *data, *n_data, N);
-	shrink_memory(data, n_data, n_alloc, N);
-
-	*dump_flag = n_targets - 1;
-    } else {			/* try to increase buffer */
-	const size_t n = *n_data + BLOCK_SIZE;
-	double *t = (double *) realloc(*data, N * n * sizeof(double));
-	if (t) {		/* success, update state */
-	    *data = t;
-	    *n_alloc = n;
-	} else {		/* memory exhausted, initiate dump cycle */
-	    dump_data(dump_file, *data, *n_data, N);
-	    shrink_memory(data, n_data, n_alloc, N);
-
-	    *dump_flag = n_targets - 1;
-	}
-    }
-}
-
-void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
-			gsl_interp_accel ** acc)
+void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
 {
     FILE *spectrum;
     double *lambda;
@@ -364,7 +300,6 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline,
     fclose(spectrum);
 
     /* cspline will be used to interpolate */
-    *acc = gsl_interp_accel_alloc();
     *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
 
     gsl_spline_init(*spline, lambda, refl, n_lambda);

@@ -44,9 +44,9 @@ OBJ_FLUX= flux_2D.o
 
 
 
-#LIBS= -lgsl -lgslcblas -lconfig -lm
-LIBS= -lgsl -lcblas -latlas -lconfig -lm
-LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm
+LIBS= -lgsl -lgslcblas -lconfig -lm -lpthread
+#LIBS= -lgsl -lcblas -latlas -lconfig -lm -lpthread
+LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm -lpthread
 
 AllTarget(rt rt-semistatic spectrum flux_2D)
 NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))

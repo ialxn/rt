@@ -21,21 +21,18 @@
 #include "targets.h"
 #include "vector_math.h"
 
-#define N_COORDINATES 3		/* store x,y,z */
+#define NO_ITEMS 5
+
 
 typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
-    FILE *dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    int dump_file;
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    gsl_interp_accel *acc;	/* cache for spline */
-    int absorbed;		/* flag to indicated that ray was absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } ell_state_t;
 
 
@@ -54,24 +51,8 @@ static void ell_surf_normal(const double *point, const double *axes,
 
 }
 
-static int ell_alloc_state(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    /* 5 items per data set (x,y,z,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
-}
-
 static void ell_init_state(void *vstate, config_setting_t * this_target,
-			   config_t * cfg, const char *file_mode)
+			   config_t * cfg, const int file_mode)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -85,7 +66,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     state->name = strdup(S);
 
     snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file = fopen(f_name, file_mode);
+    state->dump_file =
+	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
 
     read_vector(this_target, "center", state->center);
     /*
@@ -116,29 +98,22 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->spline, &state->acc);
+    init_refl_spectrum(S, &state->spline);
 
-    state->absorbed = 0;
-    state->n_data = 0;
+    pthread_key_create(&state->PTDT_key, free);
 }
 
 static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    /* first write remaining data to file. 5 items per data (x,y,z,ppr,lambda) */
-    dump_data(state->dump_file, state->data, state->n_data,
-	      N_COORDINATES + 2);
-    fclose(state->dump_file);
+    close(state->dump_file);
 
     free(state->name);
-    free(state->data);
     gsl_spline_free(state->spline);
-    gsl_interp_accel_free(state->acc);
 }
 
-static double *ell_get_intercept(void *vstate, ray_t * in_ray,
-				 int *dump_flag)
+static double *ell_get_intercept(void *vstate, ray_t * in_ray)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -147,14 +122,6 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
     double O[] = { 0.0, 0.0, 0.0 };
     double A = 0.0, B = 0.0, C = -1.0;
     double D;
-
-    if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data,
-		  N_COORDINATES + 1);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
-		      N_COORDINATES + 1);
-	(*dump_flag)--;
-    }
 
     /*
      * calculate point of interception D
@@ -209,6 +176,7 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 	if (z < state->z_min || z > state->z_max)
 	    return NULL;	/* z component outside range */
 	else {
+	    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 	    double dot;
 	    double l_intercept[3];
 	    double normal[3];
@@ -220,8 +188,9 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 
 	    ell_surf_normal(l_intercept, state->axes, normal);
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
+
 	    if (dot < 0.0)	/* anti-parallel. hits outside, absorbed */
-		state->absorbed = 1;
+		data->flag |= ABSORBED;
 
 	    /* convert to global coordinates, origin is 'state->center' */
 	    l2g(state->M, state->center, l_intercept, intercept);
@@ -232,23 +201,23 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			      const gsl_rng * r, int *dump_flag,
-			      const int n_targets)
+			      const gsl_rng * r)
 {
     ell_state_t *state = (ell_state_t *) vstate;
-    double l_hit[3];
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
+    double hit_local[3];
 
     /* transform to local coordinates */
-    g2l(state->M, state->center, hit, l_hit);
+    g2l(state->M, state->center, hit, hit_local);
 
-    if (state->absorbed
+    if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
+	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
-	 * if 'state->absorbed'is true we know ray has been absorbed
-	 * because it wass intercepted by a surface with absorptivity=1
+	 * if ABSORBED is set we know ray has been absorbed
+	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
-	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * checked (and the flag was set) in 'xxx_get_intercept()'
 	 * above.
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
@@ -257,25 +226,17 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 5 items per data set (x,y,z,ppr,lambda)
 	 * first x,y,z then ppr,lambda
 	 */
-	memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]),
-	       l_hit, N_COORDINATES * sizeof(double));
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
-	    in_ray->power;
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES +
-		    1] = in_ray->lambda;
-	state->n_data++;
+	if (data->i == BUF_SIZE * NO_ITEMS) {
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    data->i = 0;
+	}
 
-	/*
-	 * increase data size for next interception
-	 * or
-	 * initiate dump cycle
-	 */
-	if (state->n_data == state->n_alloc)	/* buffer full */
-	    try_increase_memory(&(state->data), &(state->n_data),
-				&(state->n_alloc), N_COORDINATES + 2,
-				state->dump_file, dump_flag, n_targets);
+	data->buf[data->i++] = (float) hit_local[0];
+	data->buf[data->i++] = (float) hit_local[1];
+	data->buf[data->i++] = (float) hit_local[2];
+	data->buf[data->i++] = (float) in_ray->power;
+	data->buf[data->i++] = (float) in_ray->lambda;
 
-	state->absorbed = 0;	/* reset flag */
 	free(in_ray);
 	return NULL;
 
@@ -283,7 +244,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	double l_N[3], N[3];
 	double O[] = { 0.0, 0.0, 0.0 };
 
-	ell_surf_normal(l_hit, state->axes, l_N);	/* normal vector local system */
+	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
 	reflect(in_ray, N, hit);
@@ -304,7 +265,7 @@ static void ell_dump_string(void *vstate, const char *str)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    fprintf(state->dump_file, "%s", str);
+    write(state->dump_file, str, strlen(str));
 }
 
 static double *ell_M(void *vstate)
@@ -314,18 +275,40 @@ static double *ell_M(void *vstate)
     return state->M;
 }
 
+static void ell_init_PTDT(void *vstate)
+{
+    ell_state_t *state = (ell_state_t *) vstate;
+    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
+
+    data->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
+    data->i = 0;
+    data->flag = 0;
+
+    pthread_setspecific(state->PTDT_key, data);
+}
+
+static void ell_flush_PTDT_outbuf(void *vstate)
+{
+    ell_state_t *state = (ell_state_t *) vstate;
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
+
+    if (data->i != 0)		/* write rest of buffer to file. */
+	write(state->dump_file, data->buf, sizeof(float) * data->i);
+}
+
 
 static const target_type_t ell_t = {
     "ellipsoid",
     sizeof(struct ell_state_t),
-    &ell_alloc_state,
     &ell_init_state,
     &ell_free_state,
     &ell_get_intercept,
     &ell_get_out_ray,
     &ell_get_target_name,
     &ell_dump_string,
-    &ell_M
+    &ell_M,
+    &ell_init_PTDT,
+    &ell_flush_PTDT_outbuf
 };
 
 const target_type_t *target_ellipsoid = &ell_t;

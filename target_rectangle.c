@@ -21,45 +21,24 @@
 #include "targets.h"
 #include "vector_math.h"
 
+#define NO_ITEMS 4
 
-#define N_COORDINATES 2		/* store only x,y */
 
 typedef struct sq_state_t {
     char *name;			/* name (identifier) of target */
-    char last_was_hit;		/* flag */
-    FILE *dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    int dump_file;
     double point[3];		/* center coordinate */
     double dx;			/* rectangle is '2*dx' times '2*dy' local coordinates */
     double dy;
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    gsl_interp_accel *acc;	/* cache for spline */
-    int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
-    size_t n_alloc;		/* buffer 'data' can hold 'n_alloc' data sets */
-    size_t n_data;		/* buffer 'data' currently holds 'n_data' sets */
-    double *data;		/* buffer to store hits */
 } sq_state_t;
 
 
-static int sq_alloc_state(void *vstate)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    /* 4 items per data set (x,y,ppr,lambda) */
-    if (!
-	(state->data =
-	 (double *) malloc((N_COORDINATES + 2) * BLOCK_SIZE *
-			   sizeof(double))))
-	return ERR;
-
-    state->n_alloc = BLOCK_SIZE;
-
-    return NO_ERR;
-}
-
 static void sq_init_state(void *vstate, config_setting_t * this_target,
-			  config_t * cfg, const char *file_mode)
+			  config_t * cfg, const int file_mode)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
@@ -73,7 +52,8 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
     state->name = strdup(S);
 
     snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file = fopen(f_name, file_mode);
+    state->dump_file =
+	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
 
     read_vector(this_target, "P1", state->point);
     /*
@@ -108,46 +88,31 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->spline, &state->acc);
+    init_refl_spectrum(S, &state->spline);
 
-    state->last_was_hit = 0;
-    state->absorbed = 0;
-    state->n_data = 0;
+    pthread_key_create(&state->PTDT_key, free);
 }
 
 static void sq_free_state(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    /* first write remaining data to file. 4 items per data (x,y,ppr,lambda) */
-    dump_data(state->dump_file, state->data, state->n_data,
-	      N_COORDINATES + 2);
-    fclose(state->dump_file);
+    close(state->dump_file);
 
     free(state->name);
-    free(state->data);
     gsl_spline_free(state->spline);
-    gsl_interp_accel_free(state->acc);
 }
 
-static double *sq_get_intercept(void *vstate, ray_t * in_ray,
-				int *dump_flag)
+static double *sq_get_intercept(void *vstate, ray_t * in_ray)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
     double t1, t2[3], t3;
     double d;
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    if (*dump_flag) {		/* we are in a dump cycle and have not yet written data */
-	dump_data(state->dump_file, state->data, state->n_data,
-		  N_COORDINATES + 2);
-	shrink_memory(&(state->data), &(state->n_data), &(state->n_alloc),
-		      N_COORDINATES + 2);
-	(*dump_flag)--;
-    }
-
-    if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
-	state->last_was_hit = 0;
+    if (data->flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
+	data->flag &= ~LAST_WAS_HIT;
 	return NULL;
     }
 
@@ -201,7 +166,7 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 	} else {		/* hits within target dimensions 'dx' times 'dy' */
 
 	    if (t1 > 0.0)	/* hits rear side, absorbed */
-		state->absorbed = 1;
+		data->flag |= ABSORBED;
 
 	    return intercept;
 
@@ -211,53 +176,44 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     const gsl_rng * r, int *dump_flag,
-			     const int n_targets)
+			     const gsl_rng * r)
 {
     sq_state_t *state = (sq_state_t *) vstate;
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    if (state->absorbed
+    if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
+	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
-	 * if 'state->absorbed'is true we know ray has been absorbed
-	 * because it wass intercepted by a surface with absorptivity=1
+	 * if ABSORBED is set we know ray has been absorbed
+	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
-	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * checked (and the flag was set) in 'xxx_get_intercept()'
 	 * above.
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
-	double hit_copy[3];
+	double hit_local[3];
 
 	/* transform to local coordinates */
-	memcpy(hit_copy, hit, 3 * sizeof(double));
-	g2l(state->M, state->point, hit, hit_copy);
+	memcpy(hit_local, hit, 3 * sizeof(double));
+	g2l(state->M, state->point, hit, hit_local);
 
 	/*
 	 * store 4 items per data set (x,y,ppr,lambda)
 	 * first x,y then ppr,lambda
 	 */
-	memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]),
-	       hit_copy, N_COORDINATES * sizeof(double));
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
-	    in_ray->power;
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES +
-		    1] = in_ray->lambda;
-	state->n_data++;
+	if (data->i == BUF_SIZE * NO_ITEMS) {
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    data->i = 0;
+	}
 
-	/*
-	 * increase data size for next interception
-	 * or
-	 * initiate dump cycle
-	 */
-	if (state->n_data == state->n_alloc)	/* buffer full */
-	    try_increase_memory(&(state->data), &(state->n_data),
-				&(state->n_alloc), N_COORDINATES + 2,
-				state->dump_file, dump_flag, n_targets);
+	data->buf[data->i++] = (float) hit_local[0];
+	data->buf[data->i++] = (float) hit_local[1];
+	data->buf[data->i++] = (float) in_ray->power;
+	data->buf[data->i++] = (float) in_ray->lambda;
 
-	state->absorbed = 0;	/* reset flags */
-	state->last_was_hit = 0;
+	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
 	free(in_ray);
 	return NULL;
@@ -265,7 +221,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     } else {			/* reflect 'in_ray' */
 	reflect(in_ray, state->normal, hit);
 
-	state->last_was_hit = 1;	/* mark as hit */
+	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
 	return in_ray;
     }
@@ -282,7 +238,7 @@ static void sq_dump_string(void *vstate, const char *str)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    fprintf(state->dump_file, "%s", str);
+    write(state->dump_file, str, strlen(str));
 }
 
 static double *sq_M(void *vstate)
@@ -292,18 +248,40 @@ static double *sq_M(void *vstate)
     return state->M;
 }
 
+static void sq_init_PTDT(void *vstate)
+{
+    sq_state_t *state = (sq_state_t *) vstate;
+    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
+
+    data->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
+    data->i = 0;
+    data->flag = 0;
+
+    pthread_setspecific(state->PTDT_key, data);
+}
+
+static void sq_flush_PTDT_outbuf(void *vstate)
+{
+    sq_state_t *state = (sq_state_t *) vstate;
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
+
+    if (data->i != 0)		/* write rest of buffer to file. */
+	write(state->dump_file, data->buf, sizeof(float) * data->i);
+}
+
 
 static const target_type_t sq_t = {
     "rectangle",
     sizeof(struct sq_state_t),
-    &sq_alloc_state,
     &sq_init_state,
     &sq_free_state,
     &sq_get_intercept,
     &sq_get_out_ray,
     &sq_get_target_name,
     &sq_dump_string,
-    &sq_M
+    &sq_M,
+    &sq_init_PTDT,
+    &sq_flush_PTDT_outbuf
 };
 
 const target_type_t *target_rectangle = &sq_t;

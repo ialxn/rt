@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <pthread.h>
 
 #include <libconfig.h>
 
@@ -34,6 +35,30 @@
 
 #define DZ 0.005
 #define AXES_LENGTH 5.0
+
+struct run_simulation_args {
+    source_list_t *source_list;	/* list of all sources */
+    target_list_t *target_list;	/* list of all targets */
+    int seed_base;
+    int seed_incr;
+};
+
+struct worker_retval {
+    unsigned int n_lost;	/* number of rays lost i.e. rays that
+				   are not absorbed anywhere. they may
+				   have hit some targets and have been
+				   reflected several times, however. */
+    double p_lost;		/* total power of all lost rays */
+};
+
+static pthread_mutex_t mutex_seed_incr = PTHREAD_MUTEX_INITIALIZER;
+
+static pthread_mutex_t mutex_print1 = PTHREAD_MUTEX_INITIALIZER;
+static int print1 = 0;
+
+static pthread_mutex_t mutex_print2 = PTHREAD_MUTEX_INITIALIZER;
+static int print2 = 0;
+static int n_threads = 1;	/* default single threaded */
 
 static void output_targets(const config_t * cfg)
 {
@@ -320,26 +345,91 @@ static double distance(const double a[3], const double b[3])
 
 }
 
-static void run_simulation(source_list_t * source_list,
-			   target_list_t * target_list, const int seed,
-			   const int n_targets)
+static void init_PTD(source_list_t * source_list,
+		     target_list_t * target_list)
 {
+    struct list_head *s_pos;
+    struct list_head *t_pos;
+
+    list_for_each(t_pos, &(target_list->list)) {
+	target_list_t *this_t = list_entry(t_pos, target_list_t, list);
+	target_t *current_target = this_t->t;
+
+	init_PTDT(current_target);
+    }
+
+    list_for_each(s_pos, &(source_list->list)) {
+	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
+	source_t *current_source = this_s->s;
+
+	init_rays_remain(current_source);
+    }
+}
+
+static void flush_outbufs(target_list_t * target_list)
+{
+    struct list_head *t_pos;
+
+    list_for_each(t_pos, &(target_list->list)) {
+	target_list_t *this_t = list_entry(t_pos, target_list_t, list);
+	target_t *current_target = this_t->t;
+
+	flush_PTDT_outbuf(current_target);
+    }
+}
+
+static void print1_once(const char *rng_name)
+{
+    pthread_mutex_lock(&mutex_print1);
+
+    if (!print1)		/* only true during first call */
+	fprintf(stdout,
+		"    using random number generator %s from Gnu Scientif Library\n",
+		rng_name);
+
+    print1++;
+    pthread_mutex_unlock(&mutex_print1);
+}
+
+static void print2_once(const char *s_type, const char *s_name)
+{
+    pthread_mutex_lock(&mutex_print2);
+
+    if (print2 % n_threads == 0) {	/* only true during first call */
+	fprintf(stdout, "        %s (%s) started\n", s_name, s_type);
+	fflush(stdout);
+    }
+
+    print2++;
+    pthread_mutex_unlock(&mutex_print2);
+}
+
+
+static void *run_simulation(void *args)
+{
+    struct run_simulation_args *a = (struct run_simulation_args *) args;
+
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
-    int dump_flag = 0;		/* indicates dump cycle (1) */
-    unsigned int n_lost = 0;	/* number of rays lost i.e. rays that
-				   are not absorbed anywhere. they may
-				   have hit some targets and have been
-				   reflected several times, however. */
+    struct worker_retval *retval =
+	(struct worker_retval *) malloc(sizeof(struct worker_retval));
 
-    gsl_rng_set(r, (unsigned long int) abs(seed));
+    retval->n_lost = 0;
+    retval->p_lost = 0.0;
 
-    fprintf(stdout,
-	    "    using random number generator %s from Gnu Scientif Library\n",
-	    gsl_rng_name(r));
+    pthread_mutex_lock(&mutex_seed_incr);	/* begin critical section */
 
-    list_for_each(s_pos, &(source_list->list)) {
+    gsl_rng_set(r, (unsigned long int) abs(a->seed_base + a->seed_incr));
+    a->seed_incr++;
+
+    pthread_mutex_unlock(&mutex_seed_incr);	/* end critical section */
+
+    init_PTD(a->source_list, a->target_list);	/* initialize per thread data */
+
+    print1_once(gsl_rng_name(r));
+
+    list_for_each(s_pos, &(a->source_list->list)) {
 	/*
 	 * iterate through all sources
 	 */
@@ -347,10 +437,8 @@ static void run_simulation(source_list_t * source_list,
 	source_t *current_source = this_s->s;
 	ray_t *ray;
 
-	fprintf(stdout, "        %s %s ... ",
-		get_source_type(current_source),
-		get_source_name(current_source));
-	fflush(stdout);
+	print2_once(get_source_type(current_source),
+		    get_source_name(current_source));
 
 	while ((ray = new_ray(current_source, r))) {
 	    /*
@@ -374,7 +462,7 @@ static void run_simulation(source_list_t * source_list,
 		double *closest_intercept = NULL;
 		double min_dist = GSL_DBL_MAX;
 
-		list_for_each(t_pos, &(target_list->list)) {
+		list_for_each(t_pos, &(a->target_list->list)) {
 		    /*
 		     * iterate through all targets.
 		     * calculate point of interception on each target
@@ -385,7 +473,7 @@ static void run_simulation(source_list_t * source_list,
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
 		    double *current_intercept =
-			interception(current_target, ray, &dump_flag);
+			interception(current_target, ray);
 
 		    if (current_intercept) {
 			/*
@@ -426,8 +514,7 @@ static void run_simulation(source_list_t * source_list,
 		     *        ray will be emitted by the current source.
 		     */
 		    ray =
-			out_ray(closest_target, ray, closest_intercept, r,
-				&dump_flag, n_targets);
+			out_ray(closest_target, ray, closest_intercept, r);
 		    free(closest_intercept);
 		    closest_intercept = NULL;
 
@@ -438,18 +525,19 @@ static void run_simulation(source_list_t * source_list,
 		     * trigger emmision of new ray from current source
 		     * by assigning NULL to 'ray'
 		     */
-		    n_lost++;
+		    retval->n_lost++;
+		    retval->p_lost += get_ppr(current_source);
 		    free(ray);
 		    ray = NULL;
 
 		}
 	    }			/* 'ray' absorbed or lost */
 	}			/* 'current_source' is exhausted */
-	fprintf(stdout, "exhausted\n");
     }				/* all sources exhausted */
     gsl_rng_free(r);
+    flush_outbufs(a->target_list);
 
-    fprintf(stdout, "%u rays lost\n", n_lost);
+    return retval;
 }
 
 static void help(void)
@@ -464,6 +552,8 @@ static void help(void)
     fprintf(stdout,
 	    "                         1: output geometry (OFF files).\n");
     fprintf(stdout, "                         2: run simulation.\n");
+    fprintf(stdout,
+	    "       --threads, -t     number of threads to use [1]\n");
     fprintf(stdout, "       --Version, -V     Print version number\n");
     fprintf(stdout, "       --help, -h        Print this help message\n");
     fprintf(stdout, "\n");
@@ -516,7 +606,13 @@ int main(int argc, char **argv)
     config_t cfg;
     int mode = CHECK_CONFIG;
     int seed;			/* seed for rng */
-    char file_mode[2] = "w";	/* default file mode for output per target */
+    int file_mode = O_TRUNC;	/* default file mode for output per target */
+
+    struct run_simulation_args *rs_args;	/* arguments for worker threads */
+    pthread_t *tids;		/* vector with thread ids */
+    pthread_attr_t attr;
+
+    int i;
 
     while (1) {
 	int c;
@@ -524,12 +620,14 @@ int main(int argc, char **argv)
 	static struct option long_options[] = {
 	    {"append", required_argument, 0, 'a'},
 	    {"mode", required_argument, 0, 'm'},
+	    {"threads", required_argument, 0, 't'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:m:Vh", long_options, &option_index);
+	c = getopt_long(argc, argv, "a:m:t:Vh", long_options,
+			&option_index);
 
 	if (c == -1)
 	    break;
@@ -537,7 +635,7 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'a':
-	    snprintf(file_mode, 2, "a");
+	    file_mode = O_APPEND;
 	    seed = atoi(optarg);
 	    break;
 
@@ -547,6 +645,10 @@ int main(int argc, char **argv)
 		fprintf(stderr, "unknown 'mode' (%d) given.\n", mode);
 		exit(EXIT_FAILURE);
 	    }
+	    break;
+
+	case 't':
+	    n_threads = atoi(optarg);
 	    break;
 
 	case 'V':
@@ -586,6 +688,9 @@ int main(int argc, char **argv)
 	int n_sources;
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
+	struct worker_retval *retval;
+	unsigned int n_lost;
+	double p_lost;
 
     case CHECK_CONFIG:		/* print parsed input */
 	config_write(&cfg, stdout);
@@ -607,7 +712,7 @@ int main(int argc, char **argv)
 	target_list = init_targets(&cfg, &n_targets, file_mode);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
-	if (file_mode[0] == 'w') {	/* use seed from cfg, otherwise from command line */
+	if (file_mode == O_TRUNC) {	/* use seed from cfg, otherwise from command line */
 	    config_lookup_int(&cfg, "seed", &seed);
 	    fprintf(stdout,
 		    "    using %d as seed for random number generator from config file\n",
@@ -619,14 +724,51 @@ int main(int argc, char **argv)
 		    seed);
 	}
 
+	if (n_threads > 1)
+	    fprintf(stdout,
+		    "    starting %d threads (seed %d, %d, ...) \n",
+		    n_threads, seed, seed + 1);
+
 	config_destroy(&cfg);
 
-	run_simulation(source_list, target_list, seed, n_targets);
+	rs_args = (struct run_simulation_args *)
+	    malloc(sizeof(struct run_simulation_args));
+	rs_args->source_list = source_list;
+	rs_args->target_list = target_list;
+	rs_args->seed_base = seed;
+	rs_args->seed_incr = 0;
 
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+
+	tids =
+	    (pthread_t *) malloc((size_t) n_threads * sizeof(pthread_t *));
+
+	for (i = 0; i < n_threads; i++)
+	    pthread_create(&(tids[i]), &attr, run_simulation,
+			   (void *) rs_args);
+
+	/* Wait for the other threads */
+	n_lost = 0;
+	p_lost = 0.0;
+
+	for (i = 0; i < n_threads; i++) {
+	    pthread_join(tids[i], (void **) &retval);
+	    n_lost += retval->n_lost;
+	    p_lost += retval->p_lost;
+	    free(retval);
+	}
+
+	fprintf(stdout, "%u rays lost with total power of %e\n", n_lost,
+		p_lost);
+
+	free(tids);
+	free(rs_args);
 	source_list_free(source_list);
 	target_list_free(target_list);
 	free(source_list);
 	free(target_list);
+
     default:
 	break;
 

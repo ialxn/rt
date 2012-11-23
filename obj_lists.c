@@ -65,7 +65,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 }
 
 target_list_t *init_targets(config_t * cfg, int *n_targets,
-			    const char *file_mode)
+			    const int file_mode)
 {
     int i;
     target_list_t *t_list;
@@ -131,7 +131,7 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	new_entry->t = new_target;
 	list_add_tail(&new_entry->list, &t_list->list);
 
-	if (file_mode[0] == 'w') {	/* write header to new dump_file */
+	if (file_mode == O_TRUNC) {	/* write header to new dump_file */
 	    char string[256];
 	    double *mat;
 	    int idx;
