@@ -329,7 +329,7 @@ static double distance(const double a[3], const double b[3])
 
 }
 
-static void run_simulation(void *args)
+static void *run_simulation(void *args)
 {
     struct run_simulation_args *a = (struct run_simulation_args *) args;
 
@@ -464,6 +464,8 @@ static void run_simulation(void *args)
     gsl_rng_free(r);
 
     fprintf(stdout, "%u rays lost\n", n_lost);
+
+    return NULL;
 }
 
 static void help(void)
@@ -534,7 +536,12 @@ int main(int argc, char **argv)
     int seed;			/* seed for rng */
     int n_threads = 1;		/* default single threaded */
     char file_mode[2] = "w";	/* default file mode for output per target */
-    struct run_simulation_args *rs_args;
+
+    struct run_simulation_args *rs_args;	/* arguments for worker threads */
+    pthread_t *tids;		/* vector with thread ids */
+    pthread_attr_t attr;
+
+    int i;
 
     while (1) {
 	int c;
@@ -652,13 +659,28 @@ int main(int argc, char **argv)
 	rs_args->seed_base = seed;
 	rs_args->seed_incr = 0;
 
-	run_simulation((void *) rs_args);
+	pthread_attr_init(&attr);
+	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
 
+	tids =
+	    (pthread_t *) malloc((size_t) n_threads * sizeof(pthread_t *));
+
+	for (i = 0; i < n_threads; i++)
+	    pthread_create(&(tids[i]), &attr, run_simulation,
+			   (void *) rs_args);
+
+	/* Wait for the other threads */
+
+	for (i = 0; i < n_threads; i++)
+	    pthread_join(tids[i], NULL);
+
+	free(tids);
 	free(rs_args);
 	source_list_free(source_list);
 	target_list_free(target_list);
 	free(source_list);
 	free(target_list);
+
     default:
 	break;
 
