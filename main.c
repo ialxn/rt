@@ -37,8 +37,8 @@
 #define AXES_LENGTH 5.0
 
 struct run_simulation_args {
-    source_list_t *source_list;
-    target_list_t *target_list;
+    source_list_t *source_list;	/* list of all sources */
+    target_list_t *target_list;	/* list of all targets */
     int seed_base;
     int seed_incr;
 };
@@ -329,6 +329,26 @@ static double distance(const double a[3], const double b[3])
 
 }
 
+static void init_PTD(source_list_t * source_list,
+		     target_list_t * target_list)
+{
+    struct list_head *s_pos;
+    struct list_head *t_pos;
+
+    list_for_each(t_pos, &(target_list->list)) {
+	target_list_t *this_t = list_entry(t_pos, target_list_t, list);
+	target_t *current_target = this_t->t;
+
+	init_flags(current_target);
+    }
+
+    list_for_each(s_pos, &(source_list->list)) {
+	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
+	source_t *current_source = this_s->s;
+
+    }
+}
+
 static void *run_simulation(void *args)
 {
     struct run_simulation_args *a = (struct run_simulation_args *) args;
@@ -348,7 +368,7 @@ static void *run_simulation(void *args)
 
     pthread_mutex_unlock(&mutex_seed_incr);	/* end critical section */
 
-
+    init_PTD(a->source_list, a->target_list);	/* initialize per thread data */
 
     fprintf(stdout,
 	    "    using random number generator %s from Gnu Scientif Library\n",

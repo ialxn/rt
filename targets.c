@@ -79,6 +79,11 @@ double *M(const target_t * T)
     return (T->type->M) (T->state);
 }
 
+void init_flags(const target_t * T)
+{
+    (T->type->init_flags) (T->state);
+}
+
 
 int check_targets(config_t * cfg)
 {

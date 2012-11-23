@@ -23,12 +23,12 @@
 
 typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
+    pthread_key_t flags_key;	/* flags see target.h */
     FILE *dump_file;
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    int absorbed;		/* flag to indicated that ray was absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
 } ell_state_t;
 
@@ -96,7 +96,7 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
 
-    state->absorbed = 0;
+    pthread_key_create(&state->flags_key, free);
 }
 
 static void ell_free_state(void *vstate)
@@ -183,8 +183,12 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray)
 
 	    ell_surf_normal(l_intercept, state->axes, normal);
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
-	    if (dot < 0.0)	/* anti-parallel. hits outside, absorbed */
-		state->absorbed = 1;
+
+	    if (dot < 0.0) {	/* anti-parallel. hits outside, absorbed */
+		int *flag = pthread_getspecific(state->flags_key);
+		*flag |= ABSORBED;
+		pthread_setspecific(state->flags_key, flag);
+	    }
 
 	    /* convert to global coordinates, origin is 'state->center' */
 	    l2g(state->M, state->center, l_intercept, intercept);
@@ -198,20 +202,20 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			      const gsl_rng * r)
 {
     ell_state_t *state = (ell_state_t *) vstate;
-
+    int *flag = pthread_getspecific(state->flags_key);
     double hit_local[3];
 
     /* transform to local coordinates */
     g2l(state->M, state->center, hit, hit_local);
 
-    if (state->absorbed
+    if (*flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
 	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
-	 * if 'state->absorbed'is true we know ray has been absorbed
+	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
-	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * checked (and the flag was set) in 'xxx_get_intercept()'
 	 * above.
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
@@ -223,7 +227,9 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	fprintf(state->dump_file, "%g\t%g\t%g\t%g\t%g\n", hit_local[0],
 		hit_local[1], hit_local[2], in_ray->power, in_ray->lambda);
 
-	state->absorbed = 0;	/* reset flag */
+	*flag &= ~ABSORBED;	/* clear flag */
+	pthread_setspecific(state->flags_key, flag);
+
 	free(in_ray);
 	return NULL;
 
@@ -262,6 +268,16 @@ static double *ell_M(void *vstate)
     return state->M;
 }
 
+static void ell_init_flags(void *vstate)
+{
+    ell_state_t *state = (ell_state_t *) vstate;
+
+    int *flag = (int *) malloc(sizeof(int));
+
+    *flag = 0;
+    pthread_setspecific(state->flags_key, flag);
+}
+
 
 static const target_type_t ell_t = {
     "ellipsoid",
@@ -272,7 +288,8 @@ static const target_type_t ell_t = {
     &ell_get_out_ray,
     &ell_get_target_name,
     &ell_dump_string,
-    &ell_M
+    &ell_M,
+    &ell_init_flags
 };
 
 const target_type_t *target_ellipsoid = &ell_t;

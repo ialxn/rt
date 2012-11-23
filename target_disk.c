@@ -24,7 +24,7 @@
 
 typedef struct disk_state_t {
     char *name;			/* name (identifier) of target */
-    char last_was_hit;		/* flag */
+    pthread_key_t flags_key;	/* flags see target.h */
     FILE *dump_file;
     double point[3];		/* center coordinate of disk */
     double normal[3];		/* normal vector of disk */
@@ -74,8 +74,7 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
 
     config_setting_lookup_float(this_target, "r", &state->r);
 
-    state->last_was_hit = 0;
-    state->absorbed = 0;
+    pthread_key_create(&state->flags_key, free);
 }
 
 static void disk_free_state(void *vstate)
@@ -94,9 +93,11 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
 
     double t1, t2[3], t3;
     double d;
+    int *flag = pthread_getspecific(state->flags_key);
 
-    if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
-	state->last_was_hit = 0;
+    if (*flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
+	*flag &= ~LAST_WAS_HIT;
+	pthread_setspecific(state->flags_key, flag);
 	return NULL;
     }
 
@@ -147,8 +148,10 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
 
 	} else {		/* hits within disk radius 'r' */
 
-	    if (t1 > 0.0)	/* hits rear side, absorbed */
-		state->absorbed = 1;
+	    if (t1 > 0.0) {	/* hits rear side, absorbed */
+		*flag |= ABSORBED;
+		pthread_setspecific(state->flags_key, flag);
+	    }
 
 	    return intercept;
 
@@ -161,15 +164,16 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			       const gsl_rng * r)
 {
     disk_state_t *state = (disk_state_t *) vstate;
+    int *flag = pthread_getspecific(state->flags_key);
 
-    if (state->absorbed
+    if (*flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
 	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
-	 * if 'state->absorbed'is true we know ray has been absorbed
+	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
-	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
+	 * checked (and the flag was set) in 'xxx_get_intercept()'
 	 * above.
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
@@ -187,8 +191,8 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	fprintf(state->dump_file, "%g\t%g\t%g\t%g\n", hit_local[0],
 		hit_local[1], in_ray->power, in_ray->lambda);
 
-	state->absorbed = 0;	/* reset flags */
-	state->last_was_hit = 0;
+	*flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
+	pthread_setspecific(state->flags_key, flag);
 
 	free(in_ray);
 	return NULL;
@@ -196,7 +200,8 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     } else {			/* reflect 'in_ray' */
 	reflect(in_ray, state->normal, hit);
 
-	state->last_was_hit = 1;	/* mark as hit */
+	*flag |= LAST_WAS_HIT;	/* mark as hit */
+	pthread_setspecific(state->flags_key, flag);
 
 	return in_ray;
     }
@@ -223,6 +228,16 @@ static double *disk_M(void *vstate)
     return state->M;
 }
 
+static void disk_init_flags(void *vstate)
+{
+    disk_state_t *state = (disk_state_t *) vstate;
+
+    int *flag = (int *) malloc(sizeof(int));
+
+    *flag = 0;
+    pthread_setspecific(state->flags_key, flag);
+}
+
 
 static const target_type_t disk_t = {
     "disk",
@@ -233,7 +248,8 @@ static const target_type_t disk_t = {
     &disk_get_out_ray,
     &disk_get_target_name,
     &disk_dump_string,
-    &disk_M
+    &disk_M,
+    &disk_init_flags
 };
 
 const target_type_t *target_disk = &disk_t;

@@ -11,12 +11,17 @@
 #ifndef __TARGETS_H__
 #define __TARGETS_H__
 
+#include <pthread.h>
+
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_spline.h>
 
 #include <libconfig.h>
 
 #include "ray.h"
+
+#define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
+#define ABSORBED     (1<<1)	/* ray was absorbed on target */
 
 
 typedef struct target_type_t {
@@ -34,6 +39,7 @@ typedef struct target_type_t {
     const char *(*get_target_name) (void *state);
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
     double *(*M) (void *state);	/* returns pointer to M matrix */
+    void (*init_flags) (void *state);	/* allocate and zero per thread flags */
 } target_type_t;
 
 typedef struct target_t {
@@ -65,6 +71,7 @@ extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);
 extern void dump_string(const target_t * T, const char *str);
 extern double *M(const target_t * T);
+extern void init_flags(const target_t * T);
 
 
 /*

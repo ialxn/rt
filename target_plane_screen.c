@@ -23,7 +23,7 @@
 
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
-    char last_was_hit;		/* flag */
+    pthread_key_t flags_key;	/* flags see target.h */
     char one_sided;		/* flag [one-sided|two-sided] */
     FILE *dump_file;
     double point[3];		/* point on plane */
@@ -45,8 +45,6 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
-    state->last_was_hit = 0;
-
     snprintf(f_name, 256, "%s.dat", state->name);
     state->dump_file = fopen(f_name, file_mode);
 
@@ -66,6 +64,8 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 
     /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
+
+    pthread_key_create(&state->flags_key, free);
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,
@@ -102,9 +102,11 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray)
     double t1, t2[3], t3;
     double d;
     double *intercept;
+    int *flag = pthread_getspecific(state->flags_key);
 
-    if (state->last_was_hit) {	/* ray starts on this target, definitely no hit */
-	state->last_was_hit = 0;
+    if (*flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
+	*flag &= ~LAST_WAS_HIT;
+	pthread_setspecific(state->flags_key, flag);
 	return NULL;
     }
 
@@ -159,7 +161,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			     const gsl_rng * r)
 {
     ps_state_t *state = (ps_state_t *) vstate;
-
+    int *flag = pthread_getspecific(state->flags_key);
     double hit_local[3];
 
     (void) r;			/* avoid warning : unused parameter 'r' */
@@ -175,7 +177,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     fprintf(state->dump_file, "%g\t%g\t%g\t%g\n", hit_local[0],
 	    hit_local[1], in_ray->power, in_ray->lambda);
 
-    state->last_was_hit = 1;	/* mark as hit */
+    *flag |= LAST_WAS_HIT;	/* mark as hit */
+    pthread_setspecific(state->flags_key, flag);
 
     memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
     return in_ray;
@@ -203,6 +206,16 @@ static double *ps_M(void *vstate)
     return state->M;
 }
 
+static void ps_init_flags(void *vstate)
+{
+    ps_state_t *state = (ps_state_t *) vstate;
+
+    int *flag = (int *) malloc(sizeof(int));
+
+    *flag = 0;
+    pthread_setspecific(state->flags_key, flag);
+}
+
 
 static const target_type_t ps1_t = {
     "one-sided plane screen",
@@ -213,7 +226,8 @@ static const target_type_t ps1_t = {
     &ps_get_out_ray,
     &ps_get_target_name,
     &ps_dump_string,
-    &ps_M
+    &ps_M,
+    &ps_init_flags
 };
 
 static const target_type_t ps2_t = {
@@ -225,7 +239,8 @@ static const target_type_t ps2_t = {
     &ps_get_out_ray,
     &ps_get_target_name,
     &ps_dump_string,
-    &ps_M
+    &ps_M,
+    &ps_init_flags
 };
 
 const target_type_t *target_plane_screen_one_sided = &ps1_t;
