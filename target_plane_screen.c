@@ -196,35 +196,20 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    double hit_copy[3];
+    double hit_local[3];
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
     /* transform to local coordinates */
-    memcpy(hit_copy, hit, 3 * sizeof(double));
-    g2l(state->M, state->point, hit, hit_copy);
+    memcpy(hit_local, hit, 3 * sizeof(double));
+    g2l(state->M, state->point, hit, hit_local);
 
     /*
      * store 4 items per data set (x,y,ppr,lambda)
      * first x,y then ppr,lambda
      */
-    memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]), hit_copy,
-	   N_COORDINATES * sizeof(double));
-    state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
-	in_ray->power;
-    state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES + 1] =
-	in_ray->lambda;
-    state->n_data++;
-
-    /*
-     * increase data size for next interception
-     * or
-     * initiate dump cycle
-     */
-    if (state->n_data == state->n_alloc)	/* buffer full */
-	try_increase_memory(&(state->data), &(state->n_data),
-			    &(state->n_alloc), N_COORDINATES + 2,
-			    state->dump_file, dump_flag, n_targets);
+    fprintf(state->dump_file, "%g\t%g\t%g\t%g\n", hit_local[0],
+	    hit_local[1], in_ray->power, in_ray->lambda);
 
     state->last_was_hit = 1;	/* mark as hit */
 

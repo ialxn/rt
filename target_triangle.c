@@ -200,8 +200,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray,
 }
 
 static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
-			     const gsl_rng * r, int *dump_flag,
-			     const int n_targets)
+			     const gsl_rng * r)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -210,40 +209,25 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
 	/*
 	 * if 'state->absorbed'is true we know ray has been absorbed
-	 * because it wass intercepted by a surface with absorptivity=1
+	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
 	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
 	 * above.
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
-	double hit_copy[3];
+	double hit_local[3];
 
 	/* transform to local coordinates */
-	memcpy(hit_copy, hit, 3 * sizeof(double));
-	g2l(state->M, state->P1, hit, hit_copy);
+	memcpy(hit_local, hit, 3 * sizeof(double));
+	g2l(state->M, state->P1, hit, hit_local);
 
 	/*
 	 * store 4 items per data set (x,y,ppr,lambda)
 	 * first x,y then ppr,lambda
 	 */
-	memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]),
-	       hit_copy, N_COORDINATES * sizeof(double));
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
-	    in_ray->power;
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES +
-		    1] = in_ray->lambda;
-	state->n_data++;
-
-	/*
-	 * increase data size for next interception
-	 * or
-	 * initiate dump cycle
-	 */
-	if (state->n_data == state->n_alloc)	/* buffer full */
-	    try_increase_memory(&(state->data), &(state->n_data),
-				&(state->n_alloc), N_COORDINATES + 2,
-				state->dump_file, dump_flag, n_targets);
+	fprintf(state->dump_file, "%g\t%g\t%g\t%g\n", hit_local[0],
+		hit_local[1], in_ray->power, in_ray->lambda);
 
 	state->absorbed = 0;	/* reset flags */
 	state->last_was_hit = 0;

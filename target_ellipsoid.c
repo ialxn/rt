@@ -236,17 +236,18 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			      const int n_targets)
 {
     ell_state_t *state = (ell_state_t *) vstate;
-    double l_hit[3];
+
+    double hit_local[3];
 
     /* transform to local coordinates */
-    g2l(state->M, state->center, hit, l_hit);
+    g2l(state->M, state->center, hit, hit_local);
 
     if (state->absorbed
 	|| (gsl_rng_uniform(r) >
 	    gsl_spline_eval(state->spline, in_ray->lambda, state->acc))) {
 	/*
 	 * if 'state->absorbed'is true we know ray has been absorbed
-	 * because it wass intercepted by a surface with absorptivity=1
+	 * because it was intercepted by a surface with absorptivity=1
 	 * (reflectivity=0) e.g. the backside of the target. this was
 	 * checked (and 'state->absorbed' was set) in 'xxx_get_intercept()'
 	 * above.
@@ -257,23 +258,8 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 5 items per data set (x,y,z,ppr,lambda)
 	 * first x,y,z then ppr,lambda
 	 */
-	memcpy(&(state->data[(N_COORDINATES + 2) * state->n_data]),
-	       l_hit, N_COORDINATES * sizeof(double));
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES] =
-	    in_ray->power;
-	state->data[(N_COORDINATES + 2) * state->n_data + N_COORDINATES +
-		    1] = in_ray->lambda;
-	state->n_data++;
-
-	/*
-	 * increase data size for next interception
-	 * or
-	 * initiate dump cycle
-	 */
-	if (state->n_data == state->n_alloc)	/* buffer full */
-	    try_increase_memory(&(state->data), &(state->n_data),
-				&(state->n_alloc), N_COORDINATES + 2,
-				state->dump_file, dump_flag, n_targets);
+	fprintf(state->dump_file, "%g\t%g\t%g\t%g\t%g\n", hit_local[0],
+		hit_local[1], hit_local[2], in_ray->power, in_ray->lambda);
 
 	state->absorbed = 0;	/* reset flag */
 	free(in_ray);
@@ -283,7 +269,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	double l_N[3], N[3];
 	double O[] = { 0.0, 0.0, 0.0 };
 
-	ell_surf_normal(l_hit, state->axes, l_N);	/* normal vector local system */
+	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
 	reflect(in_ray, N, hit);
