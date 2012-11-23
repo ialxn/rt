@@ -339,8 +339,7 @@ static void init_PTD(source_list_t * source_list,
 	target_list_t *this_t = list_entry(t_pos, target_list_t, list);
 	target_t *current_target = this_t->t;
 
-	init_flags(current_target);
-	init_outbuf(current_target);
+	init_PTDT(current_target);
     }
 
     list_for_each(s_pos, &(source_list->list)) {
@@ -359,7 +358,7 @@ static void flush_outbufs(target_list_t * target_list)
 	target_list_t *this_t = list_entry(t_pos, target_list_t, list);
 	target_t *current_target = this_t->t;
 
-	flush_outbuf(current_target);
+	flush_PTDT_outbuf(current_target);
     }
 }
 

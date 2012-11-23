@@ -26,8 +26,7 @@
 
 typedef struct disk_state_t {
     char *name;			/* name (identifier) of target */
-    pthread_key_t flags_key;	/* flags see target.h */
-    pthread_key_t outbuf_key;	/* access to output buffer for each target */
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     int dump_file;
     double point[3];		/* center coordinate of disk */
     double normal[3];		/* normal vector of disk */
@@ -78,8 +77,7 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
 
     config_setting_lookup_float(this_target, "r", &state->r);
 
-    pthread_key_create(&state->flags_key, free);
-    pthread_key_create(&state->outbuf_key, free_outbuf);
+    pthread_key_create(&state->PTDT_key, free);
 }
 
 static void disk_free_state(void *vstate)
@@ -98,11 +96,10 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
 
     double t1, t2[3], t3;
     double d;
-    int *flag = pthread_getspecific(state->flags_key);
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    if (*flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
-	*flag &= ~LAST_WAS_HIT;
-	pthread_setspecific(state->flags_key, flag);
+    if (data->flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
+	data->flag &= ~LAST_WAS_HIT;
 	return NULL;
     }
 
@@ -153,10 +150,8 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
 
 	} else {		/* hits within disk radius 'r' */
 
-	    if (t1 > 0.0) {	/* hits rear side, absorbed */
-		*flag |= ABSORBED;
-		pthread_setspecific(state->flags_key, flag);
-	    }
+	    if (t1 > 0.0)	/* hits rear side, absorbed */
+		data->flag |= ABSORBED;
 
 	    return intercept;
 
@@ -169,9 +164,9 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 			       const gsl_rng * r)
 {
     disk_state_t *state = (disk_state_t *) vstate;
-    int *flag = pthread_getspecific(state->flags_key);
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    if (*flag & ABSORBED
+    if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
 	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
 	/*
@@ -184,7 +179,6 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 	double hit_local[3];
-	outbuf_t *out = pthread_getspecific(state->outbuf_key);
 
 	/* transform to local coordinates */
 	memcpy(hit_local, hit, 3 * sizeof(double));
@@ -194,18 +188,17 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * store 4 items per data set (x,y,ppr,lambda)
 	 * first x,y then ppr,lambda
 	 */
-	if (out->i == BUF_SIZE * NO_ITEMS) {
-	    write(state->dump_file, out->buf, sizeof(float) * out->i);
-	    out->i = 0;
+	if (data->i == BUF_SIZE * NO_ITEMS) {
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    data->i = 0;
 	}
 
-	out->buf[out->i++] = (float) hit_local[0];
-	out->buf[out->i++] = (float) hit_local[1];
-	out->buf[out->i++] = (float) in_ray->power;
-	out->buf[out->i++] = (float) in_ray->lambda;
+	data->buf[data->i++] = (float) hit_local[0];
+	data->buf[data->i++] = (float) hit_local[1];
+	data->buf[data->i++] = (float) in_ray->power;
+	data->buf[data->i++] = (float) in_ray->lambda;
 
-	*flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
-	pthread_setspecific(state->flags_key, flag);
+	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
 	free(in_ray);
 	return NULL;
@@ -213,8 +206,7 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     } else {			/* reflect 'in_ray' */
 	reflect(in_ray, state->normal, hit);
 
-	*flag |= LAST_WAS_HIT;	/* mark as hit */
-	pthread_setspecific(state->flags_key, flag);
+	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
 	return in_ray;
     }
@@ -241,34 +233,25 @@ static double *disk_M(void *vstate)
     return state->M;
 }
 
-static void disk_init_flags(void *vstate)
+static void disk_init_PTDT(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
+    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
 
-    int *flag = (int *) malloc(sizeof(int));
+    data->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
+    data->i = 0;
+    data->flag = 0;
 
-    *flag = 0;
-    pthread_setspecific(state->flags_key, flag);
+    pthread_setspecific(state->PTDT_key, data);
 }
 
-static void disk_init_outbuf(void *vstate)
+static void disk_flush_PTDT_outbuf(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
-    outbuf_t *out = (outbuf_t *) malloc(sizeof(outbuf_t));
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    out->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
-    out->i = 0;
-
-    pthread_setspecific(state->outbuf_key, out);
-}
-
-static void disk_flush_outbuf(void *vstate)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-    outbuf_t *out = pthread_getspecific(state->outbuf_key);
-
-    if (out->i != 0)		/* write rest of buffer to file. */
-	write(state->dump_file, out->buf, sizeof(float) * out->i);
+    if (data->i != 0)		/* write rest of buffer to file. */
+	write(state->dump_file, data->buf, sizeof(float) * data->i);
 }
 
 
@@ -282,9 +265,8 @@ static const target_type_t disk_t = {
     &disk_get_target_name,
     &disk_dump_string,
     &disk_M,
-    &disk_init_flags,
-    &disk_init_outbuf,
-    &disk_flush_outbuf
+    &disk_init_PTDT,
+    &disk_flush_PTDT_outbuf
 };
 
 const target_type_t *target_disk = &disk_t;

@@ -29,10 +29,11 @@
 
 #define BUF_SIZE 4096
 
-typedef struct outbuf_t {
-    float *buf;
-    size_t i;
-} outbuf_t;
+typedef struct PTDT_t {		/* per thread data of every target */
+    float *buf;			/* output buffer */
+    size_t i;			/* current position within output buffer */
+    int flag;			/* various flags. */
+} PTDT_t;
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
@@ -49,9 +50,8 @@ typedef struct target_type_t {
     const char *(*get_target_name) (void *state);
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
     double *(*M) (void *state);	/* returns pointer to M matrix */
-    void (*init_flags) (void *state);	/* allocate and zero per thread flags */
-    void (*init_outbuf) (void *state);	/* allocate per thread buffer */
-    void (*flush_outbuf) (void *state);	/* flush per thread buffer */
+    void (*init_PTDT) (void *state);	/* allocate per thread buffer */
+    void (*flush_PTDT_outbuf) (void *state);	/* flush per thread buffer */
 } target_type_t;
 
 typedef struct target_t {
@@ -83,10 +83,9 @@ extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);
 extern void dump_string(const target_t * T, const char *str);
 extern double *M(const target_t * T);
-extern void init_flags(const target_t * T);
-extern void init_outbuf(const target_t * T);
-extern void flush_outbuf(const target_t * T);
-extern void free_outbuf(void *p);
+extern void init_PTDT(const target_t * T);
+extern void flush_PTDT_outbuf(const target_t * T);
+extern void free_PTDT(void *p);
 
 
 /*

@@ -79,27 +79,22 @@ double *M(const target_t * T)
     return (T->type->M) (T->state);
 }
 
-void init_flags(const target_t * T)
+void init_PTDT(const target_t * T)
 {
-    (T->type->init_flags) (T->state);
+    (T->type->init_PTDT) (T->state);
 }
 
-void init_outbuf(const target_t * T)
+void flush_PTDT_outbuf(const target_t * T)
 {
-    (T->type->init_outbuf) (T->state);
+    (T->type->flush_PTDT_outbuf) (T->state);
 }
 
-void flush_outbuf(const target_t * T)
+void free_PTDT(void *p)
 {
-    (T->type->flush_outbuf) (T->state);
-}
+    PTDT_t *data = (PTDT_t *) p;
 
-void free_outbuf(void *p)
-{
-    outbuf_t *out = (outbuf_t *) p;
-
-    free(out->buf);
-    free(out);
+    free(data->buf);
+    free(data);
 }
 
 
