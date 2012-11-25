@@ -19,7 +19,7 @@
 
 
 
-static int get_idx(FILE * f_in, size_t *idx_lambda, size_t *idx_power)
+static int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
 {
     char line[LINE_LEN];
     int status = NO_ERR;
@@ -56,7 +56,8 @@ static int get_idx(FILE * f_in, size_t *idx_lambda, size_t *idx_power)
 }
 
 
-static int read_hist(FILE * f_in, gsl_histogram * h, int *n_missed,
+static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
+		     double *p_inc, int *n_missed,
 		     double *p_missed, const size_t idx_lambda,
 		     const size_t idx_power)
 {
@@ -90,6 +91,9 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_missed,
 	    /* data lies outside of range of histogram */
 	    (*n_missed)++;
 	    *p_missed += t[idx_power];
+	} else {
+	    (*n_inc)++;
+	    *p_inc += t[idx_power];
 	}
 
     } while (n_items_read);
@@ -98,8 +102,9 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_missed,
 }
 
 
-static void output_hist(FILE * f_out, gsl_histogram * h,
-			const int n_missed, const double p_missed)
+static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
+			const double p_inc, const int n_missed,
+			const double p_missed)
 {
     size_t i;
     double t;
@@ -127,8 +132,12 @@ static void output_hist(FILE * f_out, gsl_histogram * h,
 
     fprintf(stdout, "#      number of data points not included: %d\n",
 	    n_missed);
-    fprintf(stdout, "#                      total power missed: %e\n#\n",
+    fprintf(stdout, "#                      total power missed: %e\n",
 	    p_missed);
+    fprintf(stdout, "#          number of data points included: %d\n",
+	    n_inc);
+    fprintf(stdout, "#               total power accounted for: %e\n#\n",
+	    p_inc);
 
 
     t = gsl_histogram_min_val(h);
@@ -207,8 +216,10 @@ int main(int argc, char **argv)
     double stop_wl = 1000.0;
     gsl_histogram *h;
     size_t idx_p, idx_l;
-    int n_missed = 0;
+    int n_missed = 0;		/* data not included in histogram */
     double p_missed = 0.0;
+    int n_inc = 0;		/* data included in histogram */
+    double p_inc = 0.0;
 
     while (1) {
 	int c;
@@ -272,8 +283,9 @@ int main(int argc, char **argv)
 
     h = init_hist(start_wl, stop_wl, n_bins);
 
-    read_hist(stdin, h, &n_missed, &p_missed, idx_l, idx_p);
-    output_hist(stdout, h, n_missed, p_missed);
+    read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, idx_l,
+	      idx_p);
+    output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
 
     gsl_histogram_free(h);
 
