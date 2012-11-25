@@ -122,9 +122,9 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     /* print header with statistics */
     fprintf(f_out, "#   histogram definition\n");
     t = gsl_histogram_min(h);
-    fprintf(f_out, "#      minimum x-value: %e\n", t);
+    fprintf(f_out, "#      minimum x-value: %.0f\n", t);
     t = gsl_histogram_max(h);
-    fprintf(f_out, "#      maximum x-value: %e\n", t);
+    fprintf(f_out, "#      maximum x-value: %.0f\n", t);
     i = gsl_histogram_bins(h);
     fprintf(f_out, "#       number of bins: %d\n", i);
 
@@ -144,21 +144,23 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     i = gsl_histogram_min_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
     fprintf(stdout, "#        minimum y-value: %e\n", t);
-    fprintf(stdout, "#            at bin number (range): %d (%e -- %e)\n",
-	    i, min, max);
+    fprintf(stdout,
+	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    min, max);
 
     t = gsl_histogram_max_val(h);
     i = gsl_histogram_max_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
     fprintf(stdout, "#        maximum y-value: %e\n", t);
-    fprintf(stdout, "#            at bin number (range): %d (%e -- %e)\n",
-	    i, min, max);
+    fprintf(stdout,
+	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    min, max);
 
     fprintf(stdout, "# mean y-value (+-sigma): %e (+-%e)\n",
 	    gsl_histogram_mean(h), gsl_histogram_sigma(h));
     fprintf(stdout, "#\n");
 
-    fprintf(stdout, "# x\t\ty\t\tbin_min\t\tbin_max\n");
+    fprintf(stdout, "# x\t\ty\tbin_min\tbin_max\n");
 
     for (i = 0; i < n; i++) {
 	double t_x;
@@ -167,7 +169,7 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
 	t_x = (min + max) / 2.0;
 	t = gsl_histogram_get(h, i);
 
-	fprintf(f_out, "%e\t%e\t%e\t%e\n", t_x, t, min, max);
+	fprintf(f_out, "%.1f\t%e\t%.0f\t%.0f\n", t_x, t, min, max);
     }
 }
 
