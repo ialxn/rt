@@ -78,16 +78,13 @@ static gsl_histogram2d *init_hist(const double xmax,
     return h;
 }
 
-static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_missed,
-		     double *p_missed)
+static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
+		     double *p_inc, int *n_missed, double *p_missed)
 {
     char line[LINE_LEN];
     int n;
     float t[MAX_ITEMS];
     size_t n_items_read;
-
-    *n_missed = 0;
-    *p_missed = 0.0;
 
     /* skip header (first line is has already been read */
     for (n = 0; n < T_HEADER_LINES - 1; n++) {
@@ -114,6 +111,9 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_missed,
 	    /* data lies outside of range of histogram */
 	    (*n_missed)++;
 	    *p_missed += t[2];
+	} else {
+	    (*n_inc)++;
+	    *p_inc += t[2];
 	}
     } while (n_items_read);
 
@@ -121,8 +121,9 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_missed,
 
 }
 
-static void output_hist(FILE * f_out, gsl_histogram2d * h,
-			const int n_missed, const double p_missed)
+static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
+			const double p_inc, const int n_missed,
+			const double p_missed)
 {
     size_t i, j;
     size_t nx, ny;
@@ -161,8 +162,12 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
 
     fprintf(f_out, "#        number of data point not included: %d\n",
 	    n_missed);
-    fprintf(f_out, "#                       total power missed: %e\n#\n",
+    fprintf(f_out, "#                       total power missed: %e\n",
 	    p_missed);
+    fprintf(f_out, "#           number of data points included: %d\n",
+	    n_inc);
+    fprintf(f_out, "#                total power accounted for: %e\n#\n",
+	    p_inc);
     fprintf(f_out, "#        area represented by one bin: %e\n#\n", A);
 
     t = gsl_histogram2d_min_val(h);
@@ -242,8 +247,10 @@ int main(int argc, char **argv)
     double y_min = -10.0;
     size_t y_bins = 10;
 
-    double p_missed;
-    int n_missed;
+    int n_inc = 0;		/* data included in histogram */
+    double p_inc = 0.0;
+    int n_missed = 0;		/* data not included in histogram */
+    double p_missed = 0;
 
     gsl_histogram2d *h;
 
@@ -324,8 +331,8 @@ int main(int argc, char **argv)
 
     h = init_hist(x_max, x_min, x_bins, y_max, y_min, y_bins);
 
-    read_hist(stdin, h, &n_missed, &p_missed);
-    output_hist(stdout, h, n_missed, p_missed);
+    read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed);
+    output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
 
     gsl_histogram2d_free(h);
     exit(EXIT_SUCCESS);
