@@ -48,19 +48,6 @@ static int wrong_target_type(FILE * f_in)
 }
 
 
-static double *range(const double min, const double max, const size_t n)
-{
-    size_t i;
-    const double width = (max - min) / n;
-    double *r = (double *) malloc((n + 1) * sizeof(double));
-
-    r[0] = min;
-    for (i = 1; i <= n; i++)
-	r[i] = r[i - 1] + width;
-
-    return r;
-}
-
 static gsl_histogram2d *init_hist(const double xmax,
 				  const double xmin, const size_t x_bins,
 				  const double ymax,
@@ -81,20 +68,11 @@ static gsl_histogram2d *init_hist(const double xmax,
 static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 		     double *p_inc, int *n_missed, double *p_missed)
 {
-    char line[LINE_LEN];
-    int n;
     float t[MAX_ITEMS];
     size_t n_items_read;
 
-    /* skip header (first line is has already been read */
-    for (n = 0; n < T_HEADER_LINES - 1; n++) {
-	fgets(line, LINE_LEN, f_in);
-	if (line[0] != '#') {	/* not a header line */
-	    fprintf(stderr,
-		    "Wrong file type (unexpected size of header)\n");
-	    return (ERR);
-	}
-    }
+    if (skip_header(f_in) == ERR)
+	return ERR;
 
     /* read data. (x,y,power,lambda) */
     do {
@@ -115,6 +93,7 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	    (*n_inc)++;
 	    *p_inc += t[2];
 	}
+
     } while (n_items_read);
 
     return NO_ERR;

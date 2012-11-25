@@ -18,63 +18,16 @@
 #include "version.h"
 
 
-
-static int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
-{
-    char line[LINE_LEN];
-    int status = NO_ERR;
-
-    fgets(line, LINE_LEN, f_in);
-
-    /* check file type and set indices of columns to be read */
-    if (strcmp(line, "(one-sided plane screen)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strcmp(line, "(two-sided plane screen)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strcmp(line, "(rectangle)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strcmp(line, "(triangle)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strcmp(line, "(ellipsoid)")) {
-	*idx_lambda = 4;
-	*idx_power = 3;
-    } else if (strcmp(line, "(annulus)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strcmp(line, "(disk)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else {
-	fprintf(stderr, "Unknown target type (%s) found\n", line);
-	status = ERR;
-    }
-    return status;
-}
-
-
 static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 		     double *p_inc, int *n_missed,
 		     double *p_missed, const size_t idx_lambda,
 		     const size_t idx_power)
 {
-    char line[LINE_LEN];
-    int n;
     float t[MAX_ITEMS];
     size_t n_items_read;
 
-    /* skip header (first line is has already been read */
-    for (n = 0; n < T_HEADER_LINES - 1; n++) {
-	fgets(line, LINE_LEN, f_in);
-	if (line[0] != '#') {	/* not a header line */
-	    fprintf(stderr,
-		    "Wrong file type (unexpected size of header)\n");
-	    return (ERR);
-	}
-    }
+    if (skip_header(f_in) == ERR)
+	return ERR;
 
     /* read data. (x,y,[z,]power,lambda) */
     do {
@@ -178,22 +131,12 @@ static gsl_histogram *init_hist(const double start_wl,
 				const double stop_wl, const size_t n_bins)
 {
     gsl_histogram *h;
-    double *range;
-    double width;
-    size_t i;
-
-    width = (stop_wl - start_wl) / n_bins;
-
-    range = (double *) malloc((n_bins + 1) * sizeof(double));
-
-    range[0] = start_wl;
-    for (i = 1; i <= n_bins; i++)
-	range[i] = range[i - 1] + width;
+    double *wl_range = range(start_wl, stop_wl, n_bins);
 
     h = gsl_histogram_alloc(n_bins);
-    gsl_histogram_set_ranges(h, range, n_bins + 1);
+    gsl_histogram_set_ranges(h, wl_range, n_bins + 1);
 
-    free(range);
+    free(wl_range);
 
     return h;
 }
@@ -280,7 +223,7 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
     }
 
-    if (get_idx(stdin, &idx_l, &idx_p))
+    if (get_idx(stdin, &idx_l, &idx_p) == ERR)
 	exit(EXIT_FAILURE);
 
     h = init_hist(start_wl, stop_wl, n_bins);

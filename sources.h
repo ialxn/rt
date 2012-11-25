@@ -51,7 +51,8 @@ const source_type_t *source_sphere;
 /*
  *  public functions to access / manipulate the sources (found in sources.c)
  */
-extern source_t *source_alloc(const source_type_t * T, config_setting_t * this_s);
+extern source_t *source_alloc(const source_type_t * T,
+			      config_setting_t * this_s);
 extern void source_free(source_t * S);
 extern ray_t *new_ray(const source_t * S, const gsl_rng * r);
 extern double get_ppr(const source_t * S);

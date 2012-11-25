@@ -265,3 +265,68 @@ int read_data(FILE * f, double **x, double **y, size_t * n)
     return NO_ERR;
 
 }
+
+int skip_header(FILE * f)
+{
+    /* skip header (first line is has already been read */
+    char line[LINE_LEN];
+    int n;
+
+    for (n = 0; n < T_HEADER_LINES - 1; n++) {
+	fgets(line, LINE_LEN, f);
+	if (line[0] != '#') {	/* not a header line */
+	    fprintf(stderr,
+		    "Wrong file type (unexpected size of header)\n");
+	    return (ERR);
+	}
+    }
+}
+
+double *range(const double min, const double max, const size_t n)
+{
+    size_t i;
+    const double width = (max - min) / n;
+    double *r = (double *) malloc((n + 1) * sizeof(double));
+
+    r[0] = min;
+    for (i = 1; i <= n; i++)
+	r[i] = r[i - 1] + width;
+
+    return r;
+}
+
+int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
+{
+    char line[LINE_LEN];
+    int status = NO_ERR;
+
+    fgets(line, LINE_LEN, f_in);
+
+    /* check file type and set indices of columns to be read */
+    if (strstr(line, "(one-sided plane screen)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(two-sided plane screen)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(rectangle)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(triangle)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(ellipsoid)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
+    } else if (strstr(line, "(annulus)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(disk)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else {
+	fprintf(stderr, "Unknown target type (%s) found\n", line);
+	status = ERR;
+    }
+    return status;
+}
