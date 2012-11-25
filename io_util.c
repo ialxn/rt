@@ -280,6 +280,8 @@ int skip_header(FILE * f)
 	    return (ERR);
 	}
     }
+
+    return (NO_ERR);
 }
 
 double *range(const double min, const double max, const size_t n)
