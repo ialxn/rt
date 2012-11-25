@@ -18,6 +18,9 @@
 
 #define LINE_LEN 256
 #define BSIZE 256
+#define T_HEADER_LINES 10	/* number of header lines in target output */
+#define MAX_ITEMS 5		/* maximum number of items per data set
+				   (x,y,z,power,lambda) */
 
 
 extern int check_array(const char *section, const config_setting_t * s,

@@ -19,7 +19,7 @@
 
 
 
-static int get_idx(FILE * f_in, int *idx_lambda, int *idx_power)
+static int get_idx(FILE * f_in, size_t *idx_lambda, size_t *idx_power)
 {
     char line[LINE_LEN];
     int status = NO_ERR;
@@ -57,33 +57,43 @@ static int get_idx(FILE * f_in, int *idx_lambda, int *idx_power)
 
 
 static int read_hist(FILE * f_in, gsl_histogram * h, int *n_missed,
-		     double *p_missed, const int idx_lambda,
-		     const int idx_power)
+		     double *p_missed, const size_t idx_lambda,
+		     const size_t idx_power)
 {
     char line[LINE_LEN];
+    int n;
+    float t[MAX_ITEMS];
+    size_t n_items_read;
 
-    while (fgets(line, LINE_LEN, f_in)) {	/* read all lines */
-	if (strncmp(line, "#", 1) != 0) {	/* not a comment */
-#define MAX_ITEMS 5		/* maximum number of items per line.
-				   if changed, also change sscanf() statement below */
-
-	    double t[MAX_ITEMS];
-	    int n_items;
-
-	    n_items =
-		sscanf(line, "%lf%lf%lf%lf%lf", &t[0], &t[1], &t[2], &t[3],
-		       &t[4]);
-
-	    if (n_items < idx_lambda + 1)	/* insufficient data read */
-		break;
-
-	    if (gsl_histogram_accumulate(h, t[idx_lambda], t[idx_power])) {
-		/* data lies outside of allowed range */
-		(*n_missed)++;
-		*p_missed += t[idx_power];
-	    }
+    /* skip header (first line is has already been read */
+    for (n = 0; n < T_HEADER_LINES - 1; n++) {
+	fgets(line, LINE_LEN, f_in);
+	if (line[0] != '#') {	/* not a header line */
+	    fprintf(stderr,
+		    "Wrong file type (unexpected size of header)\n");
+	    return (ERR);
 	}
     }
+
+    /* read data. (x,y,[z,]power,lambda) */
+    do {
+	n_items_read = fread(t, sizeof(float), idx_lambda + 1, stdin);
+
+	if (n_items_read < idx_lambda + 1) {	/* insufficient data read */
+	    fprintf(stderr,
+		    "Incomplete data set read (%d instead of %d)\n",
+		    n_items_read, idx_lambda + 1);
+	    return (ERR);
+	}
+
+	if (gsl_histogram_accumulate(h, t[idx_lambda], t[idx_power])) {
+	    /* data lies outside of range of histogram */
+	    (*n_missed)++;
+	    *p_missed += t[idx_power];
+	}
+
+    } while (n_items_read);
+
     return NO_ERR;
 }
 
@@ -196,7 +206,7 @@ int main(int argc, char **argv)
     double start_wl = 0.0;
     double stop_wl = 1000.0;
     gsl_histogram *h;
-    int idx_p, idx_l;
+    size_t idx_p, idx_l;
     int n_missed = 0;
     double p_missed = 0.0;
 
