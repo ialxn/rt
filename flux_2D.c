@@ -78,38 +78,47 @@ static gsl_histogram2d *init_hist(const double xmax,
     return h;
 }
 
-static void read_hist(FILE * f_in, gsl_histogram2d * h, int *n_missed,
-		      double *p_missed)
+static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_missed,
+		     double *p_missed)
 {
     char line[LINE_LEN];
+    int n;
+    float t[MAX_ITEMS];
+    size_t n_items_read;
 
     *n_missed = 0;
     *p_missed = 0.0;
 
-    while (fgets(line, LINE_LEN, f_in)) {	/* read all lines */
-	if (strncmp(line, "#", 1) != 0) {	/* not a comment */
-#define INDX 0
-#define INDY 1
-#define INDP 2
-#define MAX_ITEMS 4		/* maximum number of items per line.
-				   if changed, also change sscanf() statement below */
-
-	    double t[MAX_ITEMS];
-	    int n_items;
-
-	    n_items =
-		sscanf(line, "%lf%lf%lf%lf", &t[0], &t[1], &t[2], &t[3]);
-
-	    if (n_items < INDP + 1)	/* insufficient data read */
-		break;
-
-	    if (gsl_histogram2d_accumulate(h, t[INDX], t[INDY], t[INDP])) {
-		/* data lies outside of allowed range */
-		(*n_missed)++;
-		*p_missed += t[INDP];
-	    }
+    /* skip header (first line is has already been read */
+    for (n = 0; n < T_HEADER_LINES - 1; n++) {
+	fgets(line, LINE_LEN, f_in);
+	if (line[0] != '#') {	/* not a header line */
+	    fprintf(stderr,
+		    "Wrong file type (unexpected size of header)\n");
+	    return (ERR);
 	}
     }
+
+    /* read data. (x,y,power,lambda) */
+    do {
+	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, stdin);
+
+	if (n_items_read < MAX_ITEMS - 1) {	/* insufficient data read */
+	    fprintf(stderr,
+		    "Incomplete data set read (%d instead of %d)\n",
+		    n_items_read, MAX_ITEMS - 1);
+	    return (ERR);
+	}
+
+	if (gsl_histogram2d_accumulate(h, t[0], t[1], t[2])) {
+	    /* data lies outside of range of histogram */
+	    (*n_missed)++;
+	    *p_missed += t[2];
+	}
+    } while (n_items_read);
+
+    return NO_ERR;
+
 }
 
 static void output_hist(FILE * f_out, gsl_histogram2d * h,
