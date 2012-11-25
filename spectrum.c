@@ -78,7 +78,7 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 
     /* read data. (x,y,[z,]power,lambda) */
     do {
-	n_items_read = fread(t, sizeof(float), idx_lambda + 1, stdin);
+	n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
 
 	if (n_items_read < idx_lambda + 1) {	/* insufficient data read */
 	    fprintf(stderr,
@@ -128,39 +128,39 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     i = gsl_histogram_bins(h);
     fprintf(f_out, "#       number of bins: %d\n", i);
 
-    fprintf(stdout, "#\n#   histogram statistics\n");
+    fprintf(f_out, "#\n#   histogram statistics\n");
 
-    fprintf(stdout, "#      number of data points not included: %d\n",
+    fprintf(f_out, "#      number of data points not included: %d\n",
 	    n_missed);
-    fprintf(stdout, "#                      total power missed: %e\n",
+    fprintf(f_out, "#                      total power missed: %e\n",
 	    p_missed);
-    fprintf(stdout, "#          number of data points included: %d\n",
+    fprintf(f_out, "#          number of data points included: %d\n",
 	    n_inc);
-    fprintf(stdout, "#               total power accounted for: %e\n#\n",
+    fprintf(f_out, "#               total power accounted for: %e\n#\n",
 	    p_inc);
 
 
     t = gsl_histogram_min_val(h);
     i = gsl_histogram_min_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
-    fprintf(stdout, "#        minimum y-value: %e\n", t);
-    fprintf(stdout,
+    fprintf(f_out, "#        minimum y-value: %e\n", t);
+    fprintf(f_out,
 	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
 	    min, max);
 
     t = gsl_histogram_max_val(h);
     i = gsl_histogram_max_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
-    fprintf(stdout, "#        maximum y-value: %e\n", t);
-    fprintf(stdout,
+    fprintf(f_out, "#        maximum y-value: %e\n", t);
+    fprintf(f_out,
 	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
 	    min, max);
 
-    fprintf(stdout, "# mean y-value (+-sigma): %e (+-%e)\n",
+    fprintf(f_out, "# mean y-value (+-sigma): %e (+-%e)\n",
 	    gsl_histogram_mean(h), gsl_histogram_sigma(h));
-    fprintf(stdout, "#\n");
+    fprintf(f_out, "#\n");
 
-    fprintf(stdout, "# x\t\ty\tbin_min\tbin_max\n");
+    fprintf(f_out, "# x\t\ty\tbin_min\tbin_max\n");
 
     for (i = 0; i < n; i++) {
 	double t_x;

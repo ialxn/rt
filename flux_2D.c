@@ -98,7 +98,7 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 
     /* read data. (x,y,power,lambda) */
     do {
-	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, stdin);
+	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
 
 	if (n_items_read < MAX_ITEMS - 1) {	/* insufficient data read */
 	    fprintf(stderr,
