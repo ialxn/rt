@@ -60,10 +60,10 @@ OBJ_GET_FLUX= get_flux.o \
 
 LIBS= -lgsl -lgslcblas -lconfig -lm -lpthread
 #LIBS= -lgsl -lcblas -latlas -lconfig -lm -lpthread
-LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm -lpthread
+#LIBS-SEMISTATIC= -Wl,-Bstatic -lgsl -lgslcblas -lconfig -Wl,-Bdynamic -lm -lpthread
 
-AllTarget(rt rt-semistatic spectrum flux_2D get_flux)
-NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))
+AllTarget(rt spectrum flux_2D get_flux)
+#NormalProgramTarget(rt,$(OBJ),NullParameter,NullParameter, $(LIBS))
 NormalProgramTarget(rt-semistatic,$(OBJ),NullParameter,NullParameter, $(LIBS-SEMISTATIC))
 NormalProgramTarget(spectrum,$(OBJ_SPECTRUM),NullParameter,NullParameter, $(LIBS))
 NormalProgramTarget(flux_2D,$(OBJ_FLUX),NullParameter,NullParameter, $(LIBS))
