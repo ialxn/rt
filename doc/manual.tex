@@ -1,5 +1,6 @@
 \documentclass[10pt,a4paper,titlepage]{article}
-\usepackage[T1]{fontenc}
+\usepackage{hyperref}
+%\usepackage[T1]{fontenc}
 %\usepackage{textcomp}
 
 \newcommand{\rt}{{\tt rt} }
@@ -35,7 +36,7 @@
 
 \section{Installation}
 
-To compile and install \rt you need a C-compiler\footnote{\rt is only tested with gcc} and ,ideally, {\tt (I)make}. In addition, the following libraries are needed: {\tt GSL}\footnote{Gnu Scientific Library}, a C-version of BLAS (Basic Linear Algebra System) such as {\tt cblas} or {\tt Atlas}, and {\tt libconfig}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably, you will make sure that {\tt -O2 -g} is set. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries \rt and {\rt-semistatic} (a semi statically linked version {\rt-semistatic}.
+To compile and install \rt you need a C-compiler\footnote{\rt is only tested with gcc} and, ideally, {\tt (I)make}. In addition, the following libraries are needed: {\tt GSL}\footnote{Gnu Scientific Library, \url{http://www.gnu.org/software/gsl/}}, a C-version of BLAS (Basic Linear Algebra System) such as {\tt gslcblas} or {\tt Atlas}\footnote{\url{http://math-atlas.sourceforge.net/}}, {\tt libconfig}\footnote{Version 1.4.6+, \url{http://www.hyperrealm.com/libconfig/}}, and {\tt libpthread}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably, you will make sure that {\tt -O2 -g} is set. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries.
 
 
 
@@ -46,26 +47,29 @@ To compile and install \rt you need a C-compiler\footnote{\rt is only tested wit
 \begin{list}{}
 {\setlength{\leftmargin}{3.5cm}
 \setlength{\labelwidth}{3.0cm}
+\setlength{\labelsep}{0.25cm}
 \setlength{\rightmargin}{0.5cm}}
 
-\item[\tt [--append|-a]] Append to output files. A new seed value for the random number generator is supplied on the command line. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays.
+\item[{\tt [--append|-a]}] Append to output files. A new seed value for the random number generator is supplied by this parameter. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays and append to existing output files. Default mode is to truncate existing files.
 
-\item[\tt [--mode|-m]] Select mode [012] for this run.
+\item[{\tt [--mode|-m]}] Select mode [012] for this run.
 \begin{itemize}
 \item[\tt -m0]{Check syntax of input [default].}
 \item[\tt -m1]{Output {\tt OFF} files useful to visualize the geometry\footnote{geomview}.}
-\item[\tt -m2]{perform a ray tracing run.}
+\item[\tt -m2]{Perform a ray tracing run.}
 \end{itemize}
 
-\item[\tt [--help|-h]] prints a help message.
+\item[{\tt [--threads|-t]}] {Set number of worker threads [1]. Typically, you want to set this parameter to the number of CPUs or cores available. ach worker thread uses its own rng seeded with {\tt seed}, {\tt seed}+1}, \ldots{}.
 
-\item[\tt [--Version|-V]] Prints the version number.
+\item[{\tt [--help|-h]}] prints a help message.
+
+\item[{\tt [--Version|-V]}] Prints the version number.
 
 \end{list}
 
 
 \section{Structure in input file}
-Input is given by a series of 'keyword'='value' pairs using {\tt libconfig}\footnote{Version 1.4.6, www.xxx.yyy-}. Note, that each definition ends with ';', that keywords and strings\footnote{in double quotes.} are both case sensitive, and that float values \emph{must} contain a decimal point. {\tt libconfig} treats everything after the \# character until the end of the line as comment, is white space agnostic, and allows up to ten levels of included files (via the {\tt @include "filename"} directive. For details on the syntax used in the configuration files, please consult the documentation of {\tt libconfig}.
+Input is given by a series of 'keyword'='value' pairs and parsed by {\tt libconfig}. Note, that each definition ends with ';', that keywords and strings\footnote{in double quotes.} are both case sensitive, and that float values \emph{must} contain a decimal point. {\tt libconfig} treats everything after the \# character until the end of the line as comment, is white space agnostic, and allows up to ten levels of included files (via the {\tt @include "filename"} directive. For details on the syntax used in the configuration files, please consult the documentation of {\tt libconfig}.
 The general structure of the input --- the order of the keyword being unimportant --- is as follows:
 
 \begin{verbatim}
@@ -82,19 +86,18 @@ sources = (
 );
 
 targets = (
-{definition of target_1},
+{definition of target_1}, 
 {definition of target_2},
 .
-{definition of target_n},
+{definition of target_n}
 );
-
 \end{verbatim}
 
 All sources and all targets are identified by their {\tt type}. The common {\tt name} keyword\footnote{must be unique.} is used as base name for the various output files\footnote{{\tt axes\_NAME.off} and {\tt NAME.off} (mode 1) and {\tt NAME.dat} for targets only (mode 2).}.
 
 \subsection{Global Parameters}
 \begin{itemize}
-\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\\
+\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\footnote{This is not true anymore if you use more than one worker thread. First, each worker uses its own rng and seed value. It produces an unique stream of pseudo random numbers. Second, the exact sequence with which blocks of output from the different worker are interleaved in the final output is non-deterministic. Third, the amount of work performed by an individual worker is non-deterministic.}\\
 The value will be overridden by the {\tt -a} command line argument. Using this option, existing results can be improved by tracing additional rays.}
 \end{itemize}
 
@@ -102,7 +105,7 @@ The value will be overridden by the {\tt -a} command line argument. Using this o
 
 \subsection{Sources}
 
-All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string)i.e.~the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
+All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string) i.e.\ the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
 
 \subsubsection{Uniform Point Source}
 
@@ -118,6 +121,7 @@ All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned in
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines an uniform point source located at {\tt origin}. 
 
 
@@ -139,7 +143,8 @@ Defines an uniform point source located at {\tt origin}.
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
-Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} needs not be normalized.
+\vspace{0.25cm}
+Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} does not need to be normalized.
 
 \subsubsection{Sphere}
 
@@ -157,7 +162,8 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
-Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Ray start randomly inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
+\vspace{0.25cm}
+Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Ray start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
 
 
@@ -176,7 +182,8 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
-Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. The one-side plane screen registers all rays that intercept the plane anti-parallel to its normal vector.
+\vspace{0.25cm}
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. The one-side plane screen registers all rays that intercept the plane anti-parallel to its normal vector.
 
 
 \subsubsection{Two-Side Plane Screen}
@@ -191,7 +198,8 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
-Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. In contrast the the one-side plane screen the two-side plane screen registers \emph{all} rays that intercept the plane independent of their direction.
+\vspace{0.25cm}
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. In contrast the the one-side plane screen the two-side plane screen registers \emph{all} rays that intercept the plane independent of their direction.
 
 
 \subsubsection{Triangle}
@@ -208,6 +216,7 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local z axis.} defined in this way points away from the reflective surface with reflectivity spectrum given by the file {\tt reflectivity}\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast}. The opposite surface is non-reflecting and absorbs all rays that hit it. The origin of the local, right handed coordinate system is located at {\tt P1} and $P2 - P1$ defines the local x axis. 
 
 
@@ -225,6 +234,7 @@ Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=P2-P1$, is parallel to the local x axis and $b=P3 - P1$ is parallel to the local y axis. The local origin is at the center of the rectangle. The local z axis follows from the right handedness of the local system. The surface from which the z-axis points away is reflecting while the opposite surface absorbs all rays that hit it. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
 
 \subsubsection{Ellipsoid}
@@ -247,6 +257,7 @@ Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
 
 \subsubsection{Disk}
@@ -265,6 +276,7 @@ Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the lo
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the disk has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
 
 \subsubsection{Annulus}
@@ -285,6 +297,7 @@ Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal ve
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
+\vspace{0.25cm}
 Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the annulus has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
 
 
@@ -298,13 +311,14 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 \begin{list}{}
 {\setlength{\leftmargin}{3.5cm}
 \setlength{\labelwidth}{3.0cm}
+\setlength{\labelsep}{0.25cm}
 \setlength{\rightmargin}{0.5cm}}
 
-\item[\tt [--num|-n]] Number of bins used [10].
-\item[\tt [--start|-a]] Start wavelength for spectrum [0.0].
-\item[\tt [--stop|-o]] Stop wavelength for spectrum [2000.0].
-\item[\tt [--help|-h]] prints a help message.
-\item[\tt [--Version|-V]] Prints the version number.
+\item[{\tt [--num|-n]}] Number of bins used [10].
+\item[{\tt [--start|-a]}] Start wavelength for spectrum [0.0].
+\item[{\tt [--stop|-o]}] Stop wavelength for spectrum [2000.0].
+\item[{\tt [--help|-h]}] prints a help message.
+\item[{\tt [--Version|-V]}] Prints the version number.
 
 \end{list}
 
@@ -316,19 +330,35 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 \begin{list}{}
 {\setlength{\leftmargin}{3.5cm}
 \setlength{\labelwidth}{3.0cm}
+\setlength{\labelsep}{0.25cm}
 \setlength{\rightmargin}{0.5cm}}
 
-\item[\tt [--nx|-a]] Number of bins in x direction used [10].
-\item[\tt [--ny|-b]] Number of bins in y direction used [10].
-\item[\tt [--minx|-x]] Minimum x value of histogram [-10.0].
-\item[\tt [--maxx|-X]] Maximum x value of histogram [10.0].
-\item[\tt [--miny|-y]] Minimum y value of histogram [-10.0].
-\item[\tt [--maxy|-Y]] Maximum y value of histogram [10.0].
-\item[\tt [--help|-h]] prints a help message.
-\item[\tt [--Version|-V]] Prints the version number.
+\item[{\tt [--nx|-a]}] Number of bins in x direction used [10].
+\item[{\tt [--ny|-b]}] Number of bins in y direction used [10].
+\item[{\tt [--minx|-x]}] Minimum x value of histogram [-10.0].
+\item[{\tt [--maxx|-X]}] Maximum x value of histogram [10.0].
+\item[{\tt [--miny|-y]}] Minimum y value of histogram [-10.0].
+\item[{\tt [--maxy|-Y]}] Maximum y value of histogram [10.0].
+\item[{\tt [--help|-h]}] prints a help message.
+\item[{\tt [--Version|-V]}] Prints the version number.
 
 \end{list}
 
+\subsection{{\tt get\_flux}}
+{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ power $\lambda$ for planar targets or $x$ $y$ $z$ power $\lambda$ otherwise.
+
+{\bf Syntax:} {\tt get\_flux} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
+\vspace{1em}
+\begin{list}{}
+{\setlength{\leftmargin}{3.5cm}
+\setlength{\labelwidth}{3.0cm}
+\setlength{\labelsep}{0.25cm}
+\setlength{\rightmargin}{0.5cm}}
+
+\item[{\tt [--help|-h]}] prints a help message.
+\item[{\tt [--Version|-V]}] Prints the version number.
+
+\end{list}
 
 
 \section{Availability}
@@ -336,7 +366,7 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 
 
 
-\section{Bugs} Please send any bug report or fix or enhancement to the author. They probably will be include in a future version. However {\bf no} actual support will be available from the author.
+\section{Bugs} Please send any bug report or fix or enhancement to the author. They probably will be include in a future version. However, {\bf no} actual support will be available from the author.
 
 \end{document}
 
