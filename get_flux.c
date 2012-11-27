@@ -84,25 +84,35 @@ int main(int argc, char **argv)
     if (skip_header(stdin) == ERR)
 	return ERR;
 
-    /* read data. (x,y,[z,]power,lambda) */
-    do {
-	n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+    /*
+     * read data. (x,y,[z,]power,lambda)
+     */
+    n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
 
-	if (n_items_read != 0 && n_items_read < idx_l + 1) {	/* insufficient data read */
+    if (!n_items_read) {
+	fprintf(stderr, "No data found\n");
+	exit(EXIT_FAILURE);
+    }
+
+    while (n_items_read) {
+
+	if (n_items_read < idx_l + 1) {	/* insufficient data read */
 	    fprintf(stderr,
 		    "Incomplete data set read (%d instead of %d)\n",
 		    n_items_read, idx_l + 1);
 	    exit(EXIT_FAILURE);
 	}
 
-	if (idx_l == 3)
+	if (idx_l == MAX_ITEMS - 1)
 	    fprintf(stdout, "%f\t%f\t%f\t%f\t%f\n", t[0], t[1], t[2],
 		    t[idx_p], t[idx_l]);
 	else
 	    fprintf(stdout, "%f\t%f\t%f\t%f\n", t[0], t[1], t[idx_p],
 		    t[idx_l]);
 
-    } while (n_items_read);
+	n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+
+    }
 
     exit(EXIT_SUCCESS);
 }

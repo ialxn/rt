@@ -74,10 +74,17 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
     if (skip_header(f_in) == ERR)
 	return ERR;
 
-    /* read data. (x,y,power,lambda) */
-    do {
-	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
+    /*
+     * read data. (x,y,power,lambda)
+     */
+    n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
 
+    if (!n_items_read) {
+	fprintf(stderr, "No data found\n");
+	return (ERR);
+    }
+
+    while (n_items_read) {
 	if (n_items_read < MAX_ITEMS - 1) {	/* insufficient data read */
 	    fprintf(stderr,
 		    "Incomplete data set read (%d instead of %d)\n",
@@ -94,7 +101,8 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	    *p_inc += t[2];
 	}
 
-    } while (n_items_read);
+	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
+    }
 
     return NO_ERR;
 
@@ -312,8 +320,8 @@ int main(int argc, char **argv)
 
     h = init_hist(x_max, x_min, x_bins, y_max, y_min, y_bins);
 
-    read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed);
-    output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
+    if (!read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed))
+	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
 
     gsl_histogram2d_free(h);
     exit(EXIT_SUCCESS);

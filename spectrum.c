@@ -29,9 +29,17 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
     if (skip_header(f_in) == ERR)
 	return ERR;
 
-    /* read data. (x,y,[z,]power,lambda) */
-    do {
-	n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+    /*
+     * read data. (x,y,[z,]power,lambda)
+     */
+    n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+
+    if (!n_items_read) {
+	fprintf(stderr, "No data found\n");
+	return (ERR);
+    }
+
+    while (n_items_read) {
 
 	if (n_items_read < idx_lambda + 1) {	/* insufficient data read */
 	    fprintf(stderr,
@@ -49,7 +57,9 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 	    *p_inc += t[idx_power];
 	}
 
-    } while (n_items_read);
+	n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+
+    }
 
     return NO_ERR;
 }
@@ -230,9 +240,9 @@ int main(int argc, char **argv)
 
     h = init_hist(start_wl, stop_wl, n_bins);
 
-    read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, idx_l,
-	      idx_p);
-    output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
+    if (read_hist
+	(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, idx_l, idx_p))
+	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
 
     gsl_histogram_free(h);
 
