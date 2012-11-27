@@ -21,7 +21,8 @@
 
 static void help(void)
 {
-    fprintf(stdout, "\nget_flux Version %s (AI52)\n\n", VERSION);
+    fprintf(stdout, "\nget_flux Version %s(%s) AI52\n\n", RELEASE,
+	    RELEASE_DATE);
     fprintf(stdout, "Usage: get_flux\n");
     fprintf(stdout, "       --help, -h        Print this help message\n");
     fprintf(stdout, "       --Version, -V     Print version number\n");
@@ -52,7 +53,8 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'V':
-	    fprintf(stdout, " spectrum version %s (AI52)\n", VERSION);
+	    fprintf(stdout, " get_flux Version %s(%s) AI52\n", RELEASE,
+		    RELEASE_DATE);
 	    exit(EXIT_SUCCESS);
 	    break;
 

@@ -144,7 +144,8 @@ static gsl_histogram *init_hist(const double start_wl,
 
 static void help(void)
 {
-    fprintf(stdout, "\nspectrum Version %s (AI52)\n\n", VERSION);
+    fprintf(stdout, "\nspectrum Version %s(%s) AI52\n\n", RELEASE,
+	    RELEASE_DATE);
     fprintf(stdout, "Usage: spectrum\n");
     fprintf(stdout, "       --num, -n         number of bins [10]\n");
     fprintf(stdout, "       --start, -a       Start wavelength [0.0]\n");
@@ -199,7 +200,8 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, " spectrum version %s (AI52)\n", VERSION);
+	    fprintf(stdout, " spectrum Version %s(%s) AI52\n", RELEASE,
+		    RELEASE_DATE);
 	    exit(EXIT_SUCCESS);
 	    break;
 

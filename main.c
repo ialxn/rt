@@ -544,7 +544,7 @@ static void *run_simulation(void *args)
 
 static void help(void)
 {
-    fprintf(stdout, "\nrt Version %s (AI52)\n\n", VERSION);
+    fprintf(stdout, "\nrt Version %s(%s) AI52\n\n", RELEASE, RELEASE_DATE);
     fprintf(stdout, "Usage: rt\n");
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
@@ -654,7 +654,8 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, " rt Version %s (AI52)\n", VERSION);
+	    fprintf(stdout, " rt Version %s(%s) AI52\n", RELEASE,
+		    RELEASE_DATE);
 	    exit(EXIT_SUCCESS);
 	    break;
 
@@ -707,7 +708,7 @@ int main(int argc, char **argv)
 	break;
 
     case RUN:			/* do the simulation */
-	fprintf(stdout, "rt version %s running ...\n", VERSION);
+	fprintf(stdout, "rt version %s running ...\n", RELEASE);
 
 	source_list = init_sources(&cfg, &n_sources);
 	fprintf(stdout, "    %d sources initialized\n", n_sources);
