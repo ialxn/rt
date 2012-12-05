@@ -142,7 +142,7 @@ void off_axes(const char *name, const double *origin, const double *X,
     }
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "24 18 0\n\n");
+    fprintf(outf, "24 18 0\n");
 
     /* output vertices of axes */
     for (i = 0; i < 3; i++)
@@ -173,7 +173,7 @@ extern void off_sphere(const char *name, double *O, const double radius,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "6 8 0\n\n");	/* 6 vertices, 8 faces */
+    fprintf(outf, "6 8 0\n");	/* 6 vertices, 8 faces */
 
     /*
      * list of vertices
@@ -214,7 +214,7 @@ void off_cone(const char *name, double *origin, double *dir,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "7 7 0\n\n");	/* 7 vertices, 7 faces */
+    fprintf(outf, "7 7 0\n");	/* 7 vertices, 7 faces */
 
     /*
      * determine alpha, beta for transformation from local to global system.
@@ -275,7 +275,7 @@ void off_plane(const char *name, const double *P, const double *N,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "8 2 0\n\n");	/* 8 vertices, 2 faces */
+    fprintf(outf, "8 2 0\n");	/* 8 vertices, 2 faces */
 
     for (i = 0; i < 3; i++)	/* 'P2' is point on front side */
 	P2[i] = P[i] + dz * N[i];
@@ -305,7 +305,7 @@ extern void off_rectangle(const char *name, const double *P,
     normalize(N);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "8 2 0\n\n");	/* 6 vertices, 2 faces */
+    fprintf(outf, "8 2 0\n");	/* 6 vertices, 2 faces */
 
     /* front side */
     fprintf(outf, "%f\t%f\t%f\n", P[0], P[1], P[2]);
@@ -353,7 +353,7 @@ void off_triangle(const char *name, const double *P1,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "6 2 0\n\n");	/* 6 vertices, 2 faces */
+    fprintf(outf, "6 2 0\n");	/* 6 vertices, 2 faces */
 
     fprintf(outf, "%f\t%f\t%f\n", P1[0], P1[1], P1[2]);
     fprintf(outf, "%f\t%f\t%f\n", P2[0] + P1[0], P2[1] + P1[1],
@@ -393,7 +393,7 @@ void off_ellipsoid(const char *name, const double *origin, const double *Z,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "%d %d 0\n\n", 2 * N_TRANS * N_ROT,
+    fprintf(outf, "%d %d 0\n", 2 * N_TRANS * N_ROT,
 	    2 * (N_TRANS - 1) * N_ROT);
 
     /*
@@ -513,7 +513,7 @@ void off_disk(const char *name, const double *origin, const double *dir,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "24 2 0\n\n");	/* 2*12 vertices, 2 faces */
+    fprintf(outf, "24 2 0\n");	/* 2*12 vertices, 2 faces */
 
     /*
      * determine alpha, beta for transformation from local to global system.
@@ -580,7 +580,7 @@ void off_annulus(const char *name, const double *origin, const double *dir,
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "48 24 0\n\n");	/* 2*12 vertices,
+    fprintf(outf, "48 24 0\n");	/* 2*12 vertices,
 					   2 faces with 12 patches each */
 
     /*
