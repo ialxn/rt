@@ -104,18 +104,18 @@ static void block_faces(FILE * f, const int i, const double r,
  *       in the correct order! (use 'block_vertices()'
  */
 {
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 1, i + 2, i + 3, i,
-	    r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 1, i + 5, i + 4, i,
-	    r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i, i + 3, i + 7, i + 4, i,
-	    r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 2, i + 1, i + 5, i + 6,
-	    i + 2, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 2, i + 3, i + 7, i + 6,
-	    i + 2, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g\n", i + 4, i + 5, i + 6, i + 7,
-	    i + 4, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 1, i + 2, i + 3,
+	    i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 1, i + 5, i + 4,
+	    i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 3, i + 7, i + 4,
+	    i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 2, i + 1, i + 5,
+	    i + 6, i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 2, i + 3, i + 7,
+	    i + 6, i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 4, i + 5, i + 6,
+	    i + 7, i + 4, r, g, b);
 }
 
 void off_axes(const char *name, const double *origin, const double *X,
@@ -190,14 +190,14 @@ extern void off_sphere(const char *name, double *O, const double radius,
      * list of (triangular) faces, each defined by 3 vertices, as
      * a->b->c->a
      */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 4 1 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 5 1 2 5 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 5 2 3 5 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 5 3 4 5 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 5 4 1 5 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 4 1 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 5 1 2 5 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 5 2 3 5 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 5 3 4 5 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 5 4 1 5 %f\t%f\t%f 1.0\n", r, g, b);
 
     fclose(outf);
 }
@@ -240,15 +240,15 @@ void off_cone(const char *name, double *origin, double *dir,
      * list of (triangular) faces, each defined by 3 vertices, as
      * a->b->c->a
      */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 4 5 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 5 6 0 %f\t%f\t%f\n", r, g, b);
-    fprintf(outf, "4 0 6 1 0 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 4 5 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 5 6 0 %f\t%f\t%f 1.0\n", r, g, b);
+    fprintf(outf, "4 0 6 1 0 %f\t%f\t%f 1.0\n", r, g, b);
 
     /* hexagonal face */
-    fprintf(outf, "7 1 2 3 4 5 6 1 %f\t%f\t%f\n", r, g, b);
+    fprintf(outf, "7 1 2 3 4 5 6 1 %f\t%f\t%f 1.0\n", r, g, b);
 
     fclose(outf);
 }
@@ -285,8 +285,8 @@ void off_plane(const char *name, const double *P, const double *N,
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rb, gb, bb);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", rf, gf, bf);
 
     fclose(outf);
 }
@@ -328,8 +328,8 @@ extern void off_rectangle(const char *name, const double *P,
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f\n", rb, gb, bb);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", rf, gf, bf);
     fclose(outf);
 
 }
@@ -369,8 +369,8 @@ void off_triangle(const char *name, const double *P1,
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f\n", rb, gb, bb);
-    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
+    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f 1.0\n", rf, gf, bf);
 
     fclose(outf);
 }
@@ -467,10 +467,10 @@ void off_ellipsoid(const char *name, const double *origin, const double *Z,
      */
     for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
 	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
 		    i, i + 1, i + 1 + N_ROT, i + N_ROT, i, ro, go, bo);
 	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
 		    i, i + 1 - N_ROT, i + 1, i + N_ROT, i, ro, go, bo);
 
     /*
@@ -478,13 +478,13 @@ void off_ellipsoid(const char *name, const double *origin, const double *Z,
      */
     for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
 	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
 		    i + N_TRANS * N_ROT, i + 1 + N_TRANS * N_ROT,
 		    i + 1 + N_ROT + N_TRANS * N_ROT,
 		    i + N_ROT + N_TRANS * N_ROT, i + N_TRANS * N_ROT, ri,
 		    gi, bi);
 	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f\n",
+	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
 		    i + N_TRANS * N_ROT, i + N_TRANS * N_ROT + 1 - N_ROT,
 		    i + N_TRANS * N_ROT + 1, i + N_TRANS * N_ROT + N_ROT,
 		    i + N_TRANS * N_ROT, ri, gi, bi);
@@ -550,12 +550,12 @@ void off_disk(const char *name, const double *origin, const double *dir,
     fprintf(outf, "13 ");
     for (i = 0; i < 12; i++)
 	fprintf(outf, "%d ", i);
-    fprintf(outf, "0 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "0 %f\t%f\t%f 1.0\n", rb, gb, bb);
 
     fprintf(outf, "13 ");
     for (i = 12; i < 24; i++)
 	fprintf(outf, "%d ", i);
-    fprintf(outf, "12 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "12 %f\t%f\t%f 1.0\n", rf, gf, bf);
 
     fclose(outf);
 }
@@ -581,7 +581,7 @@ void off_annulus(const char *name, const double *origin, const double *dir,
 
     fprintf(outf, "OFF\n");
     fprintf(outf, "48 24 0\n");	/* 2*12 vertices,
-					   2 faces with 12 patches each */
+				   2 faces with 12 patches each */
 
     /*
      * determine alpha, beta for transformation from local to global system.
@@ -631,17 +631,17 @@ void off_annulus(const char *name, const double *origin, const double *dir,
      */
     for (i = 0; i < 11; i++) {
 	const int base = 2 * i;
-	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f\n", base, base + 1,
+	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", base, base + 1,
 		base + 3, base + 2, base, rb, gb, bb);
     }
-    fprintf(outf, "5 22 23 1 0 22 %f\t%f\t%f\n", rb, gb, bb);
+    fprintf(outf, "5 22 23 1 0 22 %f\t%f\t%f 1.0\n", rb, gb, bb);
 
     for (i = 12; i < 23; i++) {
 	const int base = 2 * i;
-	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f\n", base, base + 1,
+	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", base, base + 1,
 		base + 3, base + 2, base, rf, gf, bf);
     }
-    fprintf(outf, "5 46 47 25 24 46 %f\t%f\t%f\n", rf, gf, bf);
+    fprintf(outf, "5 46 47 25 24 46 %f\t%f\t%f 1.0\n", rf, gf, bf);
 
     fclose(outf);
 }
