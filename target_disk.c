@@ -79,7 +79,7 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
 
-    pthread_key_create(&state->PTDT_key, free);
+    pthread_key_create(&state->PTDT_key, free_PTDT);
 }
 
 static void disk_free_state(void *vstate)

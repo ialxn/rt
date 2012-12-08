@@ -68,7 +68,7 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
 
-    pthread_key_create(&state->PTDT_key, free);
+    pthread_key_create(&state->PTDT_key, free_PTDT);
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,

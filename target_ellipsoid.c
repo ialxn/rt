@@ -100,7 +100,7 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
 
-    pthread_key_create(&state->PTDT_key, free);
+    pthread_key_create(&state->PTDT_key, free_PTDT);
 }
 
 static void ell_free_state(void *vstate)
