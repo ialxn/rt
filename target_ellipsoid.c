@@ -198,10 +198,6 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 {
     ell_state_t *state = (ell_state_t *) vstate;
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
-    double hit_local[3];
-
-    /* transform to local coordinates */
-    g2l(state->M, state->center, hit, hit_local);
 
     if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
@@ -215,20 +211,11 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
-	/*
-	 * store 5 items per data set (x,y,z,ppr,lambda)
-	 * first x,y,z then ppr,lambda
-	 */
-	if (data->i == BUF_SIZE * NO_ITEMS) {
-	    write(state->dump_file, data->buf, sizeof(float) * data->i);
-	    data->i = 0;
-	}
 
-	data->buf[data->i++] = (float) hit_local[0];
-	data->buf[data->i++] = (float) hit_local[1];
-	data->buf[data->i++] = (float) hit_local[2];
-	data->buf[data->i++] = (float) in_ray->power;
-	data->buf[data->i++] = (float) in_ray->lambda;
+	store_xyz(state->dump_file, in_ray, hit, state->M, state->center,
+		  data);
+
+	data->flag &= ~ABSORBED;	/* clear flag */
 
 	free(in_ray);
 	return NULL;
@@ -236,14 +223,15 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
     } else {			/* reflect 'in_ray' */
 	double l_N[3], N[3];
 	double O[] = { 0.0, 0.0, 0.0 };
+	double hit_local[3];
 
+	g2l(state->M, state->center, hit, hit_local);	/* transform to local coordinates */
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
 	reflect(in_ray, N, hit);
 
 	return in_ray;
-
     }
 }
 

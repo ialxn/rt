@@ -393,3 +393,23 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
     data->buf[data->i++] = (float) ray->power;
     data->buf[data->i++] = (float) ray->lambda;
 }
+
+extern void store_xyz(const int fd, ray_t * ray, const double *hit,
+		      const double *m, const double *point, PTDT_t * data)
+{
+    double hit_local[3];
+
+    /* transform to local coordinates */
+    g2l(m, point, hit, hit_local);
+
+    if (data->i == BUF_SIZE * 5) {	/* buffer full, write to disk */
+	write(fd, data->buf, sizeof(float) * data->i);
+	data->i = 0;
+    }
+
+    data->buf[data->i++] = (float) hit_local[0];
+    data->buf[data->i++] = (float) hit_local[1];
+    data->buf[data->i++] = (float) hit_local[2];
+    data->buf[data->i++] = (float) ray->power;
+    data->buf[data->i++] = (float) ray->lambda;
+}

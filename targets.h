@@ -101,5 +101,7 @@ extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_point, int *hits_front);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data);
+extern void store_xyz(const int fd, ray_t * ray, const double *hit,
+		      const double *m, const double *point, PTDT_t * data);
 
 #endif				/* __TARGETS_H__ */
