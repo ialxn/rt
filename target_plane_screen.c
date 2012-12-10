@@ -134,7 +134,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     store_xy(state->dump_file, in_ray, hit, state->M, state->point, data);
 
-    data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
+    data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
     memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
     return in_ray;
