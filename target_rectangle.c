@@ -11,15 +11,8 @@
 #include <math.h>
 #include <string.h>
 
-#include <gsl/gsl_cblas.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_spline.h>
-
 #include "io_util.h"
-#include "ray.h"
 #include "targets.h"
-#include "vector_math.h"
 
 #define NO_ITEMS 4
 
@@ -107,8 +100,12 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    double t1, t2[3], t3;
-    double d;
+
+    double *intercept;
+    double l_intercept[3];
+
+    int hits_front;
+
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
@@ -116,63 +113,31 @@ static double *sq_get_intercept(void *vstate, ray_t * in_ray)
 	return NULL;
     }
 
-    /*
-     * calculate point of interception d
-     *
-     * d = {(\mathbf{p_0}-\mathbf{l_0})\cdot\mathbf{n} \over \mathbf{l}\cdot\mathbf{n}}
-     *
-     * with
-     *       p_0: point on the plane
-     *         n: normal vector of the plane (|n|=1)
-     *       l_0: origin of the line
-     *         l: unit vector in direction of the line
-     *
-     * If the line starts outside the plane and is parallel to the plane, there is no intersection.
-     * In this case, the above denominator will be zero and the numerator will be non-zero. If the
-     * line starts inside the plane and is parallel to the plane, the line intersects the plane
-     * everywhere. In this case, both the numerator and denominator above will be zero. In all other
-     * cases, the line intersects the plane once and d represents the intersection as the distance
-     * along the line from \mathbf{l_0}.
-     */
+    intercept =
+	intercept_plane(in_ray, state->normal, state->point, &hits_front);
 
-    t1 = cblas_ddot(3, in_ray->direction, 1, state->normal, 1);	/* l dot n */
-    if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
+    if (!intercept)		/* ray does not hit target */
 	return NULL;
 
-    v_diff(t2, state->point, in_ray->origin);	/* p_0 - l_0 */
-    t3 = cblas_ddot(3, t2, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
-    if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
+    /* convert to local coordinates, origin is 'state->point' */
+    g2l(state->M, state->point, intercept, l_intercept);
+
+    if ((l_intercept[0] <= -state->dx) || (l_intercept[0] >= state->dx)
+	|| (l_intercept[1] <= -state->dy)
+	|| (l_intercept[1] >= state->dy)) {
+
+	/* hit not within boundaries */
+	free(intercept);
 	return NULL;
 
-    d = t3 / t1;
-    if (d < 0.0)		/* intercepted target is not in front */
-	return NULL;
-    else {			/* 'in_ray' intercepts target plane */
-	double l_intercept[3];
-	double *intercept = (double *) malloc(3 * sizeof(double));
+    } else {			/* hits within target dimensions 'dx' times 'dy' */
 
-	v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
-	/* convert to local coordinates, origin is 'state->point' */
-	g2l(state->M, state->point, intercept, l_intercept);
+	if (!hits_front)	/* hits rear side, absorbed */
+	    data->flag |= ABSORBED;
 
-	if ((l_intercept[0] <= -state->dx) || (l_intercept[0] >= state->dx)
-	    || (l_intercept[1] <= -state->dy)
-	    || (l_intercept[1] >= state->dy)) {
+	return intercept;
 
-	    /* hit not within boundaries */
-	    free(intercept);
-	    return NULL;
-
-	} else {		/* hits within target dimensions 'dx' times 'dy' */
-
-	    if (t1 > 0.0)	/* hits rear side, absorbed */
-		data->flag |= ABSORBED;
-
-	    return intercept;
-
-	}
     }
-
 }
 
 static ray_t *sq_get_out_ray(void *vstate, ray_t * in_ray, double *hit,

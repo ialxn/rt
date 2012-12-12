@@ -11,15 +11,8 @@
 #include <math.h>
 #include <string.h>
 
-#include <gsl/gsl_cblas.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_spline.h>
-
 #include "io_util.h"
-#include "ray.h"
 #include "targets.h"
-#include "vector_math.h"
 
 #define NO_ITEMS 5
 

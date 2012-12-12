@@ -17,12 +17,15 @@
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <gsl/gsl_cblas.h>
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_spline.h>
 
 #include <libconfig.h>
 
 #include "ray.h"
+#include "vector_math.h"
 
 #define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
@@ -93,5 +96,8 @@ extern void free_PTDT(void *p);
  */
 extern int check_targets(config_t * cfg);
 extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline);
+extern double *intercept_plane(const ray_t * ray,
+			       const double *plane_normal,
+			       const double *plane_point, int *hits_front);
 
 #endif				/* __TARGETS_H__ */

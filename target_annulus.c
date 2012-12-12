@@ -11,15 +11,8 @@
 #include <math.h>
 #include <string.h>
 
-#include <gsl/gsl_cblas.h>
-#include <gsl/gsl_math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_spline.h>
-
 #include "io_util.h"
-#include "ray.h"
 #include "targets.h"
-#include "vector_math.h"
 
 #define NO_ITEMS 4
 
@@ -100,8 +93,12 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray)
 {
     ann_state_t *state = (ann_state_t *) vstate;
 
-    double t1, t2[3], t3;
-    double d;
+    double *intercept;
+    double l_intercept[3];
+    double r2_intercept;
+
+    int hits_front;
+
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->flag & LAST_WAS_HIT) {	/* ray starts on this target, no hit posible */
@@ -109,71 +106,38 @@ static double *ann_get_intercept(void *vstate, ray_t * in_ray)
 	return NULL;
     }
 
+    intercept =
+	intercept_plane(in_ray, state->normal, state->point, &hits_front);
+
+    if (!intercept)		/* ray does not hit target */
+	return NULL;
+
+    /* convert to local coordinates, origin is 'state->point' */
+    g2l(state->M, state->point, intercept, l_intercept);
+
     /*
-     * calculate point of interception d
-     *
-     * d = {(\mathbf{p_0}-\mathbf{l_0})\cdot\mathbf{n} \over \mathbf{l}\cdot\mathbf{n}}
-     *
-     * with
-     *       p_0: point on the plane
-     *         n: normal vector of the plane (|n|=1)
-     *       l_0: origin of the line
-     *         l: unit vector in direction of the line
-     *
-     * If the line starts outside the plane and is parallel to the plane, there is no intersection.
-     * In this case, the above denominator will be zero and the numerator will be non-zero. If the
-     * line starts inside the plane and is parallel to the plane, the line intersects the plane
-     * everywhere. In this case, both the numerator and denominator above will be zero. In all other
-     * cases, the line intersects the plane once and d represents the intersection as the distance
-     * along the line from \mathbf{l_0}.
+     * r2_intercep is sqared distance from center of annulus to intercept
+     * in the plane of the annulus. we are in local system that
+     * is offset by intercept[2], so leave the latter out.
+     * compare r^2 to avoid sqrt()
      */
+    r2_intercept =
+	intercept[0] * intercept[0] + intercept[1] * intercept[1];
+    if ((r2_intercept > state->R2)
+	|| (r2_intercept < state->r2)) {
 
-    t1 = cblas_ddot(3, in_ray->direction, 1, state->normal, 1);	/* l dot n */
-    if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
+	/* hit not within boundaries */
+	free(intercept);
 	return NULL;
 
-    v_diff(t2, state->point, in_ray->origin);	/* p_0 - l_0 */
-    t3 = cblas_ddot(3, t2, 1, state->normal, 1);	/* (p_0 - l_0) dot N */
-    if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
-	return NULL;
+    } else {			/* hits disk between radius 'r' and 'R' */
 
-    d = t3 / t1;
-    if (d < 0.0)		/* intercepted target is not in front */
-	return NULL;
-    else {			/* 'in_ray' intercepts target plane */
-	double l_intercept[3];
-	double *intercept = (double *) malloc(3 * sizeof(double));
-	double r2_intercept;
+	if (!hits_front)	/* hits rear side, absorbed */
+	    data->flag |= ABSORBED;
 
-	v_a_plus_cb(intercept, in_ray->origin, d, in_ray->direction);
-	/* convert to local coordinates, origin is 'state->point' */
-	g2l(state->M, state->point, intercept, l_intercept);
+	return intercept;
 
-	/*
-	 * r2_intercep is sqared distance from center of annulus to intercept
-	 * in the plane of the annulus. we are in local system that
-	 * is offset by intercept[2], so leave the latter out.
-	 * compare r^2 to avoid sqrt()
-	 */
-	r2_intercept =
-	    intercept[0] * intercept[0] + intercept[1] * intercept[1];
-	if ((r2_intercept > state->R2)
-	    || (r2_intercept < state->r2)) {
-
-	    /* hit not within boundaries */
-	    free(intercept);
-	    return NULL;
-
-	} else {		/* hits disk between radius 'r' and 'R' */
-
-	    if (t1 > 0.0)	/* hits rear side, absorbed */
-		data->flag |= ABSORBED;
-
-	    return intercept;
-
-	}
     }
-
 }
 
 static ray_t *ann_get_out_ray(void *vstate, ray_t * in_ray, double *hit,

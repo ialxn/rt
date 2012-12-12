@@ -307,3 +307,70 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
     free(lambda);
     free(refl);
 }
+
+double *intercept_plane(const ray_t * ray, const double *plane_normal,
+			const double *plane_point, int *hits_front)
+{
+/*
+ * calculate point of interception d
+ *
+ * d = {(\mathbf{p_0}-\mathbf{l_0})\cdot\mathbf{n} \over \mathbf{l}\cdot\mathbf{n}}
+ *
+ * with
+ *       p_0: point on the plane
+ *         n: normal vector of the plane (|n|=1)
+ *       l_0: origin of the line
+ *         l: unit vector in direction of the line
+ *
+ * If the line starts outside the plane and is parallel to the plane, there is no intersection.
+ * In this case, the above denominator will be zero and the numerator will be non-zero. If the
+ * line starts inside the plane and is parallel to the plane, the line intersects the plane
+ * everywhere. In this case, both the numerator and denominator above will be zero. In all other
+ * cases, the line intersects the plane once and d represents the intersection as the distance
+ * along the line from \mathbf{l_0}.
+ *
+ * returns dynamically allocated intercept
+ *     or
+ * NULL if:
+ *         - ray is parallel to plane (or ray->origin lies within plane. this should never
+ *           occur as planar targets set the flag 'last_was_hit'
+ *         - plane is not in front (propagation direction) of ray
+ *
+ * 'hits_front' is 1 if ray hits front of plane (ray is antiparallel to normal vector)
+ * and 0 otherwise
+ */
+
+    double t1, t3;
+    double t2[3];
+    double d;
+    double *intercept;
+
+    t1 = cblas_ddot(3, ray->direction, 1, plane_normal, 1);	/* l dot n */
+
+    if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
+	return NULL;
+
+    if (t1 < 0.0)
+	*hits_front = 1;
+    else
+	*hits_front = 0;
+
+    v_diff(t2, plane_point, ray->origin);	/* p_0 - l_0 */
+    t3 = cblas_ddot(3, t2, 1, plane_normal, 1);	/* (p_0 - l_0) dot N */
+
+    if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
+	return NULL;
+
+    /*
+     * 'ray' intercepts target plane
+     */
+    d = t3 / t1;
+    if (d < 0.0)		/* target is not in front */
+	return NULL;
+
+    intercept = (double *) malloc(3 * sizeof(double));
+    v_a_plus_cb(intercept, ray->origin, d, ray->direction);
+
+    return intercept;
+
+}
