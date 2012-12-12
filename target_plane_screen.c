@@ -129,33 +129,15 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 {
     ps_state_t *state = (ps_state_t *) vstate;
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
-    double hit_local[3];
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
-    /* transform to local coordinates */
-    memcpy(hit_local, hit, 3 * sizeof(double));
-    g2l(state->M, state->point, hit, hit_local);
-
-    /*
-     * store 4 items per data set (x,y,ppr,lambda)
-     * first x,y then ppr,lambda
-     */
-    if (data->i == BUF_SIZE * NO_ITEMS) {
-	write(state->dump_file, data->buf, sizeof(float) * data->i);
-	data->i = 0;
-    }
-
-    data->buf[data->i++] = (float) hit_local[0];
-    data->buf[data->i++] = (float) hit_local[1];
-    data->buf[data->i++] = (float) in_ray->power;
-    data->buf[data->i++] = (float) in_ray->lambda;
+    store_xy(state->dump_file, in_ray, hit, state->M, state->point, data);
 
     data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
     memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
     return in_ray;
-
 }
 
 static const char *ps_get_target_name(void *vstate)
