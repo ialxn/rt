@@ -652,7 +652,84 @@ static void off_annulus(const char *name, const double *origin,
     fclose(outf);
 }
 
+static void off_window(const char *name, const double *origin, const double *dir,
+		const double R, const double d, const double r,
+		const double g, const double b)
+{
+/*
+ * writes 'OFF' file to 'name.off' for window. the window is defined by the
+ * center 'origin' of one face, the direction vector 'dir' of the cylinder,
+ * its radius 'r', and its thickness.
+ */
+    double P[3], g_P[3];
+    const double O[] = { 0.0, 0.0, 0.0 };
+    double alpha, beta;
+    int i;
 
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "24 14 0\n");	/* 2*12 vertices,
+				   2 faces with 1 patch each
+				   plus cylinde wall with 12 patches */
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off(O, dir, P, &alpha, &beta);
+
+    /*
+     * vertices at first face
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = R * sa;
+	P[1] = R * ca;
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * vertices at second face (+ 'd')
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = R * sa;
+	P[1] = R * ca;
+	P[2] = d;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * print two faces
+     */
+    fprintf(outf, "13 ");
+    for (i = 0; i < 12; i++)
+	fprintf(outf, "%d ", i);
+    fprintf(outf, "0 %f\t%f\t%f\t 1.0\n", r, g, b);
+
+    fprintf(outf, "13 ");
+    for (i = 12; i < 24; i++)
+	fprintf(outf, "%d ", i);
+    fprintf(outf, "12 %f\t%f\t%f\t 1.0\n", r, g, b);
+
+    /*
+     * print cylinder wall black
+     */
+    for (i = 0; i < 11; i++)
+	fprintf(outf, "5 %d %d %d %d %d 0.0 0.0 0.0 1.0\n", i, i + 1,
+		i + 13, i + 12, i);
+    fprintf(outf, "5 11 0 12 23 0.0 0.0 0.0 1.0\n");
+
+    fclose(outf);
+}
 
 static void output_targets(const config_t * cfg)
 {
@@ -851,6 +928,28 @@ static void output_targets(const config_t * cfg)
 	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
 			DZ);
 
+	} else if (!strcmp(type, "window")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double d, r;
+
+	    read_vector(this_t, "C", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "a", Z);
+	    config_setting_lookup_float(this_t, "d", &d);
+	    config_setting_lookup_float(this_t, "r", &r);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw window:
+	     *   front at 'C'+'d'
+	     *   rear at 'C'
+	     *   tiny hole in the middle
+	     */
+	    off_window(name, O, Z, r, d, 0.39, 0.785, 0.785);
+
 	}
     }				/* end all targets */
 }
@@ -927,8 +1026,6 @@ void output_geometry(config_t * cfg)
     output_sources(cfg);
     output_targets(cfg);
 }
-
-
 
 void g2l_off(const double *P, const double *N, double *L,
 	     double *alpha, double *beta)

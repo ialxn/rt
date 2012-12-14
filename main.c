@@ -55,6 +55,7 @@ static int n_threads = 1;	/* default single threaded */
 static int n_log = 0;		/* default do not log path of rays */
 static int log_OFF;		/* TRUE: log OFF file (FALSE: raw) */
 
+
 static void init_PTD(source_list_t * source_list,
 		     target_list_t * target_list)
 {
