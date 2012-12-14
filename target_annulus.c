@@ -26,7 +26,6 @@ typedef struct ann_state_t {
     double R2;			/* inner radius^2 of annulus */
     double r2;			/* inner radius^2 of annulus */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
 } ann_state_t;
 

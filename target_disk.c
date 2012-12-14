@@ -25,7 +25,6 @@ typedef struct disk_state_t {
     double normal[3];		/* normal vector of disk */
     double r2;			/* radius^2 of disk */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
-    int absorbed;		/* flag to indicated hit on rear surface == absorbed */
     double M[9];		/* transform matrix local -> global coordinates */
 } disk_state_t;
 
