@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
 #include <string.h>
@@ -97,7 +98,7 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 
     if (*rays_remain > 0) {	/* rays still available in group */
 	double sin_theta, cos_theta;
-	double phi;
+	double phi, sin_phi, cos_phi;
 	double R, R_sin_theta;
 
 	(*rays_remain)--;
@@ -129,21 +130,23 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
 	sin_theta = sin(acos(cos_theta));
 	phi = 2.0 * M_PI * gsl_rng_uniform(r);
+	sincos(phi, &sin_phi, &cos_phi);
 
 	R = state->radius * sqrt(gsl_rng_uniform(r));
 	R_sin_theta = R * sin_theta;
 
-	ray->origin[0] = state->origin[0] + R_sin_theta * cos(phi);
-	ray->origin[1] = state->origin[1] + R_sin_theta * sin(phi);
+	ray->origin[0] = state->origin[0] + R_sin_theta * cos_phi;
+	ray->origin[1] = state->origin[1] + R_sin_theta * sin_phi;
 	ray->origin[2] = state->origin[2] + state->radius * cos_theta;
 
 	/* choose random direction */
 	cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
 	sin_theta = sin(acos(cos_theta));
 	phi = 2.0 * M_PI * gsl_rng_uniform(r);
+	sincos(phi, &sin_phi, &cos_phi);
 
-	ray->direction[0] = sin_theta * cos(phi);
-	ray->direction[1] = sin_theta * sin(phi);
+	ray->direction[0] = sin_theta * cos_phi;
+	ray->direction[1] = sin_theta * sin_phi;
 	ray->direction[2] = cos_theta;
 
 	ray->power = state->ppr;

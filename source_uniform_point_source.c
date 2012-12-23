@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
 #include <string.h>
@@ -18,6 +19,8 @@
 #include "io_util.h"
 #include "ray.h"
 #include "sources.h"
+
+
 
 typedef struct ups_state_t {
     char *name;			/* name (identifier) of uniform point source */
@@ -94,7 +97,8 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 
     if (*rays_remain > 0) {	/* rays still available in group */
 	double t;
-	double cos_theta, sin_theta, phi;
+	double cos_theta, sin_theta;
+	double phi, sin_phi, cos_phi;
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
@@ -107,9 +111,10 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 
 	t = gsl_rng_uniform(r);
 	phi = 2.0 * M_PI * t;
+	sincos(phi, &sin_phi, &cos_phi);
 
-	ray->direction[0] = sin_theta * cos(phi);
-	ray->direction[1] = sin_theta * sin(phi);
+	ray->direction[0] = sin_theta * cos_phi;
+	ray->direction[1] = sin_theta * sin_phi;
 	ray->direction[2] = cos_theta;
 
 	memcpy(ray->origin, state->origin, 3 * sizeof(double));
