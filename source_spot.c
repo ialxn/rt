@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
 #include <string.h>
@@ -114,7 +115,8 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	if (state->cos_theta < 1.0) {	/* theta != 0.0 */
 	    const double O[] = { 0.0, 0.0, 0.0 };
 	    double l_ray[3];	/* direction of ray in local system */
-	    double sin_theta, cos_theta, phi;
+	    double sin_theta, cos_theta;
+	    double phi, sin_phi, cos_phi;
 	    double t;
 
 	    t = gsl_rng_uniform(r);
@@ -123,9 +125,10 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 
 	    t = gsl_rng_uniform(r);
 	    phi = 2.0 * M_PI * t;	/* phi: random 0 .. 2*pi */
+	    sincos(phi, &sin_phi, &cos_phi);
 
-	    l_ray[0] = sin_theta * cos(phi);
-	    l_ray[1] = sin_theta * sin(phi);
+	    l_ray[0] = sin_theta * cos_phi;
+	    l_ray[1] = sin_theta * sin_phi;
 	    l_ray[2] = cos_theta;
 
 	    l2g_off(O, l_ray, ray->direction, state->alpha, state->beta);
