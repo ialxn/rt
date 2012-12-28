@@ -293,7 +293,36 @@ int check_targets(config_t * cfg)
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
 
-	    }			/* end 'annulus' */
+	    } /* end 'annulus' */
+	    else if (!strcmp(type, "cylinder")) {
+		/*
+		 * cylinder:
+		 * C: center point of one end face
+		 *  - array 'C' (center of first end face) [x,y,z] / double
+		 *  - array 'a' (cylinder axis / local z-axis) [x,y,z] / double
+		 *  - 'r' (radius of cylinder) double
+		 *  - 'l' (length of cylinder) double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'reflecting_surface' (reflecting surface ["inside"|"outside"])
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("targets", this_t, "C", i);
+		status += check_array("targets", this_t, "a", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_float("targets", this_t, "l", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "reflecting_surface", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status += check_string("targets", this_t, "reflectivity_model", i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+
+	    }			/* end 'cylinder' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
