@@ -42,10 +42,10 @@ typedef struct target_type_t {
     const char *type;		/* type of target */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
-    void (*init_state) (void *state, config_setting_t * this_t, config_t * cfg, const int file_mode);	/* initialize
-													   internal data
-													   from
-													   configuration */
+    void (*init_state) (void *state, config_setting_t * this_t, const int file_mode);	/* initialize
+											   internal data
+											   from
+											   configuration */
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * in_ray);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * in_ray, double *hit,
@@ -76,7 +76,7 @@ const target_type_t *target_disk;
  *  public functions to access/manipulate the targets (found in targets.c)
  */
 extern target_t *target_alloc(const target_type_t * type,
-			      config_setting_t * this_t, config_t * cfg,
+			      config_setting_t * this_t,
 			      const int file_mode);
 extern void target_free(target_t * T);
 extern double *interception(const target_t * T, ray_t * in_ray);

@@ -97,29 +97,25 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 	if (!strcmp(type, "one-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_one_sided, this_target,
-			     NULL, file_mode);
+			     file_mode);
 	else if (!strcmp(type, "two-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_two_sided, this_target,
-			     NULL, file_mode);
+			     file_mode);
 	else if (!strcmp(type, "rectangle"))
 	    new_target =
-		target_alloc(target_rectangle, this_target, NULL,
-			     file_mode);
+		target_alloc(target_rectangle, this_target, file_mode);
 	else if (!strcmp(type, "triangle"))
 	    new_target =
-		target_alloc(target_triangle, this_target, NULL,
-			     file_mode);
+		target_alloc(target_triangle, this_target, file_mode);
 	else if (!strcmp(type, "ellipsoid"))
 	    new_target =
-		target_alloc(target_ellipsoid, this_target, NULL,
-			     file_mode);
+		target_alloc(target_ellipsoid, this_target, file_mode);
 	else if (!strcmp(type, "annulus"))
 	    new_target =
-		target_alloc(target_annulus, this_target, NULL, file_mode);
+		target_alloc(target_annulus, this_target, file_mode);
 	else if (!strcmp(type, "disk"))
-	    new_target =
-		target_alloc(target_disk, this_target, NULL, file_mode);
+	    new_target = target_alloc(target_disk, this_target, file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

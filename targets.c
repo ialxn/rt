@@ -16,8 +16,7 @@
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type,
-		       config_setting_t * this_t, config_t * cfg,
-		       const int file_mode)
+		       config_setting_t * this_t, const int file_mode)
 {
     target_t *T;
 
@@ -36,7 +35,7 @@ target_t *target_alloc(const target_type_t * type,
 
     T->type = type;
 
-    (T->type->init_state) (T->state, this_t, cfg, file_mode);	/* initialize data structures */
+    (T->type->init_state) (T->state, this_t, file_mode);	/* initialize data structures */
 
     return T;
 }

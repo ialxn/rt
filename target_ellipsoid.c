@@ -45,15 +45,13 @@ static void ell_surf_normal(const double *point, const double *axes,
 }
 
 static void ell_init_state(void *vstate, config_setting_t * this_target,
-			   config_t * cfg, const int file_mode)
+			   const int file_mode)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
     int i;
     const char *S;
     char f_name[256];
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);

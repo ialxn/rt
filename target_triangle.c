@@ -31,7 +31,7 @@ typedef struct tr_state_t {
 
 
 static void tr_init_state(void *vstate, config_setting_t * this_target,
-			  config_t * cfg, const int file_mode)
+			  const int file_mode)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -39,8 +39,6 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
     char f_name[256];
     config_setting_t *point;
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);

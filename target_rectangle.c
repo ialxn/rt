@@ -31,15 +31,13 @@ typedef struct sq_state_t {
 
 
 static void sq_init_state(void *vstate, config_setting_t * this_target,
-			  config_t * cfg, const int file_mode)
+			  const int file_mode)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
     int i;
     const char *S;
     char f_name[256];
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);

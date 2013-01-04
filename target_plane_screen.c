@@ -29,14 +29,12 @@ typedef struct ps_state_t {
 
 
 static void ps_init_state(void *vstate, config_setting_t * this_target,
-			  config_t * cfg, const int file_mode)
+			  const int file_mode)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     const char *S;
     char f_name[256];
-
-    (void) cfg;			/* avoid warning: unused parameter 'cfg' */
 
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
@@ -66,20 +64,20 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,
-			   config_t * cfg, const int file_name)
+			   const int file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, this_target, cfg, file_name);
+    ps_init_state(vstate, this_target, file_name);
     state->one_sided = 1;
 }
 
 static void ps2_init_state(void *vstate, config_setting_t * this_target,
-			   config_t * cfg, const int file_name)
+			   const int file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, this_target, cfg, file_name);
+    ps_init_state(vstate, this_target, file_name);
     state->one_sided = 0;
 }
 
