@@ -39,6 +39,23 @@ void v_diff(double result[3], const double a[3], const double b[3])
 	result[i] = a[i] - b[i];
 }
 
+double d_sqr(const double a[3], const double b[3])
+/*
+ * return squared distance between point 'a' and 'b'
+ */
+{
+    size_t i;
+    double d = 0.0;
+
+    for (i = 0; i < 3; i++) {
+	const double t = a[i] - b[i];
+	d += t * t;
+    }
+
+    return (d);
+
+}
+
 void cross_product(const double a[3], const double b[3], double result[3])
 {
     result[0] = a[1] * b[2] - a[2] * b[1];

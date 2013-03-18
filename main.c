@@ -333,18 +333,6 @@ static void output_geometry(config_t * cfg)
     output_targets(cfg);
 }
 
-static double d_sqr(const double a[3], const double b[3])
-{
-    size_t i;
-    double d = 0.0;
-    for (i = 0; i < 3; i++) {
-	const double t = a[i] - b[i];
-	d += t * t;
-    }
-    return (d);
-
-}
-
 static void init_PTD(source_list_t * source_list,
 		     target_list_t * target_list)
 {
