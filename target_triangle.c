@@ -97,7 +97,7 @@ static void tr_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static double *tr_get_intercept(void *vstate, ray_t * in_ray)
+static double *tr_get_intercept(void *vstate, ray_t * ray)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -118,20 +118,20 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray)
      * intercepted by triangle.
      * implementation according to Möller and Trumbore
      */
-    cross_product(in_ray->direction, state->E3, P);
+    cross_product(ray->direction, state->E3, P);
 
     det = cblas_ddot(3, state->E2, 1, P, 1);
 
     if (fabs(det) < GSL_SQRT_DBL_EPSILON)	/* parallel to triangle */
 	return NULL;
 
-    diff(T, in_ray->origin, state->P1);
+    diff(T, ray->origin, state->P1);
     u = cblas_ddot(3, T, 1, P, 1);
     if (u < 0.0 || u > det)	/* outside */
 	return NULL;
 
     cross_product(T, state->E2, Q);
-    v = cblas_ddot(3, in_ray->direction, 1, Q, 1);
+    v = cblas_ddot(3, ray->direction, 1, Q, 1);
 
     if (v < 0.0 || u + v > det)	/* outside */
 	return NULL;
@@ -146,7 +146,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray)
  */
     intercept = (double *) malloc(3 * sizeof(double));
 
-    a_plus_cb(intercept, in_ray->origin, t, in_ray->direction);
+    a_plus_cb(intercept, ray->origin, t, ray->direction);
 
     if (det < 0.0)		/* hits rear side (parallel to surface normal) */
 	data->flag |= ABSORBED;
@@ -155,7 +155,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray)
 
 }
 
-static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
+static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 			     const gsl_rng * r)
 {
     tr_state_t *state = (tr_state_t *) vstate;
@@ -163,7 +163,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
+	    gsl_spline_eval(state->spline, ray->lambda, NULL))) {
 	/*
 	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
@@ -174,19 +174,19 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	store_xy(state->dump_file, in_ray, hit, state->M, state->P1, data);
+	store_xy(state->dump_file, ray, hit, state->M, state->P1, data);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
-	free(in_ray);
+	free(ray);
 	return NULL;
 
-    } else {			/* reflect 'in_ray' */
-	reflect(in_ray, state->normal, hit);
+    } else {			/* reflect 'ray' */
+	reflect(ray, state->normal, hit);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
-	return in_ray;
+	return ray;
     }
 }
 

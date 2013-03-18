@@ -90,7 +90,7 @@ static void ps_free_state(void *vstate)
     free(state->name);
 }
 
-static double *ps_get_intercept(void *vstate, ray_t * in_ray)
+static double *ps_get_intercept(void *vstate, ray_t * ray)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -106,7 +106,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray)
     }
 
     intercept =
-	intercept_plane(in_ray, state->normal, state->point, &hits_front);
+	intercept_plane(ray, state->normal, state->point, &hits_front);
 
     if (!intercept)		/* ray does not hit target */
 	return NULL;
@@ -122,7 +122,7 @@ static double *ps_get_intercept(void *vstate, ray_t * in_ray)
     return intercept;
 }
 
-static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
+static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
 			     const gsl_rng * r)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -130,12 +130,12 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
-    store_xy(state->dump_file, in_ray, hit, state->M, state->point, data);
+    store_xy(state->dump_file, ray, hit, state->M, state->point, data);
 
     data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
-    memcpy(in_ray->origin, hit, 3 * sizeof(double));	/* update origin */
-    return in_ray;
+    memcpy(ray->origin, hit, 3 * sizeof(double));	/* update origin */
+    return ray;
 }
 
 static const char *ps_get_target_name(void *vstate)
