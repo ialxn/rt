@@ -354,7 +354,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
     else
 	*hits_front = 0;
 
-    v_diff(t2, plane_point, ray->origin);	/* p_0 - l_0 */
+    diff(t2, plane_point, ray->origin);	/* p_0 - l_0 */
     t3 = cblas_ddot(3, t2, 1, plane_normal, 1);	/* (p_0 - l_0) dot N */
 
     if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
@@ -368,7 +368,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 	return NULL;
 
     intercept = (double *) malloc(3 * sizeof(double));
-    v_a_plus_cb(intercept, ray->origin, d, ray->direction);
+    a_plus_cb(intercept, ray->origin, d, ray->direction);
 
     return intercept;
 

@@ -15,8 +15,8 @@
 #include "math_utils.h"
 
 
-void v_a_plus_cb(double result[3], const double a[3], const double c,
-		 const double b[3])
+void a_plus_cb(double result[3], const double a[3], const double c,
+	       const double b[3])
 /*
  * 'result' = 'a' + 'c' * 'b'
  */
@@ -27,7 +27,7 @@ void v_a_plus_cb(double result[3], const double a[3], const double c,
 	result[i] = a[i] + c * b[i];
 }
 
-void v_diff(double result[3], const double a[3], const double b[3])
+void diff(double result[3], const double a[3], const double b[3])
 /*
  * calculate difference of vectors 'a' and 'b'
  * 'result' = 'a' - 'b'
@@ -115,7 +115,7 @@ void g2l(const double *mat, const double *origin, const double *g,
     int i;
     double t[3];
 
-    v_diff(t, g, origin);
+    diff(t, g, origin);
 
     for (i = 0; i < 3; i++)
 	l[i] = cblas_ddot(3, t, 1, &mat[3 * i], 1);

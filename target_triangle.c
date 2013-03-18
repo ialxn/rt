@@ -125,7 +125,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray)
     if (fabs(det) < GSL_SQRT_DBL_EPSILON)	/* parallel to triangle */
 	return NULL;
 
-    v_diff(T, in_ray->origin, state->P1);
+    diff(T, in_ray->origin, state->P1);
     u = cblas_ddot(3, T, 1, P, 1);
     if (u < 0.0 || u > det)	/* outside */
 	return NULL;
@@ -146,7 +146,7 @@ static double *tr_get_intercept(void *vstate, ray_t * in_ray)
  */
     intercept = (double *) malloc(3 * sizeof(double));
 
-    v_a_plus_cb(intercept, in_ray->origin, t, in_ray->direction);
+    a_plus_cb(intercept, in_ray->origin, t, in_ray->direction);
 
     if (det < 0.0)		/* hits rear side (parallel to surface normal) */
 	data->flag |= ABSORBED;
