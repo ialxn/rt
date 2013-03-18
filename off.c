@@ -10,12 +10,18 @@
 
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 
+#include "io_utils.h"
 #include "math_utils.h"
 #include "off.h"
+
+#define DZ 0.005
+#define AXES_LENGTH 5.0
+
 
 static FILE *open_off(const char *name)
 {
@@ -116,6 +122,280 @@ static void block_faces(FILE * f, const int i, const double r,
 	    i + 6, i + 2, r, g, b);
     fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 4, i + 5, i + 6,
 	    i + 7, i + 4, r, g, b);
+}
+
+static void output_targets(const config_t * cfg)
+{
+    int i;
+    const config_setting_t *t = config_lookup(cfg, "targets");
+    const int n_targets = config_setting_length(t);
+
+    for (i = 0; i < n_targets; ++i) {	/* iterate through all targets */
+	const char *type, *name;
+	const config_setting_t *this_t =
+	    config_setting_get_elem(t, (unsigned int) i);
+
+	config_setting_lookup_string(this_t, "name", &name);
+	config_setting_lookup_string(this_t, "type", &type);
+
+	if (!strcmp(type, "one-sided plane screen")) {
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
+
+	    /* Y = N cross X */
+	    cross_product(N, X, Y);
+
+	    off_axes(name, P, X, Y, N);	/* local system */
+
+	    /*
+	     * draw plane:
+	     *   front (red, counter) at 'P'+'DZ'
+	     *   back side (black) at 'P'
+	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+		      DZ);
+
+	} else if (!strcmp(type, "two-sided plane screen")) {
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
+
+	    /* Y = N cross X */
+	    cross_product(N, X, Y);
+
+	    off_axes(name, P, X, Y, N);	/*local system */
+
+	    /*
+	     * draw plane:
+	     *   front (red, counter) at 'P'+'DZ'
+	     *   back side (red, counter) at 'P'
+	     */
+	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
+		      DZ);
+
+	} else if (!strcmp(type, "rectangle")) {
+	    int j;
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    /*
+	     * read three corner points:
+	     * P1:
+	     * P2: -> P2-P1 defines x axis
+	     * P3: -> P3-P1 defines y axis
+	     */
+	    read_vector(this_t, "P1", P);
+	    read_vector(this_t, "P2", X);
+	    read_vector(this_t, "P3", Y);
+	    for (j = 0; j < 3; j++) {
+		X[j] -= P[j];
+		Y[j] -= P[j];
+	    }
+
+	    /*
+	     * draw plane:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_rectangle(name, P, X, Y, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+
+	    /* make 'P1' point to center of rectangle */
+	    for (j = 0; j < 3; j++)
+		P[j] += (X[j] + Y[j]) / 2.0;
+
+	    normalize(X);
+	    normalize(Y);
+	    /* surface normal N = X cross Y */
+	    cross_product(X, Y, N);
+
+	    off_axes(name, P, X, Y, N);	/*local system */
+
+	} else if (!strcmp(type, "triangle")) {
+	    int j;
+	    double P1[3];
+	    double P2[3];	/* redefined 'P2'='P2'-'P1' */
+	    double P3[3];	/* redefined 'P3'='P3'-'P1' */
+	    double N[3];	/* 'P2' cross 'P3' */
+	    double Y[3];	/* local system. 'X' parallel 'P2' */
+	    config_setting_t *this;
+
+	    read_vector(this_t, "P1", P1);
+
+	    this = config_setting_get_member(this_t, "P2");
+	    for (j = 0; j < 3; j++)
+		P2[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+	    this = config_setting_get_member(this_t, "P3");
+	    for (j = 0; j < 3; j++)
+		P3[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+
+	    /* N = P2 cross P3 */
+	    cross_product(P2, P3, N);
+	    normalize(N);
+
+	    /*
+	     * draw triangle:
+	     *   front (white, mirror) at 'P1' + 'N' * 'DZ'
+	     *   rear side (black, absorbs) at 'P1'
+	     */
+	    off_triangle(name, P1, P2, P3, N, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+			 DZ);
+
+	    /* 'Y' = 'N' cross 'P2' */
+	    normalize(P2);
+	    cross_product(N, P2, Y);
+
+	    off_axes(name, P1, P2, Y, N);	/*local system */
+
+	} else if (!strcmp(type, "ellipsoid")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double axes[3];
+	    double z_min, z_max;
+
+	    read_vector(this_t, "center", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "z", Z);
+	    read_vector(this_t, "axes", axes);
+
+	    config_setting_lookup_float(this_t, "z_min", &z_min);
+	    config_setting_lookup_float(this_t, "z_max", &z_max);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw ellipsoid:
+	     *   inside: (white, reflecting) scaled by 1-'DZ'
+	     *   outside (black, absorbing)
+	     */
+	    off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0, 1.0,
+			  0.0, 0.0, 0.0, 1.0 - DZ);
+
+	} else if (!strcmp(type, "disk")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double r;
+
+	    read_vector(this_t, "P", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "N", Z);
+	    config_setting_lookup_float(this_t, "r", &r);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw disk:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_disk(name, O, Z, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
+
+	} else if (!strcmp(type, "annulus")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double R, r;
+
+	    read_vector(this_t, "P", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "N", Z);
+	    config_setting_lookup_float(this_t, "R", &R);
+	    config_setting_lookup_float(this_t, "r", &r);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    /*
+	     * draw disk:
+	     *   front (white, mirror) at 'P'+'DZ'
+	     *   rear side (black, absorbs) at 'P'
+	     */
+	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
+			DZ);
+
+	}
+    }				/* end all targets */
+}
+
+static void output_sources(const config_t * cfg)
+{
+    int i;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+    const int n_sources = config_setting_length(s);
+
+    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
+	const char *type, *name;
+	const config_setting_t *this_s =
+	    config_setting_get_elem(s, (unsigned int) i);
+
+	config_setting_lookup_string(this_s, "name", &name);
+	config_setting_lookup_string(this_s, "type", &type);
+
+	if (!strcmp(type, "uniform point source")) {
+	    double O[3];
+
+	    read_vector(this_s, "origin", O);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
+	     * with size 1.2
+	     * at origin 'O'
+	     */
+	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
+	} /* end 'uniform point source' */
+	else if (!strcmp(type, "sphere")) {
+	    double O[3];
+	    double radius;
+
+	    read_vector(this_s, "origin", O);
+	    config_setting_lookup_float(this_s, "radius", &radius);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
+	     * with size 'radius'
+	     * at origin 'O'
+	     */
+	    off_sphere(name, O, radius, 1.0, 1.0, 0.0);
+	} /* end 'sphere' */
+	else if (!strcmp(type, "spot source")) {
+	    double O[3], dir[3];
+
+	    read_vector(this_s, "origin", O);
+	    read_vector(this_s, "direction", dir);
+
+	    /*
+	     * draw yellow (rgb=1.0,1.0,0.0) cone
+	     * with size 1.2
+	     * at origin 'O'
+	     * in direction 'dir'
+	     */
+	    off_cone(name, O, dir, 1.2, 1.0, 1.0, 0.0);
+	}
+	/* end 'spot source' */
+    }				/* end all sources */
+}
+
+
+void output_geometry(config_t * cfg)
+{
+    const double O[] = { 0.0, 0.0, 0.0 };
+    const double X[] = { AXES_LENGTH, 0.0, 0.0 };
+    const double Y[] = { 0.0, AXES_LENGTH, 0.0 };
+    const double Z[] = { 0.0, 0.0, AXES_LENGTH };
+
+    off_axes(NULL, O, X, Y, Z);
+
+    output_sources(cfg);
+    output_targets(cfg);
 }
 
 void off_axes(const char *name, const double *origin, const double *X,

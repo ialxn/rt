@@ -11,6 +11,11 @@
 #ifndef __OFF_H__
 #define __OFF_H__
 
+#include <libconfig.h>
+
+extern void output_geometry(config_t * cfg);
+
+
 extern void off_sphere(const char *name, double *O, const double radius,
 		       const double r, const double g, const double b);
 extern void off_cone(const char *name, double *O, double *dir,
