@@ -1,4 +1,4 @@
-/*	vector_math.c
+/*	math_utils.c
  *
  * Copyright (C) 2011,2012,2013 Ivo Alxneit
  *
@@ -11,8 +11,8 @@
 #include <string.h>
 #include <gsl/gsl_cblas.h>
 
-#include "io_util.h"
-#include "vector_math.h"
+#include "io_utils.h"
+#include "math_utils.h"
 
 
 void v_a_plus_cb(double result[3], const double a[3], const double c,

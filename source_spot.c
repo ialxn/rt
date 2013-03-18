@@ -16,7 +16,7 @@
 #include <gsl/gsl_spline.h>
 #include <gsl/gsl_cblas.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "off.h"
 #include "ray.h"
 #include "sources.h"

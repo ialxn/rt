@@ -1,4 +1,4 @@
-/*	io_util.c
+/*	io_utils.c
  *
  * Copyright (C) 2011,2012,2013 Ivo Alxneit
  *
@@ -13,8 +13,8 @@
 
 #include <gsl/gsl_cblas.h>
 
-#include "io_util.h"
-#include "vector_math.h"
+#include "io_utils.h"
+#include "math_utils.h"
 
 static int is_present(const char *section, const config_setting_t * s,
 		      const char *name, const int nr)

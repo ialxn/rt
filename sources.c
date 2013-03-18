@@ -10,7 +10,7 @@
 
 #include <string.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "sources.h"
 
 source_t *source_alloc(const source_type_t * T, config_setting_t * this_s)

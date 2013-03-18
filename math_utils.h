@@ -1,4 +1,4 @@
-/*	vector_math.h
+/*	math_utils.h
  *
  * Copyright (C) 2011,2012,2013 Ivo Alxneit
  *
@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef __VECTOR_MATH_H__
-#define __VECTOR_MATH_H__
+#ifndef __MATH_UTILS_H__
+#define __MATH_UTILS_H__
 
 #include "ray.h"
 
@@ -27,4 +27,4 @@ extern void g2l(const double *mat, const double *origin, const double *g,
 extern void l2g(const double *mat, const double *origin, const double *l,
 		double *g);
 
-#endif				/* __VECTOR_MATH_H__ */
+#endif				/* __MATH_UTILS_H__ */

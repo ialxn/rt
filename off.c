@@ -14,7 +14,7 @@
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 
-#include "vector_math.h"
+#include "math_utils.h"
 #include "off.h"
 
 static FILE *open_off(const char *name)

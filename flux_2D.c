@@ -14,7 +14,7 @@
 
 #include <gsl/gsl_histogram2d.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "version.h"
 
 static int wrong_target_type(FILE * f_in)

@@ -25,7 +25,7 @@
 #include <libconfig.h>
 
 #include "ray.h"
-#include "vector_math.h"
+#include "math_utils.h"
 
 #define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */

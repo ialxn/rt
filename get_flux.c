@@ -14,7 +14,7 @@
 
 #include <gsl/gsl_histogram.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "version.h"
 
 

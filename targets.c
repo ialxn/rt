@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <gsl/gsl_cblas.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type,

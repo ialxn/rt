@@ -1,4 +1,4 @@
-/*	io_util.h
+/*	io_utils.h
  *
  * Copyright (C) 2011,2012,2013 Ivo Alxneit
  *
@@ -8,8 +8,8 @@
  *
  */
 
-#ifndef __IO_UTIL_H__
-#define __IO_UTIL_H__
+#ifndef __IO_UTILS_H__
+#define __IO_UTILS_H__
 
 #include <libconfig.h>
 

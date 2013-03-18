@@ -3,7 +3,7 @@ CCOPTIONS= -g -O0 -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -W
 #CCOPTIONS= -pg -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
 
 SRCS= main.c \
-      io_util.c \
+      io_utils.c \
       obj_lists.c \
       sources.c \
       targets.c \
@@ -17,10 +17,10 @@ SRCS= main.c \
       target_annulus.c \
       target_disk.c \
       off.c \
-      vector_math.c
+      math_utils.c
 
 OBJ= main.o \
-     io_util.o \
+     io_utils.o \
      obj_lists.o \
      sources.o \
      targets.o \
@@ -34,29 +34,29 @@ OBJ= main.o \
      target_annulus.o \
      target_disk.o \
      off.o \
-     vector_math.o
+     math_utils.o
 
 SRC_SPECTRUM= spectrum.c \
-              io_util.c \
-              vector_math.c
+              io_utils.c \
+              math_utils.c
 OBJ_SPECTRUM= spectrum.o \
-              io_util.o \
-              vector_math.o
+              io_utils.o \
+              math_utils.o
 
 SRC_FLUX= flux_2D.c \
-          io_util.c \
-          vector_math.c
+          io_utils.c \
+          math_utils.c
 OBJ_FLUX= flux_2D.o \
-          io_util.o \
-          vector_math.o
+          io_utils.o \
+          math_utils.o
 
 
 SRC_GET_FLUX= get_flux.c \
-              io_util.c \
-              vector_math.c
+              io_utils.c \
+              math_utils.c
 OBJ_GET_FLUX= get_flux.o \
-              io_util.o \
-              vector_math.o
+              io_utils.o \
+              math_utils.o
 
 LIBS= -lgsl -lgslcblas -lconfig -lm -lpthread
 #LIBS= -lgsl -lcblas -latlas -lconfig -lm -lpthread

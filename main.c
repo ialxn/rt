@@ -21,12 +21,12 @@
 #include <gsl/gsl_machine.h>
 #include <gsl/gsl_rng.h>
 
-#include "io_util.h"
+#include "io_utils.h"
 #include "obj_lists.h"
 #include "off.h"
 #include "sources.h"
 #include "targets.h"
-#include "vector_math.h"
+#include "math_utils.h"
 #include "version.h"
 
 #define CHECK_CONFIG 0
