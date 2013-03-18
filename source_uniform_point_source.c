@@ -65,7 +65,7 @@ static void ups_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
+static ray_t *ups_emit_ray(void *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
     ray_t *ray = NULL;
@@ -160,7 +160,7 @@ static const source_type_t ups_t = {
     sizeof(struct ups_state_t),
     &ups_init_state,
     &ups_free_state,
-    &ups_get_new_ray,
+    &ups_emit_ray,
     &ups_get_source_name,
     &ups_get_source_ppr,
     &ups_init_rays_remain

@@ -145,7 +145,7 @@ static void *run_simulation(void *args)
 	print2_once(get_source_type(current_source),
 		    get_source_name(current_source));
 
-	while ((ray = new_ray(current_source, r))) {
+	while ((ray = emit_ray(current_source, r))) {
 	    /*
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
