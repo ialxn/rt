@@ -12,8 +12,8 @@
 #define __RAY_H__
 
 typedef struct ray_t {
-    double origin[3];
-    double direction[3];
+    double orig[3];
+    double dir[3];
     double power;
     double lambda;		/* wavelength */
 } ray_t;

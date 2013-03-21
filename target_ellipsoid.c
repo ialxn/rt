@@ -122,8 +122,8 @@ static double *ell_get_intercept(void *vstate, ray_t * ray)
      * origin 'ray': rotate / translate by origin of local system
      * dir 'ray': rotate only
      */
-    g2l(state->M, state->center, ray->origin, r_O);
-    g2l(state->M, O, ray->direction, r_N);
+    g2l(state->M, state->center, ray->orig, r_O);
+    g2l(state->M, O, ray->dir, r_N);
 
     /*
      * solve quadratic equation

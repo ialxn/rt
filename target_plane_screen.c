@@ -134,7 +134,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
     data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
-    memcpy(ray->origin, hit, 3 * sizeof(double));	/* update origin */
+    memcpy(ray->orig, hit, 3 * sizeof(double));	/* update origin */
     return ray;
 }
 

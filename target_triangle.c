@@ -118,20 +118,20 @@ static double *tr_get_intercept(void *vstate, ray_t * ray)
      * intercepted by triangle.
      * implementation according to Möller and Trumbore
      */
-    cross_product(ray->direction, state->E3, P);
+    cross_product(ray->dir, state->E3, P);
 
     det = cblas_ddot(3, state->E2, 1, P, 1);
 
     if (fabs(det) < GSL_SQRT_DBL_EPSILON)	/* parallel to triangle */
 	return NULL;
 
-    diff(T, ray->origin, state->P1);
+    diff(T, ray->orig, state->P1);
     u = cblas_ddot(3, T, 1, P, 1);
     if (u < 0.0 || u > det)	/* outside */
 	return NULL;
 
     cross_product(T, state->E2, Q);
-    v = cblas_ddot(3, ray->direction, 1, Q, 1);
+    v = cblas_ddot(3, ray->dir, 1, Q, 1);
 
     if (v < 0.0 || u + v > det)	/* outside */
 	return NULL;
@@ -146,7 +146,7 @@ static double *tr_get_intercept(void *vstate, ray_t * ray)
  */
     intercept = (double *) malloc(3 * sizeof(double));
 
-    a_plus_cb(intercept, ray->origin, t, ray->direction);
+    a_plus_cb(intercept, ray->orig, t, ray->dir);
 
     if (det < 0.0)		/* hits rear side (parallel to surface normal) */
 	data->flag |= ABSORBED;

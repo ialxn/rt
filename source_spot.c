@@ -23,7 +23,7 @@
 
 typedef struct sp_state_t {
     char *name;			/* name (identifier) of uniform point source */
-    double origin[3];
+    double orig[3];
     double dir[3];		/* direction of cone */
     double cos_theta;		/* cosine of opening angle of light cone */
     double alpha;		/* used to convert from local to global system */
@@ -55,7 +55,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
     config_setting_lookup_float(this_s, "theta", &state->cos_theta);
     state->cos_theta = cos(state->cos_theta / 180.0 * M_PI);
 
-    read_vector(this_s, "origin", state->origin);
+    read_vector(this_s, "origin", state->orig);
     read_vector_normalize(this_s, "direction", state->dir);
 
     /* determine alpha, beta. discard t */
@@ -131,13 +131,13 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 	    l_ray[1] = sin_theta * sin_phi;
 	    l_ray[2] = cos_theta;
 
-	    l2g_off(O, l_ray, ray->direction, state->alpha, state->beta);
+	    l2g_off(O, l_ray, ray->dir, state->alpha, state->beta);
 
 	} else			/* all rays in direction 'dir' */
-	    memcpy(ray->direction, state->dir, 3 * sizeof(double));
+	    memcpy(ray->dir, state->dir, 3 * sizeof(double));
 
 	/* copy / initialize rest of structure */
-	memcpy(ray->origin, state->origin, 3 * sizeof(double));
+	memcpy(ray->orig, state->orig, 3 * sizeof(double));
 	ray->power = state->ppr;
 
 	/* choose random wavelength */

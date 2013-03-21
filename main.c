@@ -185,7 +185,7 @@ static void *run_simulation(void *args)
 			 * 'ray' is intercepted by 'current_target'
 			 */
 			const double d_sqrd =
-			    d_sqr(current_intercept, ray->origin);
+			    d_sqr(current_intercept, ray->orig);
 
 			if (d_sqrd < min_d_sqrd) {
 			    /*
