@@ -47,7 +47,7 @@ void target_free(target_t * T)
     free(T);
 }
 
-double *interception(const target_t * T, ray_t * ray)
+double *icpt(const target_t * T, ray_t * ray)
 {
     return (T->type->get_intercept) (T->state, ray);
 }
