@@ -290,8 +290,7 @@ double *range(const double min, const double max, const size_t n)
     const double width = (max - min) / n;
     double *r = (double *) malloc((n + 1) * sizeof(double));
 
-    r[0] = min;
-    for (i = 1; i <= n; i++)
+    for (i = 1, r[0] = min; i <= n; i++)
 	r[i] = r[i - 1] + width;
 
     return r;

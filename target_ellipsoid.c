@@ -33,9 +33,9 @@ static void ell_surf_normal(const double *point, const double *axes,
 			    double *const normal)
 {
     int i;
-    double norm = 0.0;
+    double norm;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0, norm = 0.0; i < 3; i++) {
 	normal[i] = 2.0 * point[i] / axes[i];
 	norm += normal[i] * normal[i];
     }

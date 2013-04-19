@@ -456,11 +456,8 @@ int main(int argc, char **argv)
 	    pthread_create(&(tids[i]), &attr, run_simulation,
 			   (void *) rs_args);
 
-	/* Wait for the other threads */
-	n_lost = 0;
-	p_lost = 0.0;
-
-	for (i = 0; i < n_threads; i++) {
+	/* Wait for the other threads to finish */
+	for (i = 0, n_lost = 0, p_lost = 0.0; i < n_threads; i++) {
 	    pthread_join(tids[i], (void **) &retval);
 	    n_lost += retval->n_lost;
 	    p_lost += retval->p_lost;

@@ -172,8 +172,7 @@ static double *calc_CDF(const double *I, const double *lambda,
     double *CDF = (double *) malloc(n_lambda * sizeof(double));
 
     /* calculate CDF. include offset by 'I[0]' */
-    CDF[0] = 0.0;
-    for (i = 1; i < n_lambda; i++)
+    for (i = 1, CDF[0] = 0.0; i < n_lambda; i++)
 	CDF[i] = CDF[i - 1] + (I[i] - I[0]) * (lambda[i] - lambda[i - 1]);
 
     /* normalize 'CDF' */

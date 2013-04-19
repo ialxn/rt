@@ -45,9 +45,9 @@ double d_sqr(const double a[3], const double b[3])
  */
 {
     size_t i;
-    double d = 0.0;
+    double d;
 
-    for (i = 0; i < 3; i++) {
+    for (i = 0, d = 0.0; i < 3; i++) {
 	const double t = a[i] - b[i];
 	d += t * t;
     }
