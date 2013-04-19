@@ -104,7 +104,7 @@ static void ell_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static double *ell_get_intercept(void *vstate, ray_t * in_ray)
+static double *ell_get_intercept(void *vstate, ray_t * ray)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -118,12 +118,12 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray)
      * calculate point of interception D
      */
     /*
-     * transform 'in_ray' from global to local system
-     * origin 'in_ray': rotate / translate by origin of local system
-     * dir 'in_ray': rotate only
+     * transform 'ray' from global to local system
+     * origin 'ray': rotate / translate by origin of local system
+     * dir 'ray': rotate only
      */
-    g2l(state->M, state->center, in_ray->origin, r_O);
-    g2l(state->M, O, in_ray->direction, r_N);
+    g2l(state->M, state->center, ray->orig, r_O);
+    g2l(state->M, O, ray->dir, r_N);
 
     /*
      * solve quadratic equation
@@ -191,7 +191,7 @@ static double *ell_get_intercept(void *vstate, ray_t * in_ray)
     }
 }
 
-static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
+static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 			      const gsl_rng * r)
 {
     ell_state_t *state = (ell_state_t *) vstate;
@@ -199,7 +199,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
+	    gsl_spline_eval(state->spline, ray->lambda, NULL))) {
 	/*
 	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
@@ -210,15 +210,15 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	store_xyz(state->dump_file, in_ray, hit, state->M, state->center,
+	store_xyz(state->dump_file, ray, hit, state->M, state->center,
 		  data);
 
 	data->flag &= ~ABSORBED;	/* clear flag */
 
-	free(in_ray);
+	free(ray);
 	return NULL;
 
-    } else {			/* reflect 'in_ray' */
+    } else {			/* reflect 'ray' */
 	double l_N[3], N[3];
 	double O[] = { 0.0, 0.0, 0.0 };
 	double hit_local[3];
@@ -227,9 +227,9 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
-	reflect(in_ray, N, hit);
+	reflect(ray, N, hit);
 
-	return in_ray;
+	return ray;
     }
 }
 

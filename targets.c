@@ -47,15 +47,15 @@ void target_free(target_t * T)
     free(T);
 }
 
-double *interception(const target_t * T, ray_t * in_ray)
+double *icpt(const target_t * T, ray_t * ray)
 {
-    return (T->type->get_intercept) (T->state, in_ray);
+    return (T->type->get_intercept) (T->state, ray);
 }
 
-ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
+ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
 	       const gsl_rng * r)
 {
-    return (T->type->get_out_ray) (T->state, in_ray, hit, r);
+    return (T->type->get_out_ray) (T->state, ray, hit, r);
 }
 
 const char *get_target_type(const target_t * T)
@@ -331,7 +331,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
  * returns dynamically allocated intercept
  *     or
  * NULL if:
- *         - ray is parallel to plane (or ray->origin lies within plane. this should never
+ *         - ray is parallel to plane (or ray->orig lies within plane. this should never
  *           occur as planar targets set the flag 'last_was_hit'
  *         - plane is not in front (propagation direction) of ray
  *
@@ -344,7 +344,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
     double d;
     double *intercept;
 
-    t1 = cblas_ddot(3, ray->direction, 1, plane_normal, 1);	/* l dot n */
+    t1 = cblas_ddot(3, ray->dir, 1, plane_normal, 1);	/* l dot n */
 
     if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
 	return NULL;
@@ -354,7 +354,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
     else
 	*hits_front = 0;
 
-    diff(t2, plane_point, ray->origin);	/* p_0 - l_0 */
+    diff(t2, plane_point, ray->orig);	/* p_0 - l_0 */
     t3 = cblas_ddot(3, t2, 1, plane_normal, 1);	/* (p_0 - l_0) dot N */
 
     if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
@@ -368,7 +368,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 	return NULL;
 
     intercept = (double *) malloc(3 * sizeof(double));
-    a_plus_cb(intercept, ray->origin, d, ray->direction);
+    a_plus_cb(intercept, ray->orig, d, ray->dir);
 
     return intercept;
 

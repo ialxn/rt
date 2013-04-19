@@ -23,7 +23,7 @@
 
 typedef struct sp_state_t {
     char *name;			/* name (identifier) of uniform point source */
-    double origin[3];
+    double orig[3];
     double radius;
     int n_rays;			/* number of rays remaining until source is exhausted */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
@@ -49,7 +49,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
     state->ppr = state->power / state->n_rays;
 
     config_setting_lookup_float(this_s, "radius", &state->radius);
-    read_vector(this_s, "origin", state->origin);
+    read_vector(this_s, "origin", state->orig);
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
@@ -66,7 +66,7 @@ static void sp_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
+static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 {
     sp_state_t *state = (sp_state_t *) vstate;
     ray_t *ray = NULL;
@@ -135,9 +135,9 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	R = state->radius * sqrt(gsl_rng_uniform(r));
 	R_sin_theta = R * sin_theta;
 
-	ray->origin[0] = state->origin[0] + R_sin_theta * cos_phi;
-	ray->origin[1] = state->origin[1] + R_sin_theta * sin_phi;
-	ray->origin[2] = state->origin[2] + state->radius * cos_theta;
+	ray->orig[0] = state->orig[0] + R_sin_theta * cos_phi;
+	ray->orig[1] = state->orig[1] + R_sin_theta * sin_phi;
+	ray->orig[2] = state->orig[2] + state->radius * cos_theta;
 
 	/* choose random direction */
 	cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
@@ -145,9 +145,9 @@ static ray_t *sp_get_new_ray(void *vstate, const gsl_rng * r)
 	phi = 2.0 * M_PI * gsl_rng_uniform(r);
 	sincos(phi, &sin_phi, &cos_phi);
 
-	ray->direction[0] = sin_theta * cos_phi;
-	ray->direction[1] = sin_theta * sin_phi;
-	ray->direction[2] = cos_theta;
+	ray->dir[0] = sin_theta * cos_phi;
+	ray->dir[1] = sin_theta * sin_phi;
+	ray->dir[2] = cos_theta;
 
 	ray->power = state->ppr;
 
@@ -190,7 +190,7 @@ static const source_type_t sp_t = {
     sizeof(struct sp_state_t),
     &sp_init_state,
     &sp_free_state,
-    &sp_get_new_ray,
+    &sp_emit_ray,
     &sp_get_source_name,
     &sp_get_source_ppr,
     &sp_init_rays_remain

@@ -47,8 +47,8 @@ typedef struct target_type_t {
 											   from
 											   configuration */
     void (*free_state) (void *state);	/* free */
-    double *(*get_intercept) (void *state, ray_t * in_ray);	/* point of intersection */
-    ray_t *(*get_out_ray) (void *state, ray_t * in_ray, double *hit,
+    double *(*get_intercept) (void *state, ray_t * ray);	/* point of intersection */
+    ray_t *(*get_out_ray) (void *state, ray_t * ray, double *hit,
 			   const gsl_rng * r);
     const char *(*get_target_name) (void *state);
     void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
@@ -79,8 +79,8 @@ extern target_t *target_alloc(const target_type_t * type,
 			      config_setting_t * this_t,
 			      const int file_mode);
 extern void target_free(target_t * T);
-extern double *interception(const target_t * T, ray_t * in_ray);
-extern ray_t *out_ray(const target_t * T, ray_t * in_ray, double *hit,
+extern double *icpt(const target_t * T, ray_t * ray);
+extern ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
 		      const gsl_rng * r);
 extern const char *get_target_type(const target_t * T);
 extern const char *get_target_name(const target_t * T);

@@ -82,7 +82,7 @@ static void disk_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static double *disk_get_intercept(void *vstate, ray_t * in_ray)
+static double *disk_get_intercept(void *vstate, ray_t * ray)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
@@ -100,7 +100,7 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
     }
 
     intercept =
-	intercept_plane(in_ray, state->normal, state->point, &hits_front);
+	intercept_plane(ray, state->normal, state->point, &hits_front);
 
     if (!intercept)		/* ray does not hit target */
 	return NULL;
@@ -132,7 +132,7 @@ static double *disk_get_intercept(void *vstate, ray_t * in_ray)
     }
 }
 
-static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
+static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
 			       const gsl_rng * r)
 {
     disk_state_t *state = (disk_state_t *) vstate;
@@ -140,7 +140,7 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 
     if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, in_ray->lambda, NULL))) {
+	    gsl_spline_eval(state->spline, ray->lambda, NULL))) {
 	/*
 	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
@@ -151,20 +151,19 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * in_ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	store_xy(state->dump_file, in_ray, hit, state->M, state->point,
-		 data);
+	store_xy(state->dump_file, ray, hit, state->M, state->point, data);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
-	free(in_ray);
+	free(ray);
 	return NULL;
 
-    } else {			/* reflect 'in_ray' */
-	reflect(in_ray, state->normal, hit);
+    } else {			/* reflect 'ray' */
+	reflect(ray, state->normal, hit);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
-	return in_ray;
+	return ray;
     }
 }
 

@@ -145,7 +145,7 @@ static void *run_simulation(void *args)
 	print2_once(get_source_type(current_source),
 		    get_source_name(current_source));
 
-	while ((ray = new_ray(current_source, r))) {
+	while ((ray = emit_ray(current_source, r))) {
 	    /*
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
@@ -159,12 +159,12 @@ static void *run_simulation(void *args)
 		/*
 		 * keep track of target closest to origin of the
 		 * current ray that is intercepted by it.
-		 * 'closest_intercept' is later used in the calculation
+		 * 'closest_icpt' is later used in the calculation
 		 * of 'ray' leaving 'closest_target' in 'out_ray()' as
 		 * origin of the new ray.
 		 */
 		target_t *closest_target;
-		double *closest_intercept = NULL;
+		double *closest_icpt = NULL;
 		double min_d_sqrd = GSL_DBL_MAX;
 
 		list_for_each(t_pos, &(a->target_list->list)) {
@@ -177,15 +177,14 @@ static void *run_simulation(void *args)
 		    target_list_t *this_t =
 			list_entry(t_pos, target_list_t, list);
 		    target_t *current_target = this_t->t;
-		    double *current_intercept =
-			interception(current_target, ray);
+		    double *current_icpt = icpt(current_target, ray);
 
-		    if (current_intercept) {
+		    if (current_icpt) {
 			/*
 			 * 'ray' is intercepted by 'current_target'
 			 */
 			const double d_sqrd =
-			    d_sqr(current_intercept, ray->origin);
+			    d_sqr(current_icpt, ray->orig);
 
 			if (d_sqrd < min_d_sqrd) {
 			    /*
@@ -195,9 +194,9 @@ static void *run_simulation(void *args)
 			     *   if d1 > d2 then also d1^2 > d2^2
 			     */
 
-			    free(closest_intercept);
+			    free(closest_icpt);
 			    closest_target = current_target;
-			    closest_intercept = current_intercept;
+			    closest_icpt = current_icpt;
 			    min_d_sqrd = d_sqrd;
 
 			} else
@@ -206,12 +205,12 @@ static void *run_simulation(void *args)
 			     * placed at a larger distance to origin of
 			     * 'ray' that 'closest_target'.
 			     */
-			    free(current_intercept);
+			    free(current_icpt);
 
-		    }		/* end 'if(current_intercept)' */
+		    }		/* end 'if(current_icpt)' */
 		}		/* all targets tried */
 
-		if (closest_intercept) {
+		if (closest_icpt) {
 		    /*
 		     * 'ray' has been intercepted by a target.
 		     * update 'ray'.
@@ -220,10 +219,9 @@ static void *run_simulation(void *args)
 		     *        the "while (ray) {}" loop and a new
 		     *        ray will be emitted by the current source.
 		     */
-		    ray =
-			out_ray(closest_target, ray, closest_intercept, r);
-		    free(closest_intercept);
-		    closest_intercept = NULL;
+		    ray = out_ray(closest_target, ray, closest_icpt, r);
+		    free(closest_icpt);
+		    closest_icpt = NULL;
 
 		} else {
 		    /*

@@ -44,9 +44,9 @@ void source_free(source_t * S)
     free(S);
 }
 
-ray_t *new_ray(const source_t * S, const gsl_rng * r)
+ray_t *emit_ray(const source_t * S, const gsl_rng * r)
 {
-    return (S->type->get_new_ray) (S->state, r);
+    return (S->type->emit_ray) (S->state, r);
 }
 
 const char *get_source_type(const source_t * S)

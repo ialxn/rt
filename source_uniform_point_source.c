@@ -24,7 +24,7 @@
 
 typedef struct ups_state_t {
     char *name;			/* name (identifier) of uniform point source */
-    double origin[3];
+    double orig[3];
     int n_rays;			/* number of rays remaining until source is exhausted */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
     pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
@@ -48,7 +48,7 @@ static void ups_init_state(void *vstate, config_setting_t * this_s)
     config_setting_lookup_float(this_s, "power", &state->power);
     state->ppr = state->power / state->n_rays;
 
-    read_vector(this_s, "origin", state->origin);
+    read_vector(this_s, "origin", state->orig);
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
@@ -65,7 +65,7 @@ static void ups_free_state(void *vstate)
     gsl_spline_free(state->spline);
 }
 
-static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
+static ray_t *ups_emit_ray(void *vstate, const gsl_rng * r)
 {
     ups_state_t *state = (ups_state_t *) vstate;
     ray_t *ray = NULL;
@@ -113,11 +113,11 @@ static ray_t *ups_get_new_ray(void *vstate, const gsl_rng * r)
 	phi = 2.0 * M_PI * t;
 	sincos(phi, &sin_phi, &cos_phi);
 
-	ray->direction[0] = sin_theta * cos_phi;
-	ray->direction[1] = sin_theta * sin_phi;
-	ray->direction[2] = cos_theta;
+	ray->dir[0] = sin_theta * cos_phi;
+	ray->dir[1] = sin_theta * sin_phi;
+	ray->dir[2] = cos_theta;
 
-	memcpy(ray->origin, state->origin, 3 * sizeof(double));
+	memcpy(ray->orig, state->orig, 3 * sizeof(double));
 
 	ray->power = state->ppr;
 
@@ -160,7 +160,7 @@ static const source_type_t ups_t = {
     sizeof(struct ups_state_t),
     &ups_init_state,
     &ups_free_state,
-    &ups_get_new_ray,
+    &ups_emit_ray,
     &ups_get_source_name,
     &ups_get_source_ppr,
     &ups_init_rays_remain
