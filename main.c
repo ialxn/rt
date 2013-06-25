@@ -89,7 +89,7 @@ static void print1_once(const char *rng_name)
 
     if (!print1)		/* only true during first call */
 	fprintf(stdout,
-		"    using random number generator %s from Gnu Scientif Library\n",
+		"    using random number generator %s from Gnu Scientific Library\n",
 		rng_name);
 
     print1++;
