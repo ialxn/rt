@@ -163,7 +163,7 @@ static void *run_simulation(void *args)
 		 * of 'ray' leaving 'closest_target' in 'out_ray()' as
 		 * origin of the new ray.
 		 */
-		target_t *closest_target;
+		target_t *closest_target = NULL;
 		double *closest_icpt = NULL;
 		double min_d_sqrd = GSL_DBL_MAX;
 
