@@ -17,7 +17,8 @@ SRCS= main.c \
       target_annulus.c \
       target_disk.c \
       off.c \
-      math_utils.c
+      math_utils.c \
+      reflect.c
 
 OBJ= main.o \
      io_utils.o \
@@ -34,7 +35,8 @@ OBJ= main.o \
      target_annulus.o \
      target_disk.o \
      off.o \
-     math_utils.o
+     math_utils.o \
+     reflect.o
 
 SRC_SPECTRUM= spectrum.c \
               io_utils.c \

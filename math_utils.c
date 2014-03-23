@@ -97,19 +97,6 @@ int orthonormalize(double x[3], double y[3], double z[3])
     return status;
 }
 
-void reflect(ray_t * r, const double N[3], const double P[3])
-/*
- * return specularly reflected ray 'r'. surface normal of reflecting surface
- * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
- * origin or refelcted ray will be 'P'.
- */
-{
-    const double t = cblas_ddot(3, N, 1, r->dir, 1);	/* 'N' dot 'r' */
-
-    cblas_daxpy(3, -2.0 * t, N, 1, r->dir, 1);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
-    memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
-}
-
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
