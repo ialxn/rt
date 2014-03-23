@@ -96,6 +96,7 @@ extern void free_PTDT(void *p);
  */
 extern int check_targets(config_t * cfg);
 extern void init_refl_spectrum(const char *f_name, gsl_spline ** spline);
+extern void init_refl_model(const struct config_setting_t *s, char *model);
 extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
 			       const double *plane_point, int *hits_front);

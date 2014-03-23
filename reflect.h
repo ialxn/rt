@@ -13,6 +13,13 @@
 
 #include "ray.h"
 
-extern void reflect(ray_t * r, const double N[3], const double P[3]);
+/*
+ * reflectivity models
+ */
+#define SPECULAR	1
+
+
+extern void reflect(ray_t * r, const double N[3], const double P[3],
+		    const char model);
 
 #endif				/* __REFLECT_H__ */

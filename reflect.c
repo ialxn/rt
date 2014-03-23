@@ -29,7 +29,15 @@ static void reflect_specular(ray_t * r, const double N[3],
 }
 
 
-void reflect(ray_t * r, const double N[3], const double P[3])
+void reflect(ray_t * r, const double N[3], const double P[3],
+	     const char model)
 {
-    reflect_specular(r, N, P);
+
+    switch (model) {
+
+    case SPECULAR:
+	reflect_specular(r, N, P);
+	break;
+    }
+
 }

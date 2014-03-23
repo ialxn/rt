@@ -20,6 +20,7 @@
 
 typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
+    char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     int dump_file;
     double center[3];		/* center coordinate, origin of local system */
@@ -91,6 +92,7 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
+    init_refl_model(this_target, &state->reflectivity_model);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 }
@@ -228,7 +230,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
-	reflect(ray, N, hit);
+	reflect(ray, N, hit, state->reflectivity_model);
 
 	return ray;
     }

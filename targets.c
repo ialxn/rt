@@ -13,6 +13,7 @@
 #include <gsl/gsl_cblas.h>
 
 #include "io_utils.h"
+#include "reflect.h"
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type,
@@ -335,6 +336,15 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
 
     free(lambda);
     free(refl);
+}
+
+void init_refl_model(const config_setting_t * s, char *model)
+{
+    const char *S;
+
+    config_setting_lookup_string(s, "reflectivity_model", &S);
+    if (!strcmp(S, "specular"))
+	*model = SPECULAR;
 }
 
 double *intercept_plane(const ray_t * ray, const double *plane_normal,

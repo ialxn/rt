@@ -20,6 +20,7 @@
 
 typedef struct ann_state_t {
     char *name;			/* name (identifier) of target */
+    char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     int dump_file;
     double point[3];		/* center coordinate of annulus */
@@ -68,6 +69,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
+    init_refl_model(this_target, &state->reflectivity_model);
 
     config_setting_lookup_float(this_target, "R", &t);
     state->R2 = t * t;
@@ -165,7 +167,7 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit);
+	reflect(ray, state->normal, hit, state->reflectivity_model);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
