@@ -23,7 +23,7 @@ static void reflect_specular(ray_t * r, const double N[3],
 /*
  * return specularly reflected ray 'r'. surface normal of reflecting surface
  * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
- * origin or refelcted ray will be 'P'.
+ * origin or reflected ray will be 'P'.
  */
 {
     const double t = cblas_ddot(3, N, 1, r->dir, 1);	/* 'N' dot 'r' */
