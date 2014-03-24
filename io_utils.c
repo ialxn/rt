@@ -119,6 +119,29 @@ int check_int(const char *section, const config_setting_t * s,
     return status;
 }
 
+int check_reflectivity_model(const char *section,
+			     const config_setting_t * s, const char *name,
+			     const int nr)
+{
+    int status;
+    const char *S = ERR;
+
+    if (config_setting_lookup_string(s, name, &S) == CONFIG_TRUE) {
+	if (!strcmp(S, "specular"))
+	    status = NO_ERR;
+	else {
+	    fprintf(stderr,
+		    "unknow reflectivity model '%s' found in '%s' section %d\n",
+		    S, section, nr + 1);
+	    status = ERR;
+
+	}
+    }
+
+    return status;
+}
+
+
 int check_file(const char *section, const config_setting_t * s,
 	       const char *name, const int nr)
 {

@@ -130,22 +130,22 @@ int check_targets(config_t * cfg)
 	     *          - "two-sided plane_screen": non-absorbing counter plane
 	     *                                      rays intersecting from both sides
 	     *                                      are counted
-	     *          - "rectangle":              specular reflection on front surface
+	     *          - "rectangle":              reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
-	     *          - "triangle":               specular reflection on front surface
+	     *          - "triangle":               reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
-	     *          - "ellipsoid"             : ellipsoid. specular reflection on
+	     *          - "ellipsoid"             : ellipsoid. reflection on
 	     *                                      inside surface, total absorption
 	     *                                      on outside surface.
-	     *          - "disk":                   specular reflection on front surface
+	     *          - "disk":                   reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
-	     *          - "annulus":                specular reflection on front surface
+	     *          - "annulus":                reflection on front surface
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
@@ -202,6 +202,12 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
 
 	    } /* end 'rectangle' */
 	    else if (!strcmp(type, "triangle")) {
@@ -221,6 +227,12 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
 
 	    } /* end 'triangle' */
 	    else if (!strcmp(type, "ellipsoid")) {
@@ -241,6 +253,12 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
 
 	    } /* end 'ellipsoid' */
 	    else if (!strcmp(type, "disk")) {
@@ -259,6 +277,12 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
 
 	    } /* end 'disk' */
 	    else if (!strcmp(type, "annulus")) {
@@ -279,6 +303,12 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
 
 	    }			/* end 'annulus' */
 	}			/* end 'this_t', check next target */

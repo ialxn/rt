@@ -35,6 +35,9 @@ extern int check_float(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_int(const char *section, const config_setting_t * s,
 		     const char *name, const int nr);
+extern int check_reflectivity_model(const char *section,
+				    const config_setting_t * s,
+				    const char *name, const int nr);
 extern int check_file(const char *section, const config_setting_t * s,
 		      const char *name, const int nr);
 extern void read_vector(const config_setting_t * s, const char *name,
