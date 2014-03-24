@@ -11,15 +11,18 @@
 #ifndef __REFLECT_H__
 #define __REFLECT_H__
 
+#include <gsl/gsl_rng.h>
+
 #include "ray.h"
 
 /*
  * reflectivity models
  */
 #define SPECULAR	1
+#define LAMBERTIAN	2
 
 
 extern void reflect(ray_t * r, const double N[3], const double P[3],
-		    const char model);
+		    const char model, const gsl_rng * rng);
 
 #endif				/* __REFLECT_H__ */

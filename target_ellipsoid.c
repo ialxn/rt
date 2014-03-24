@@ -230,7 +230,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
-	reflect(ray, N, hit, state->reflectivity_model);
+	reflect(ray, N, hit, state->reflectivity_model, r);
 
 	return ray;
     }

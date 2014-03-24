@@ -345,6 +345,8 @@ void init_refl_model(const config_setting_t * s, char *model)
     config_setting_lookup_string(s, "reflectivity_model", &S);
     if (!strcmp(S, "specular"))
 	*model = SPECULAR;
+    else if (!strcmp(S, "lambertian"))
+	*model = LAMBERTIAN;
 }
 
 double *intercept_plane(const ray_t * ray, const double *plane_normal,

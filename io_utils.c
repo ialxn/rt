@@ -129,6 +129,8 @@ int check_reflectivity_model(const char *section,
     if (config_setting_lookup_string(s, name, &S) == CONFIG_TRUE) {
 	if (!strcmp(S, "specular"))
 	    status = NO_ERR;
+	else if (!strcmp(S, "lambertian"))
+	    status = NO_ERR;
 	else {
 	    fprintf(stderr,
 		    "unknow reflectivity model '%s' found in '%s' section %d\n",

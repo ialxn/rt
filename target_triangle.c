@@ -185,7 +185,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model);
+	reflect(ray, state->normal, hit, state->reflectivity_model, r);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
