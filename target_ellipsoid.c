@@ -28,6 +28,7 @@ typedef struct ell_state_t {
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     double M[9];		/* transform matrix local -> global coordinates */
+    void *refl_model_params;
 } ell_state_t;
 
 
@@ -92,7 +93,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
-    init_refl_model(this_target, &state->reflectivity_model);
+    init_refl_model(this_target, &state->reflectivity_model,
+		    &state->refl_model_params);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 }
@@ -105,6 +107,7 @@ static void ell_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
+    free_refl_model(state->reflectivity_model, state->refl_model_params);
 }
 
 static double *ell_get_intercept(void *vstate, ray_t * ray)
@@ -230,7 +233,8 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
-	reflect(ray, N, hit, state->reflectivity_model, r);
+	reflect(ray, N, hit, state->reflectivity_model, r,
+		state->refl_model_params);
 
 	return ray;
     }

@@ -123,15 +123,28 @@ int check_reflectivity_model(const char *section,
 			     const config_setting_t * s, const char *name,
 			     const int nr)
 {
-    int status;
-    const char *S = ERR;
+    int status = ERR;
+    const char *S;
 
     if (config_setting_lookup_string(s, name, &S) == CONFIG_TRUE) {
 	if (!strcmp(S, "specular"))
 	    status = NO_ERR;
 	else if (!strcmp(S, "lambertian"))
 	    status = NO_ERR;
-	else {
+	else if (!strcmp(S, "microfacet_gaussian")) {
+	    double sigma;
+
+	    if (config_setting_lookup_float
+		(s, "microfacet_gaussian_sigma", &sigma) == CONFIG_FALSE) {
+		fprintf(stderr,
+			"missing model parameter 'multifacet_gaussian_sigma' in reflectivity model '%s' found in '%s' section %d\n",
+			S, section, nr + 1);
+
+		status = ERR;
+	    } else
+		status = NO_ERR;
+
+	} else {
 	    fprintf(stderr,
 		    "unknow reflectivity model '%s' found in '%s' section %d\n",
 		    S, section, nr + 1);

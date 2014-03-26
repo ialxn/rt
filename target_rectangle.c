@@ -29,6 +29,7 @@ typedef struct sq_state_t {
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
+    void *refl_model_params;
 } sq_state_t;
 
 
@@ -82,7 +83,8 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
-    init_refl_model(this_target, &state->reflectivity_model);
+    init_refl_model(this_target, &state->reflectivity_model,
+		    &state->refl_model_params);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 }
@@ -95,6 +97,7 @@ static void sq_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
+    free_refl_model(state->reflectivity_model, state->refl_model_params);
 }
 
 static double *sq_get_intercept(void *vstate, ray_t * ray)
@@ -168,7 +171,8 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r);
+	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 

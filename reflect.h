@@ -18,11 +18,13 @@
 /*
  * reflectivity models
  */
-#define SPECULAR	1
-#define LAMBERTIAN	2
+#define SPECULAR		1
+#define LAMBERTIAN		2
+#define MICROFACET_GAUSSIAN	3
 
 
 extern void reflect(ray_t * r, const double N[3], const double P[3],
-		    const char model, const gsl_rng * rng);
+		    const char model, const gsl_rng * rng,
+		    void *model_params);
 
 #endif				/* __REFLECT_H__ */

@@ -29,6 +29,7 @@ typedef struct ann_state_t {
     double r2;			/* inner radius^2 of annulus */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     double M[9];		/* transform matrix local -> global coordinates */
+    void *refl_model_params;
 } ann_state_t;
 
 
@@ -69,7 +70,8 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
-    init_refl_model(this_target, &state->reflectivity_model);
+    init_refl_model(this_target, &state->reflectivity_model,
+		    &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "R", &t);
     state->R2 = t * t;
@@ -87,6 +89,7 @@ static void ann_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
+    free_refl_model(state->reflectivity_model, state->refl_model_params);
 }
 
 static double *ann_get_intercept(void *vstate, ray_t * ray)
@@ -167,7 +170,8 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r);
+	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
