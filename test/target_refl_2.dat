@@ -1,0 +1,8 @@
+#
+# dummy reflectivity spectrum
+#
+# wavelength	R
+400	1.0
+1000	1.0
+1600	1.0
+2000	1.0
