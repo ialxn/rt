@@ -338,15 +338,44 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
     free(refl);
 }
 
-void init_refl_model(const config_setting_t * s, char *model)
+void init_refl_model(const config_setting_t * s, char *model,
+		     void **refl_model_params)
 {
     const char *S;
 
     config_setting_lookup_string(s, "reflectivity_model", &S);
     if (!strcmp(S, "specular"))
-	*model = SPECULAR;
+	*model = (char) SPECULAR;
     else if (!strcmp(S, "lambertian"))
-	*model = LAMBERTIAN;
+	*model = (char) LAMBERTIAN;
+    else if (!strcmp(S, "microfacet_gaussian")) {
+	double *number;
+
+	*model = (char) MICROFACET_GAUSSIAN;
+	number = (double *) malloc(sizeof(double));
+
+	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
+				    number);
+	*refl_model_params = number;
+    }
+
+}
+
+void free_refl_model(const char model, void *refl_model_params)
+/*
+ * free's model specific parameters
+ */
+{
+
+    switch (model) {
+
+    case MICROFACET_GAUSSIAN:
+	{
+	    free((double*)refl_model_params);
+	}
+
+    }
+
 }
 
 double *intercept_plane(const ray_t * ray, const double *plane_normal,

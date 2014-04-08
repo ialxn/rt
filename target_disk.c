@@ -28,6 +28,7 @@ typedef struct disk_state_t {
     double r2;			/* radius^2 of disk */
     gsl_spline *spline;		/* for interpolated reflectivity spectrum */
     double M[9];		/* transform matrix local -> global coordinates */
+    void *refl_model_params;
 } disk_state_t;
 
 
@@ -67,7 +68,8 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     init_refl_spectrum(S, &state->spline);
-    init_refl_model(this_target, &state->reflectivity_model);
+    init_refl_model(this_target, &state->reflectivity_model,
+		    &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
@@ -83,6 +85,7 @@ static void disk_free_state(void *vstate)
 
     free(state->name);
     gsl_spline_free(state->spline);
+    free_refl_model(state->reflectivity_model, state->refl_model_params);
 }
 
 static double *disk_get_intercept(void *vstate, ray_t * ray)
@@ -162,7 +165,8 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r);
+	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
