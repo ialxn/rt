@@ -329,8 +329,7 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
     read_data(spectrum, &lambda, &refl, &n_lambda);
     fclose(spectrum);
 
-    /* cspline will be used to interpolate */
-    *spline = gsl_spline_alloc(gsl_interp_cspline, n_lambda);
+    *spline = gsl_spline_alloc(gsl_interp_linear, n_lambda);
 
     gsl_spline_init(*spline, lambda, refl, n_lambda);
 
