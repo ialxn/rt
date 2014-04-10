@@ -370,7 +370,7 @@ void free_refl_model(const char model, void *refl_model_params)
 
     case MICROFACET_GAUSSIAN:
 	{
-	    free((double*)refl_model_params);
+	    free((double *) refl_model_params);
 	}
 
     }
