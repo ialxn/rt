@@ -171,14 +171,12 @@ static double *calc_CDF(const double *I, const double *lambda,
     size_t i;
     double *CDF = (double *) malloc(n_lambda * sizeof(double));
 
-    /* calculate CDF. include offset by 'I[0]' */
+    /* calculate normalized CDF. include offset by 'I[0]' */
     for (i = 1, CDF[0] = 0.0; i < n_lambda; i++)
 	CDF[i] = CDF[i - 1]
 	    + 0.5 * (I[i] + I[i - 1]) * (lambda[i] - lambda[i - 1]);
 
-    /* normalize 'CDF' */
-    for (i = 0; i < n_lambda; i++)
-	CDF[i] /= CDF[n_lambda - 1];
+    cblas_dscal((int) n_lambda, 1.0 / CDF[n_lambda - 1], CDF, 1);
 
     return CDF;
 }
