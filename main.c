@@ -231,7 +231,7 @@ static void *run_simulation(void *args)
 		     * by assigning NULL to 'ray'
 		     */
 		    retval->n_lost++;
-		    retval->p_lost += get_ppr(current_source);
+		    retval->p_lost += ray->power;
 		    free(ray);
 		    ray = NULL;
 

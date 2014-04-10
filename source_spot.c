@@ -156,13 +156,6 @@ static const char *sp_get_source_name(void
     return state->name;
 }
 
-static double sp_get_source_ppr(void *vstate)
-{
-    sp_state_t *state = (sp_state_t *) vstate;
-
-    return state->ppr;
-}
-
 static void sp_init_rays_remain(void *vstate)
 {
     sp_state_t *state = (sp_state_t *) vstate;
@@ -181,7 +174,6 @@ static const source_type_t sp_t = {
     &sp_free_state,
     &sp_emit_ray,
     &sp_get_source_name,
-    &sp_get_source_ppr,
     &sp_init_rays_remain
 };
 
