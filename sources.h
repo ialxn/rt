@@ -62,7 +62,6 @@ extern void init_rays_remain(const source_t * S);
  * utility functions
  */
 extern int check_sources(config_t * cfg);
-extern void init_spectrum(const char *f_name, gsl_spline ** spectrum,
-			  double *lambda_min);
+extern void init_spectrum(const char *f_name, gsl_spline ** spectrum);
 
 #endif				/* __SOURCES_H__ */

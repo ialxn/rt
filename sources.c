@@ -151,16 +151,6 @@ static double *calc_CDF(const double *I, const double *lambda,
  * this will be the cumulative distribution function
  * needed to obtain a random wavelength.
  *
- * careful: we have to make sure that the interval
- *          of the random varialble (0..1) is
- *          mapped to the interval (lambda_min
- *          to lambda_max). thus
- *          0 <= lambda_min < l <= lambda_max-lambda_min
- *          'lambda' has been shifted by 'lambda_min'
- *          by caller (this will be reversed
- *          in 'get_new_ray()' by adding 'lambda_min')
- *          make the CDF fall into the range 0..1
- *          after normalization and shift.
  */
 {
     size_t i;
@@ -176,8 +166,7 @@ static double *calc_CDF(const double *I, const double *lambda,
     return CDF;
 }
 
-void init_spectrum(const char *f_name, gsl_spline ** spectrum,
-		   double *lambda_min)
+void init_spectrum(const char *f_name, gsl_spline ** spectrum)
 {
     FILE *sp_data;
     double *lambda;
@@ -189,11 +178,6 @@ void init_spectrum(const char *f_name, gsl_spline ** spectrum,
     sp_data = fopen(f_name, "r");
     read_data(sp_data, &lambda, &I, &n_lambda);
     fclose(sp_data);
-
-    /* shift 'lambda' by lambda_min */
-    *lambda_min = lambda[0];
-    for (i = 0; i < n_lambda; i++)
-	lambda[i] -= *lambda_min;
 
     CDF = calc_CDF(I, lambda, n_lambda);
 

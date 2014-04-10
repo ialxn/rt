@@ -31,7 +31,6 @@ typedef struct sp_state_t {
     double power;		/* power of source */
     double ppr;			/* power allotted to one ray */
     gsl_spline *spectrum;	/* spline holding cdf of source spectrum */
-    double lambda_min;		/* minimum wavelength in spectrum */
 } sp_state_t;
 
 
@@ -53,7 +52,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
-    init_spectrum(S, &state->spectrum, &state->lambda_min);
+    init_spectrum(S, &state->spectrum);
 
     pthread_key_create(&state->rays_remain_key, free);
 }
@@ -153,8 +152,7 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 
 	/* choose random wavelength */
 	ray->lambda =
-	    state->lambda_min + gsl_spline_eval(state->spectrum,
-						gsl_rng_uniform(r), NULL);
+	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
     }
 
     return ray;
