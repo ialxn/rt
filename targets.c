@@ -318,20 +318,20 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-void init_refl_spectrum(const char *f_name, gsl_spline ** spline)
+void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 {
-    FILE *spectrum;
+    FILE *refl_data;
     double *lambda;
     double *refl;
     size_t n_lambda;
 
-    spectrum = fopen(f_name, "r");
-    read_data(spectrum, &lambda, &refl, &n_lambda);
-    fclose(spectrum);
+    refl_data = fopen(f_name, "r");
+    read_data(refl_data, &lambda, &refl, &n_lambda);
+    fclose(refl_data);
 
-    *spline = gsl_spline_alloc(gsl_interp_linear, n_lambda);
+    *refl_spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
 
-    gsl_spline_init(*spline, lambda, refl, n_lambda);
+    gsl_spline_init(*refl_spectrum, lambda, refl, n_lambda);
 
     free(lambda);
     free(refl);

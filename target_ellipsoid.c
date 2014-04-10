@@ -26,7 +26,7 @@ typedef struct ell_state_t {
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
-    gsl_spline *spline;		/* for interpolated reflectivity spectrum */
+    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double M[9];		/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } ell_state_t;
@@ -92,7 +92,7 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->spline);
+    init_refl_spectrum(S, &state->refl_spectrum);
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
@@ -106,7 +106,7 @@ static void ell_free_state(void *vstate)
     close(state->dump_file);
 
     free(state->name);
-    gsl_spline_free(state->spline);
+    gsl_spline_free(state->refl_spectrum);
     free_refl_model(state->reflectivity_model, state->refl_model_params);
 }
 
@@ -205,7 +205,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
     if (data->flag & ABSORBED
 	|| (gsl_rng_uniform(r) >
-	    gsl_spline_eval(state->spline, ray->lambda, NULL))) {
+	    gsl_spline_eval(state->refl_spectrum, ray->lambda, NULL))) {
 	/*
 	 * if ABSORBED is set we know ray has been absorbed
 	 * because it was intercepted by a surface with absorptivity=1
