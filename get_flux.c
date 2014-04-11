@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'V':
-	    fprintf(stdout, " get_flux Version %s(%s) AI52\n", RELEASE,
+	    fprintf(stdout, " get_flux Version %s (%s) AI52\n", RELEASE,
 		    RELEASE_DATE);
 	    exit(EXIT_SUCCESS);
 	    break;
