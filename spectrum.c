@@ -241,7 +241,8 @@ int main(int argc, char **argv)
     h = init_hist(start_wl, stop_wl, n_bins);
 
     if (read_hist
-	(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, idx_l, idx_p))
+	(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, idx_l,
+	 idx_p) == NO_ERR)
 	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
 
     gsl_histogram_free(h);
