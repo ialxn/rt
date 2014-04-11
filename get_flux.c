@@ -104,10 +104,10 @@ int main(int argc, char **argv)
 	}
 
 	if (idx_l == MAX_ITEMS - 1)
-	    fprintf(stdout, "%f\t%f\t%f\t%f\t%f\n", t[0], t[1], t[2],
+	    fprintf(stdout, "%e\t%e\t%e\t%e\t%e\n", t[0], t[1], t[2],
 		    t[idx_p], t[idx_l]);
 	else
-	    fprintf(stdout, "%f\t%f\t%f\t%f\n", t[0], t[1], t[idx_p],
+	    fprintf(stdout, "%e\t%e\t%e\t%e\n", t[0], t[1], t[idx_p],
 		    t[idx_l]);
 
 	n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
