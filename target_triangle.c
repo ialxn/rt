@@ -69,8 +69,7 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
      * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
      */
     /* x = 'E2' */
-    for (i = 0; i < 3; i++)
-	state->M[i] = state->E2[i];
+    memcpy(state->M, state->E2, 3 * sizeof(double));
     normalize(state->M);
 
     /* z = 'E2' cross 'E3' */

@@ -69,12 +69,8 @@ static void reflect_lambertian(ray_t * r, const double N[3],
 
 	for (i = 0; i < 3; i++)
 	    r->dir[i] = -random_ray[i];
-    } else {
-	size_t i;
-
-	for (i = 0; i < 3; i++)
-	    r->dir[i] = random_ray[i];
-    }
+    } else
+	memcpy(r->dir, random_ray, 3 * sizeof(double));
 
     memcpy(r->orig, P, 3 * sizeof(double));
 
