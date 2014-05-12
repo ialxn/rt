@@ -104,10 +104,8 @@ static double *sq_get_intercept(void *vstate, ray_t * ray)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-
     double *intercept;
     double l_intercept[3];
-
     int hits_front;
 
     PTDT_t *data = pthread_getspecific(state->PTDT_key);

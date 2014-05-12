@@ -92,7 +92,6 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#       number of bins: %d\n", i);
 
     fprintf(f_out, "#\n#   histogram statistics\n");
-
     fprintf(f_out, "#      number of data points not included: %d\n",
 	    n_missed);
     fprintf(f_out, "#                      total power missed: %e\n",
@@ -101,7 +100,6 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
 	    n_inc);
     fprintf(f_out, "#               total power accounted for: %e\n#\n",
 	    p_inc);
-
 
     t = gsl_histogram_min_val(h);
     i = gsl_histogram_min_bin(h);

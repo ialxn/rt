@@ -235,7 +235,6 @@ static int inc_buffers(size_t * n_alloc, double **x, double **y)
 
     (*n_alloc) += BSIZE;
 
-
     if ((t = (double *) realloc(*x, (*n_alloc) * sizeof(double))) == NULL) {
 	fprintf(stderr, "could not (re)allocate buffer\n");
 	return ERR;

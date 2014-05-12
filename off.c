@@ -772,7 +772,6 @@ static void output_targets(const config_t * cfg)
 	    for (j = 0; j < 3; j++)
 		P3[j] = config_setting_get_float_elem(this, j) - P1[j];
 
-
 	    /* N = P2 cross P3 */
 	    cross_product(P2, P3, N);
 	    normalize(N);

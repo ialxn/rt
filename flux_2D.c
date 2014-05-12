@@ -144,9 +144,7 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
     ny = gsl_histogram2d_ny(h);
     fprintf(f_out, "#     number of y-bins: %d\n", ny);
 
-
     fprintf(f_out, "#\n#   histogram statistics\n");
-
     fprintf(f_out, "#        number of data point not included: %d\n",
 	    n_missed);
     fprintf(f_out, "#                       total power missed: %e\n",

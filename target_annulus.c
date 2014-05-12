@@ -49,7 +49,6 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     state->dump_file =
 	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
 
-
     read_vector(this_target, "P", state->point);
     /*
      * generate transform matrix M to convert
