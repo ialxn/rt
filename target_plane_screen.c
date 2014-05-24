@@ -35,13 +35,19 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 
     const char *S;
     char f_name[256];
+    int i;
 
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
-    snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file =
-	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
+    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
+	CONFIG_FALSE || i == 0) {
+	snprintf(f_name, 256, "%s.dat", state->name);
+	state->dump_file =
+	    open(f_name, O_CREAT | O_WRONLY | file_mode,
+		 S_IRUSR | S_IWUSR);
+    } else
+	state->dump_file = -1;
 
     read_vector(this_target, "point", state->point);
     /*
@@ -85,7 +91,8 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    close(state->dump_file);
+    if (state->dump_file != -1)
+	close(state->dump_file);
 
     free(state->name);
 }
@@ -130,7 +137,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
-    store_xy(state->dump_file, ray, hit, state->M, state->point, data);
+    if (state->dump_file != -1)
+	store_xy(state->dump_file, ray, hit, state->M, state->point, data);
 
     data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
@@ -149,7 +157,8 @@ static void ps_dump_string(void *vstate, const char *str)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    write(state->dump_file, str, strlen(str));
+    if (state->dump_file != -1)
+	write(state->dump_file, str, strlen(str));
 }
 
 static double *ps_M(void *vstate)
@@ -177,7 +186,8 @@ static void ps_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	write(state->dump_file, data->buf, sizeof(float) * data->i);
+	if (state->dump_file != -1)
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
 }
 
 
