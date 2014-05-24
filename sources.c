@@ -173,7 +173,6 @@ void init_spectrum(const char *f_name, gsl_spline ** spectrum)
     double *I;
     double *CDF;
     size_t n_lambda;
-    size_t i;
 
     sp_data = fopen(f_name, "r");
     read_data(sp_data, &lambda, &I, &n_lambda);
