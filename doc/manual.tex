@@ -170,8 +170,7 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 
 \subsection{Targets}
-
-All interacting\footnote{Targets that can absorb, refract, reflect, or scatter rays in contrast to {\it screens} that only register rays passing through them.} targets have the keywords {\tt reflectivity} (filename of reflectivity spectrum) and {\tt reflectivity\_model} (see Sec.~\ref{sec:refl_models}). 
+All targets may use the optional keyword {\tt no\_output} ({\tt [true|false]}) that controls whether absorbed rays are logged for this target. The (implied) default is {\tt false} i.e.\ output is produced. All interacting\footnote{Targets that can absorb, refract, reflect, or scatter rays in contrast to {\it screens} that only register rays passing through them.} targets need the keywords {\tt reflectivity} (filename of reflectivity spectrum) and {\tt reflectivity\_model} (see Sec.~\ref{sec:refl_models}).
 
 \subsubsection{One-Sided Plane Screen}
 

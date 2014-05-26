@@ -59,9 +59,14 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
-    snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file =
-	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
+    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
+	CONFIG_FALSE || i == 0) {
+	snprintf(f_name, 256, "%s.dat", state->name);
+	state->dump_file =
+	    open(f_name, O_CREAT | O_WRONLY | file_mode,
+		 S_IRUSR | S_IWUSR);
+    } else
+	state->dump_file = -1;
 
     read_vector(this_target, "center", state->center);
     /*
@@ -103,7 +108,8 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    close(state->dump_file);
+    if (state->dump_file != -1)
+	close(state->dump_file);
 
     free(state->name);
     gsl_spline_free(state->refl_spectrum);
@@ -216,8 +222,9 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	store_xyz(state->dump_file, ray, hit, state->M, state->center,
-		  data);
+	if (state->dump_file != -1)
+	    store_xyz(state->dump_file, ray, hit, state->M, state->center,
+		      data);
 
 	data->flag &= ~ABSORBED;	/* clear flag */
 
@@ -251,7 +258,8 @@ static void ell_dump_string(void *vstate, const char *str)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    write(state->dump_file, str, strlen(str));
+    if (state->dump_file != -1)
+	write(state->dump_file, str, strlen(str));
 }
 
 static double *ell_M(void *vstate)
@@ -279,7 +287,8 @@ static void ell_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	write(state->dump_file, data->buf, sizeof(float) * data->i);
+	if (state->dump_file != -1)
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
 }
 
 

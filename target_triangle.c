@@ -46,9 +46,14 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "name", &S);
     state->name = strdup(S);
 
-    snprintf(f_name, 256, "%s.dat", state->name);
-    state->dump_file =
-	open(f_name, O_CREAT | O_WRONLY | file_mode, S_IRUSR | S_IWUSR);
+    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
+	CONFIG_FALSE || i == 0) {
+	snprintf(f_name, 256, "%s.dat", state->name);
+	state->dump_file =
+	    open(f_name, O_CREAT | O_WRONLY | file_mode,
+		 S_IRUSR | S_IWUSR);
+    } else
+	state->dump_file = -1;
 
     read_vector(this_target, "P1", state->P1);
 
@@ -95,7 +100,8 @@ static void tr_free_state(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    close(state->dump_file);
+    if (state->dump_file != -1)
+	close(state->dump_file);
 
     free(state->name);
     gsl_spline_free(state->refl_spectrum);
@@ -179,7 +185,9 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	store_xy(state->dump_file, ray, hit, state->M, state->P1, data);
+	if (state->dump_file != -1)
+	    store_xy(state->dump_file, ray, hit, state->M, state->P1,
+		     data);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
@@ -207,7 +215,8 @@ static void tr_dump_string(void *vstate, const char *str)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    write(state->dump_file, str, strlen(str));
+    if (state->dump_file != -1)
+	write(state->dump_file, str, strlen(str));
 }
 
 static double *tr_M(void *vstate)
@@ -235,7 +244,8 @@ static void tr_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	write(state->dump_file, data->buf, sizeof(float) * data->i);
+	if (state->dump_file != -1)
+	    write(state->dump_file, data->buf, sizeof(float) * data->i);
 }
 
 
