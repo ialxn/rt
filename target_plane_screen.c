@@ -20,6 +20,7 @@
 typedef struct ps_state_t {
     char *name;			/* name (identifier) of target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
     char one_sided;		/* flag [one-sided|two-sided] */
     int dump_file;
     double point[3];		/* point on plane */
@@ -67,6 +68,7 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     cross_product(&state->M[6], state->M, &state->M[3]);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
+    pthread_mutex_init(&state->mutex_writefd, NULL);
 }
 
 static void ps1_init_state(void *vstate, config_setting_t * this_target,
@@ -138,7 +140,8 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
     (void) r;			/* avoid warning : unused parameter 'r' */
 
     if (state->dump_file != -1)
-	store_xy(state->dump_file, ray, hit, state->M, state->point, data);
+	store_xy(state->dump_file, ray, hit, state->M, state->point,
+		 data, &state->mutex_writefd);
 
     data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
@@ -186,8 +189,14 @@ static void ps_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	if (state->dump_file != -1)
+	if (state->dump_file != -1) {
+
+	    pthread_mutex_lock(&state->mutex_writefd);
 	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    fsync(state->dump_file);
+	    pthread_mutex_unlock(&state->mutex_writefd);
+
+	}
 }
 
 

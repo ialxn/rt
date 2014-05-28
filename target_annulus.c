@@ -22,6 +22,7 @@ typedef struct ann_state_t {
     char *name;			/* name (identifier) of target */
     char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double point[3];		/* center coordinate of annulus */
     double normal[3];		/* normal vector of annulus */
@@ -84,6 +85,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     state->r2 = t * t;
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
+    pthread_mutex_init(&state->mutex_writefd, NULL);
 }
 
 static void ann_free_state(void *vstate)
@@ -170,7 +172,7 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 	if (state->dump_file != -1)
 	    store_xy(state->dump_file, ray, hit, state->M, state->point,
-		     data);
+		     data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
@@ -227,8 +229,14 @@ static void ann_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	if (state->dump_file != -1)
+	if (state->dump_file != -1) {
+
+	    pthread_mutex_lock(&state->mutex_writefd);
 	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    fsync(state->dump_file);
+	    pthread_mutex_unlock(&state->mutex_writefd);
+
+	}
 }
 
 static const target_type_t ann_t = {

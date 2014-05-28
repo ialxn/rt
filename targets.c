@@ -445,7 +445,8 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 }
 
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
-		     const double *m, const double *point, PTDT_t * data)
+		     const double *m, const double *point, PTDT_t * data,
+		     pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 
@@ -453,7 +454,11 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
     g2l(m, point, hit, hit_local);
 
     if (data->i == BUF_SIZE * 4) {	/* buffer full, write to disk */
+
+	pthread_mutex_lock(mutex_writefd);
 	write(fd, data->buf, sizeof(float) * data->i);
+	pthread_mutex_unlock(mutex_writefd);
+
 	data->i = 0;
     }
 
@@ -464,7 +469,8 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
 }
 
 extern void store_xyz(const int fd, ray_t * ray, const double *hit,
-		      const double *m, const double *point, PTDT_t * data)
+		      const double *m, const double *point, PTDT_t * data,
+		      pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 
@@ -472,7 +478,11 @@ extern void store_xyz(const int fd, ray_t * ray, const double *hit,
     g2l(m, point, hit, hit_local);
 
     if (data->i == BUF_SIZE * 5) {	/* buffer full, write to disk */
+
+	pthread_mutex_lock(mutex_writefd);
 	write(fd, data->buf, sizeof(float) * data->i);
+	pthread_mutex_unlock(mutex_writefd);
+
 	data->i = 0;
     }
 

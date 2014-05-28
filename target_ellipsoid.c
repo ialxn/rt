@@ -22,6 +22,7 @@ typedef struct ell_state_t {
     char *name;			/* name (identifier) of target */
     char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double center[3];		/* center coordinate, origin of local system */
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
@@ -102,6 +103,7 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
 		    &state->refl_model_params);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
+    pthread_mutex_init(&state->mutex_writefd, NULL);
 }
 
 static void ell_free_state(void *vstate)
@@ -224,7 +226,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 	if (state->dump_file != -1)
 	    store_xyz(state->dump_file, ray, hit, state->M, state->center,
-		      data);
+		      data, &state->mutex_writefd);
 
 	data->flag &= ~ABSORBED;	/* clear flag */
 
@@ -287,8 +289,14 @@ static void ell_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	if (state->dump_file != -1)
+	if (state->dump_file != -1) {
+
+	    pthread_mutex_lock(&state->mutex_writefd);
 	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    fsync(state->dump_file);
+	    pthread_mutex_unlock(&state->mutex_writefd);
+
+	}
 }
 
 

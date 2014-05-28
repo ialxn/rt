@@ -22,6 +22,7 @@ typedef struct sq_state_t {
     char *name;			/* name (identifier) of target */
     char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double point[3];		/* center coordinate */
     double dx;			/* rectangle is '2*dx' times '2*dy' local coordinates */
@@ -92,6 +93,7 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
 		    &state->refl_model_params);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
+    pthread_mutex_init(&state->mutex_writefd, NULL);
 }
 
 static void sq_free_state(void *vstate)
@@ -169,7 +171,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 	if (state->dump_file != -1)
 	    store_xy(state->dump_file, ray, hit, state->M, state->point,
-		     data);
+		     data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
@@ -226,8 +228,14 @@ static void sq_flush_PTDT_outbuf(void *vstate)
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
-	if (state->dump_file != -1)
+	if (state->dump_file != -1) {
+
+	    pthread_mutex_lock(&state->mutex_writefd);
 	    write(state->dump_file, data->buf, sizeof(float) * data->i);
+	    fsync(state->dump_file);
+	    pthread_mutex_unlock(&state->mutex_writefd);
+
+	}
 }
 
 
