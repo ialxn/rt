@@ -137,7 +137,17 @@ int check_sources(config_t * cfg)
 		status += check_array("sources", this_s, "direction", i);
 		status += check_float("sources", this_s, "theta", i);
 
-	    }			/* end 'uniform point source' */
+	    } /* end 'uniform point source' */
+	    else if (!strcmp(type, "solid_sphere")) {
+		/*
+		 * solid sphere:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - 'radius' / double
+		 */
+		status += check_array("sources", this_s, "origin", i);
+		status += check_float("sources", this_s, "radius", i);
+
+	    }			/* end 'solid_sphere' */
 	}			/* end 'this_s', check next source */
     }
 
