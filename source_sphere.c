@@ -177,7 +177,7 @@ static void sp_init_rays_remain(void *vstate)
 
 
 static const source_type_t sp_t = {
-    "uniform point source",
+    "sphere",
     sizeof(struct sp_state_t),
     &sp_init_state,
     &sp_free_state,
