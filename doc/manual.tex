@@ -166,6 +166,25 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 \vspace{0.25cm}
 Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Ray start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
+\subsubsection{Solid Sphere}
+
+\noindent {\tt type="solid\_sphere";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt radius=R.r;}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt n\_rays=N;}
+
+\noindent {\tt spectrum="FILE\_NAME";}
+
+\vspace{0.25cm}
+Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position on the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed. In contrast to the source type {\tt sphere}, this source in not transparent. Rays that hit the source are absorbed and then re-emitted from a random position into a random direction.
+
 
 
 
