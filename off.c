@@ -887,7 +887,7 @@ static void output_sources(const config_t * cfg)
 	     */
 	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
 	} /* end 'uniform point source' */
-	else if (!strcmp(type, "sphere")) {
+	else if (!strcmp(type, "sphere") || !strcmp(type, "solid sphere")) {
 	    double O[3];
 	    double radius;
 
@@ -900,7 +900,7 @@ static void output_sources(const config_t * cfg)
 	     * at origin 'O'
 	     */
 	    off_sphere(name, O, radius, 1.0, 1.0, 0.0);
-	} /* end 'sphere' */
+	} /* end 'sphere' or 'solid_sphere' */
 	else if (!strcmp(type, "spot source")) {
 	    double O[3], dir[3];
 
