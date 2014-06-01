@@ -11,6 +11,8 @@
 #ifndef __MATH_UTILS_H__
 #define __MATH_UTILS_H__
 
+#include <gsl/gsl_rng.h>
+
 #include "ray.h"
 
 extern void a_plus_cb(double result[3], const double a[3],
@@ -26,5 +28,8 @@ extern void g2l(const double *mat, const double *origin, const double *g,
 		double *l);
 extern void l2g(const double *mat, const double *origin, const double *l,
 		double *g);
+
+extern void get_uniform_random_vector(double *result, const double radius,
+				      const gsl_rng * r);
 
 #endif				/* __MATH_UTILS_H__ */
