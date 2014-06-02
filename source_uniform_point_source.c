@@ -7,8 +7,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#define _GNU_SOURCE		/* for sincos() */
-
 #include <math.h>
 #include <string.h>
 
@@ -17,6 +15,7 @@
 #include <gsl/gsl_rng.h>
 
 #include "io_utils.h"
+#include "math_utils.h"
 #include "ray.h"
 #include "sources.h"
 
@@ -95,32 +94,15 @@ static ray_t *ups_emit_ray(void *vstate, const gsl_rng * r)
     }
 
     if (*rays_remain > 0) {	/* rays still available in group */
-	double t;
-	double cos_theta, sin_theta;
-	double phi, sin_phi, cos_phi;
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
 
-	t = gsl_rng_uniform(r);
-	cos_theta = 1.0 - 2.0 * t;
-	sin_theta = sin(acos(cos_theta));
-
-	t = gsl_rng_uniform(r);
-	phi = 2.0 * M_PI * t;
-	sincos(phi, &sin_phi, &cos_phi);
-
-	ray->dir[0] = sin_theta * cos_phi;
-	ray->dir[1] = sin_theta * sin_phi;
-	ray->dir[2] = cos_theta;
-
+	get_uniform_random_vector(ray->dir, 1.0, r);
 	memcpy(ray->orig, state->orig, 3 * sizeof(double));
-
 	ray->power = state->ppr;
-
-	/* choose random wavelength */
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
     }

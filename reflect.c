@@ -9,7 +9,6 @@
  */
 #define _GNU_SOURCE		/* for sincos() */
 
-
 #include <math.h>
 #include <string.h>
 #include <gsl/gsl_cblas.h>
@@ -17,6 +16,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "math_utils.h"
 #include "off.h"
 #include "reflect.h"
 
@@ -43,21 +43,9 @@ static void reflect_lambertian(ray_t * r, const double N[3],
   * origin or reflected ray will be 'P'.
   */
 {
-    double t, random_ray[3];
-    double cos_theta, sin_theta;
-    double phi, sin_phi, cos_phi;
+    double random_ray[3];
 
-    t = gsl_rng_uniform(rng);
-    cos_theta = 1.0 - 2.0 * t;
-    sin_theta = sin(acos(cos_theta));
-
-    t = gsl_rng_uniform(rng);
-    phi = 2.0 * M_PI * t;
-    sincos(phi, &sin_phi, &cos_phi);
-
-    random_ray[0] = sin_theta * cos_phi;
-    random_ray[1] = sin_theta * sin_phi;
-    random_ray[2] = cos_theta;
+    get_uniform_random_vector(random_ray, 1.0, rng);
 
     if (cblas_ddot(3, N, 1, random_ray, 1) < 0.0) {
 	/*
