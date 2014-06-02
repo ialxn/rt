@@ -11,7 +11,7 @@
 #ifndef __VERSION_H__
 #define __VERSION_H__
 
-#define RELEASE "0.6.3"
-#define RELEASE_DATE "28.05.2014"
+#define RELEASE "0.6.4"
+#define RELEASE_DATE "02.06.2014"
 
 #endif				/* __VERSION_H__ */
