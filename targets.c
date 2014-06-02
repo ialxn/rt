@@ -43,7 +43,8 @@ target_t *target_alloc(const target_type_t * type,
 
 void target_free(target_t * T)
 {
-    (T->type->free_state) (T->state);
+    if (T->type->free_state)
+	(T->type->free_state) (T->state);
     free(T->state);
     free(T);
 }
@@ -86,14 +87,16 @@ void init_PTDT(const target_t * T)
 
 void flush_PTDT_outbuf(const target_t * T)
 {
-    (T->type->flush_PTDT_outbuf) (T->state);
+    if (T->type->flush_PTDT_outbuf)
+	(T->type->flush_PTDT_outbuf) (T->state);
 }
 
 void free_PTDT(void *p)
 {
     PTDT_t *data = (PTDT_t *) p;
 
-    free(data->buf);
+    if (data->buf)
+	free(data->buf);
     free(data);
 }
 
