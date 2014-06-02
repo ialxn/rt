@@ -43,7 +43,8 @@ target_t *target_alloc(const target_type_t * type,
 
 void target_free(target_t * T)
 {
-    (T->type->free_state) (T->state);
+    if (T->type->free_state)
+	(T->type->free_state) (T->state);
     free(T->state);
     free(T);
 }
@@ -86,14 +87,16 @@ void init_PTDT(const target_t * T)
 
 void flush_PTDT_outbuf(const target_t * T)
 {
-    (T->type->flush_PTDT_outbuf) (T->state);
+    if (T->type->flush_PTDT_outbuf)
+	(T->type->flush_PTDT_outbuf) (T->state);
 }
 
 void free_PTDT(void *p)
 {
     PTDT_t *data = (PTDT_t *) p;
 
-    free(data->buf);
+    if (data->buf)
+	free(data->buf);
     free(data);
 }
 
@@ -375,6 +378,111 @@ void free_refl_model(const char model, void *refl_model_params)
 
     }
 
+}
+
+static double *validate_intercepts(const ray_t * ray, const double t1,
+				   const double t2)
+{
+/*
+ * smallest positive is possible:
+ *   target is in front of rays origin (t>0)
+ *   AND
+ *   require minimum path length to detect
+ *   self intersection because rays initially
+ *   emitted by source do not set flag
+ */
+    double t;
+    double *intercept = NULL;
+
+    t = GSL_MIN(t1, t2);
+    if (t > GSL_SQRT_DBL_EPSILON) {
+
+	intercept = (double *) malloc(3 * sizeof(double));
+	a_plus_cb(intercept, ray->orig, t, ray->dir);
+
+    } else {
+
+	t = GSL_MAX(t1, t2);
+	if (t > GSL_SQRT_DBL_EPSILON) {
+
+	    intercept = (double *) malloc(3 * sizeof(double));
+	    a_plus_cb(intercept, ray->orig, t, ray->dir);
+
+	}
+    }
+
+    return intercept;
+}
+
+double *intercept_sphere(const ray_t * ray, const double *center,
+			 const double radius)
+{
+/*
+ * from http://wiki.cgsociety.org/index.php/Ray_Sphere_Intersection
+ *
+ * In vector notation, the equations are as follows:
+ *
+ * Equation for a sphere (C: center, P: point on sphere, r: radius)
+ *	|| P - C || = r^2
+ *
+ * Equation for a line (O: origin, P: pointson line, D: direction unit
+ * vector, t: distance from O)
+ *
+ *	P = O + t D
+ *
+ * Solution (d_12) of resulting quadratic equation:
+ *
+ *	A t^2 + B t + C = 0
+ *
+ *	with
+ *
+ *	A = D dot D := 1 (unit vector)
+ *	B = 2 (O-C) dot D
+ *	C = (O-C) dot (O-C) - r^2
+ *
+ * if discriminatnt "B^2 - 4AC" (i.e. B^2 - 4C) is negative:	miss
+ * 						       else:	2 solns
+ *								(may coincide)
+ *
+ * to aviod poor numerical precision if B is close to sqrt(discriminant) use
+ *
+ *	t1 = q / A (i.e. q)
+ *      t2 = C / q
+ *
+ * with
+ *
+ *	q = (-B + sqrt(discriminant)) / 2	B < 0
+ *	q = (-B - sqrt(discriminant)) / 2	else
+ *
+ */
+    double OminusC[3];
+    double B, C;
+    double discriminant;
+
+    diff(OminusC, ray->orig, center);
+
+    B = 2.0 * cblas_ddot(3, OminusC, 1, ray->dir, 1);
+    C = cblas_ddot(3, OminusC, 1, OminusC, 1) - radius * radius;
+
+    discriminant = B * B - 4.0 * C;
+
+    if (discriminant < 0.0)	/* does not intercept */
+	return NULL;
+    else if (fabs(discriminant) < GSL_DBL_EPSILON)	/* 1 intercept */
+	return validate_intercepts(ray, -B * 0.5, 0.0);
+    else {			/* 2 intercepts */
+	double q;
+
+	if (B < 0)
+	    q = (-B + sqrt(discriminant)) * 0.5;
+	else
+	    q = (-B - sqrt(discriminant)) * 0.5;
+
+	/*
+	 * validate intercepts (smallest positive)
+	 */
+	return validate_intercepts(ray, q, C / q);
+    }
 }
 
 double *intercept_plane(const ray_t * ray, const double *plane_normal,

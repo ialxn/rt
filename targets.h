@@ -103,6 +103,8 @@ extern void free_refl_model(const char model, void *refl_model_params);
 extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
 			       const double *plane_point, int *hits_front);
+extern double *intercept_sphere(const ray_t * ray, const double *center,
+				const double radius);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);

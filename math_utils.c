@@ -7,7 +7,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
+#include <math.h>
 #include <string.h>
 #include <gsl/gsl_cblas.h>
 
@@ -125,4 +127,25 @@ void l2g(const double *mat, const double *origin, const double *l,
     for (i = 0; i < 3; i++)
 	g[i] = cblas_ddot(3, &mat[i], 3, l, 1) + origin[i];
 
+}
+
+void get_uniform_random_vector(double *result, const double l,
+			       const gsl_rng * r)
+{
+/*
+ * return random vector of length 'l'
+ */
+    double sin_theta, cos_theta;
+    double phi, sin_phi, cos_phi;
+    double R_sin_theta;
+
+    cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
+    sin_theta = sin(acos(cos_theta));
+    phi = 2.0 * M_PI * gsl_rng_uniform(r);
+    sincos(phi, &sin_phi, &cos_phi);
+    R_sin_theta = l * sin_theta;
+
+    result[0] = R_sin_theta * cos_phi;
+    result[1] = R_sin_theta * sin_phi;
+    result[2] = l * cos_theta;
 }

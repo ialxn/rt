@@ -46,6 +46,7 @@ typedef struct source_t {
 const source_type_t *source_uniform_point_source;
 const source_type_t *source_spot;
 const source_type_t *source_sphere;
+const source_type_t *source_solid_sphere;
 
 /*
  *  public functions to access / manipulate the sources (found in sources.c)

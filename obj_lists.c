@@ -49,6 +49,8 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	    new_source = source_alloc(source_sphere, this_source);
 	else if (!strcmp(type, "spot source"))
 	    new_source = source_alloc(source_spot, this_source);
+	else if (!strcmp(type, "solid sphere"))
+	    new_source = source_alloc(source_solid_sphere, this_source);
 	else {
 	    fprintf(stderr,
 		    "Unknown source type (%s) found. Ignoring source %s\n",
@@ -64,17 +66,15 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
     return s_list;
 }
 
-target_list_t *init_targets(config_t * cfg, int *n_targets,
-			    const int file_mode)
+
+static void add_targets(target_list_t * t_list, config_t * cfg,
+			int *n_targets, const int file_mode)
 {
+
     int i;
-    target_list_t *t_list;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     *n_targets = config_setting_length(targets);
-
-    t_list = (target_list_t *) malloc(sizeof(target_list_t));
-    INIT_LIST_HEAD(&t_list->list);
 
     for (i = 0; i < *n_targets; ++i) {	/* iterate through all targets */
 	target_list_t *new_entry;
@@ -158,10 +158,62 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 		     "#\n# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n#\n");
 	    dump_string(new_target, string);
 	}
-
     }
+}
+
+
+static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
+{
+    /*
+     * add the virtual targets that correspond to solid sources here
+     * curently implemented:
+     *          - solid sphere
+     */
+    const config_setting_t *sources = config_lookup(cfg, "sources");
+    int n_sources = config_setting_length(sources);
+    int i;
+
+    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
+	target_list_t *new_entry;
+	target_t *new_virtual_target;
+	const char *type;
+	config_setting_t *this_source =
+	    config_setting_get_elem(sources, (unsigned int) i);
+
+	config_setting_lookup_string(this_source, "type", &type);
+	if (!strcmp(type, "solid sphere"))
+	    new_virtual_target =
+		target_alloc(virtual_target_solid_sphere, this_source, 0);
+	else {
+	    fprintf(stderr, "unknown solid source found (%s)\n", type);
+	    fprintf(stderr,
+		    "cannot allocate corresponding virtual target\n");
+	    fprintf(stderr, "source becomes transparent\n");
+	    continue;
+	}
+
+	new_entry = (target_list_t *) malloc(sizeof(target_list_t));
+	new_entry->t = new_virtual_target;
+	list_add_tail(&new_entry->list, &t_list->list);
+    }
+}
+
+
+target_list_t *init_targets(config_t * cfg, int *n_targets,
+			    const int file_mode)
+{
+
+    target_list_t *t_list =
+	(target_list_t *) malloc(sizeof(target_list_t));
+
+    INIT_LIST_HEAD(&t_list->list);
+
+    add_targets(t_list, cfg, n_targets, file_mode);
+    add_virtual_targets(t_list, cfg);
+
     return t_list;
 }
+
 
 void source_list_free(source_list_t * s)
 {
