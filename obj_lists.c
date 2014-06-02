@@ -184,13 +184,8 @@ static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
 	if (!strcmp(type, "solid sphere"))
 	    new_virtual_target =
 		target_alloc(virtual_target_solid_sphere, this_source, 0);
-	else {
-	    fprintf(stderr, "unknown solid source found (%s)\n", type);
-	    fprintf(stderr,
-		    "cannot allocate corresponding virtual target\n");
-	    fprintf(stderr, "source becomes transparent\n");
+	else			/* transparent source found, no virtual target added */
 	    continue;
-	}
 
 	new_entry = (target_list_t *) malloc(sizeof(target_list_t));
 	new_entry->t = new_virtual_target;
