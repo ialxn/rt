@@ -7,8 +7,6 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#define _GNU_SOURCE		/* for sincos() */
-
 #include <math.h>
 #include <string.h>
 
@@ -18,6 +16,7 @@
 #include <gsl/gsl_spline.h>
 
 #include "io_utils.h"
+#include "math_utils.h"
 #include "ray.h"
 #include "sources.h"
 
@@ -96,9 +95,7 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
     }
 
     if (*rays_remain > 0) {	/* rays still available in group */
-	double sin_theta, cos_theta;
-	double phi, sin_phi, cos_phi;
-	double R, R_sin_theta;
+	double R, point[3];
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
@@ -126,31 +123,17 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 	 *    better than O1 on an atom 450 processor)
 	 */
 
-	cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
-	sin_theta = sin(acos(cos_theta));
-	phi = 2.0 * M_PI * gsl_rng_uniform(r);
-	sincos(phi, &sin_phi, &cos_phi);
-
 	R = state->radius * sqrt(gsl_rng_uniform(r));
-	R_sin_theta = R * sin_theta;
+	get_uniform_random_vector(point, R, r);
 
-	ray->orig[0] = state->orig[0] + R_sin_theta * cos_phi;
-	ray->orig[1] = state->orig[1] + R_sin_theta * sin_phi;
-	ray->orig[2] = state->orig[2] + state->radius * cos_theta;
+	ray->orig[0] = state->orig[0] + point[0];
+	ray->orig[1] = state->orig[1] + point[1];
+	ray->orig[2] = state->orig[2] + point[2];
 
 	/* choose random direction */
-	cos_theta = 1.0 - 2.0 * gsl_rng_uniform(r);
-	sin_theta = sin(acos(cos_theta));
-	phi = 2.0 * M_PI * gsl_rng_uniform(r);
-	sincos(phi, &sin_phi, &cos_phi);
-
-	ray->dir[0] = sin_theta * cos_phi;
-	ray->dir[1] = sin_theta * sin_phi;
-	ray->dir[2] = cos_theta;
+	get_uniform_random_vector(ray->dir, 1.0, r);
 
 	ray->power = state->ppr;
-
-	/* choose random wavelength */
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
     }
