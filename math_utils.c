@@ -149,3 +149,25 @@ void get_uniform_random_vector(double *result, const double l,
     result[1] = R_sin_theta * sin_phi;
     result[2] = l * cos_theta;
 }
+
+void get_uniform_random_vector_hemisphere(double *result,
+					  const double radius,
+					  const double *normal,
+					  const gsl_rng * r)
+{
+    double random_ray[3];
+
+    get_uniform_random_vector(random_ray, radius, r);
+
+    if (cblas_ddot(3, normal, 1, random_ray, 1) < 0.0) {
+	/*
+	 * 'normal' and 'random_ray' point into opposite directions (are anti-
+	 * parallel). use inverted 'random_ray'.
+	 */
+	size_t i;
+
+	for (i = 0; i < 3; i++)
+	    result[i] = -random_ray[i];
+    } else
+	memcpy(result, random_ray, 3 * sizeof(double));
+}

@@ -31,5 +31,9 @@ extern void l2g(const double *mat, const double *origin, const double *l,
 
 extern void get_uniform_random_vector(double *result, const double radius,
 				      const gsl_rng * r);
+extern void get_uniform_random_vector_hemisphere(double *result,
+						 const double radius,
+						 const double *normal,
+						 const gsl_rng * r);
 
 #endif				/* __MATH_UTILS_H__ */

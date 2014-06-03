@@ -43,25 +43,8 @@ static void reflect_lambertian(ray_t * r, const double N[3],
   * origin or reflected ray will be 'P'.
   */
 {
-    double random_ray[3];
-
-    get_uniform_random_vector(random_ray, 1.0, rng);
-
-    if (cblas_ddot(3, N, 1, random_ray, 1) < 0.0) {
-	/*
-	 * 'N' and 'random_ray' point into opposite directions (are anti-
-	 * parallel). thus ray is not reflected but transmitted. use inverted
-	 * 'random_ray'.
-	 */
-	size_t i;
-
-	for (i = 0; i < 3; i++)
-	    r->dir[i] = -random_ray[i];
-    } else
-	memcpy(r->dir, random_ray, 3 * sizeof(double));
-
+    get_uniform_random_vector_hemisphere(r->dir, 1.0, N, rng);
     memcpy(r->orig, P, 3 * sizeof(double));
-
 }
 
 static void reflect_microfacet_gaussian(ray_t * r, const double N[3],

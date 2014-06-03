@@ -119,13 +119,9 @@ static ray_t *ssp_emit_ray(void *vstate, const gsl_rng * r)
 	 * on the sphere's surface is parallel to the normal
 	 * vector (but not normalized, which is no problem here).
 	 */
-	do {
-	    get_uniform_random_vector(ray->dir, 1.0, r);
-	} while (cblas_ddot(3, point, 1, ray->dir, 1) < 0.0);
+	get_uniform_random_vector_hemisphere(ray->dir, 1.0, point, r);
 
 	ray->power = state->ppr;
-
-	/* choose random wavelength */
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
     }
