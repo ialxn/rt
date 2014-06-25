@@ -121,9 +121,9 @@ static double *ps_get_intercept(void *vstate, ray_t * ray)
 	return NULL;
 
     /*
-     * only accept intercepts if rear side is hit
+     * only accept intercepts if front side is hit
      */
-    if (state->one_sided && hits_front) {
+    if (state->one_sided && !hits_front) {
 	free(intercept);
 	return NULL;
     }
