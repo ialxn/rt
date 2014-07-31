@@ -36,11 +36,21 @@ typedef struct ell_state_t {
 static void ell_surf_normal(const double *point, const double *axes,
 			    double *const normal)
 {
+/*
+ * from
+ * http://www.freemathhelp.com/forum/threads/80712-Question-about-Normal-to-an-Ellipsoid
+ *
+ * this normal is for ellisoid cetered at (0,0,0) i.e.
+ *
+ *      x^2/a^2 + y^2/b^2 + z^2/c^2 - 1 = 0
+ *
+ * and points inwards! (note -2.0 * .....)
+ */
     int i;
     double norm;
 
     for (i = 0, norm = 0.0; i < 3; i++) {
-	normal[i] = 2.0 * point[i] / axes[i];
+	normal[i] = -2.0 * point[i] / axes[i];
 	norm += normal[i] * normal[i];
     }
     norm = sqrt(norm);
@@ -194,7 +204,7 @@ static double *ell_get_intercept(void *vstate, ray_t * ray)
 	    ell_surf_normal(l_intercept, state->axes, normal);
 	    dot = cblas_ddot(3, normal, 1, r_N, 1);
 
-	    if (dot < 0.0)	/* anti-parallel. hits outside, absorbed */
+	    if (dot > 0.0)	/* parallel. hits outside, absorbed */
 		data->flag |= ABSORBED;
 
 	    /* convert to global coordinates, origin is 'state->center' */
