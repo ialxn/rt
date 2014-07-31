@@ -69,7 +69,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
  * - reflect 'r' at new surface normal
  * - check that ray is reflected and not transmitted ('N' dot 'r' > 0)
  */
-    double dot_product = -1.0;
+    double dot_product = 1.0;
     double alpha, beta;
     const double O[] = { 0.0, 0.0, 0.0 };
     double dummy[3];
