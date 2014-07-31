@@ -11,6 +11,7 @@
 #include <math.h>
 #include <string.h>
 
+#include "math_utils.h"
 #include "io_utils.h"
 #include "reflect.h"
 #include "targets.h"
@@ -95,6 +96,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
 
     config_setting_lookup_float(this_target, "z_min", &state->z_min);
     config_setting_lookup_float(this_target, "z_max", &state->z_max);
+    if (state->z_max < state->z_min)	/* safety */
+	SWAP(state->z_max, state->z_min);
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);

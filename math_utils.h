@@ -15,6 +15,10 @@
 
 #include "ray.h"
 
+
+#define SWAP(x, y) do { typeof((x)) temp = (x); (x) = (y); (y) = temp; } while (0)
+
+
 extern void a_plus_cb(double result[3], const double a[3],
 		      const double c, const double b[3]);
 extern void diff(double result[3], const double a[3], const double b[3]);
