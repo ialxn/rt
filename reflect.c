@@ -94,7 +94,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 
 	do {			/* gaussian theta */
 	    theta = gsl_ran_gaussian(rng, sigma);
-	} while (theta > M_PI_2);
+	} while (fabs(theta) > M_PI_2);
 
 	phi = 2.0 * M_PI * gsl_rng_uniform(rng);
 
