@@ -358,6 +358,7 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
 				    number);
+	*number /= (180.0 * M_PI);	/* degree to radian */
 	*refl_model_params = number;
     }
 
