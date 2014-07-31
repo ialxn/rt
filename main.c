@@ -7,8 +7,10 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define __STDC_FORMAT_MACROS
 
 #include <getopt.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <pthread.h>
@@ -33,7 +35,7 @@ struct run_simulation_args {
 };
 
 struct worker_retval {
-    unsigned int n_lost;	/* number of rays lost i.e. rays that
+    int64_t n_lost;		/* number of rays lost i.e. rays that
 				   are not absorbed anywhere. they may
 				   have hit some targets and have been
 				   reflected several times, however. */
@@ -395,7 +397,7 @@ int main(int argc, char **argv)
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
 	struct worker_retval *retval;
-	unsigned int n_lost;
+	int64_t n_lost;
 	double p_lost;
 
     case CHECK_CONFIG:		/* print parsed input */
@@ -462,8 +464,8 @@ int main(int argc, char **argv)
 	    free(retval);
 	}
 
-	fprintf(stdout, "%u rays lost with total power of %e\n", n_lost,
-		p_lost);
+	fprintf(stdout, "%" PRId64 " rays lost with total power of %e\n",
+		n_lost, p_lost);
 
 	free(tids);
 	free(rs_args);

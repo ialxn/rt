@@ -24,7 +24,7 @@ typedef struct sp_state_t {
     char *name;			/* name (identifier) of uniform point source */
     double orig[3];
     double radius;
-    int n_rays;			/* number of rays remaining until source is exhausted */
+    int64_t n_rays;		/* number of rays remaining until source is exhausted */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
     pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
     double power;		/* power of source */
@@ -41,10 +41,10 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
 
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);
-    config_setting_lookup_int(this_s, "n_rays", &state->n_rays);
+    config_setting_lookup_int64(this_s, "n_rays", &state->n_rays);
     pthread_mutex_init(&state->mutex_n_rays, NULL);
     config_setting_lookup_float(this_s, "power", &state->power);
-    state->ppr = state->power / state->n_rays;
+    state->ppr = state->power / (double) state->n_rays;
 
     config_setting_lookup_float(this_s, "radius", &state->radius);
     read_vector(this_s, "origin", state->orig);
@@ -68,14 +68,14 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 {
     sp_state_t *state = (sp_state_t *) vstate;
     ray_t *ray = NULL;
-    int *rays_remain = pthread_getspecific(state->rays_remain_key);
+    int64_t *rays_remain = pthread_getspecific(state->rays_remain_key);
 
     if (!*rays_remain) {
 	/*
 	 * group of rays has been consumed. check if source is not
 	 * yet exhausted
 	 */
-	int work_needed;
+	int64_t work_needed;
 
 	pthread_mutex_lock(&state->mutex_n_rays);
 	work_needed = state->n_rays;
@@ -152,7 +152,7 @@ static void sp_init_rays_remain(void *vstate)
 {
     sp_state_t *state = (sp_state_t *) vstate;
 
-    int *rays_remain = (int *) malloc(sizeof(int));
+    int64_t *rays_remain = (int64_t *) malloc(sizeof(int64_t));
 
     *rays_remain = 0;
     pthread_setspecific(state->rays_remain_key, rays_remain);
