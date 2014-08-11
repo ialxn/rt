@@ -386,7 +386,8 @@ static void off_triangle(const char *name, const double *P1,
 
 static void off_ellipsoid(const char *name, const double *origin,
 			  const double *Z, const double *axes,
-			  const double z_min, const double z_max,
+			  const double z_min, const double
+			  z_max,
 			  const double ri, const double gi,
 			  const double bi, const double ro,
 			  const double go, const double bo,
@@ -421,15 +422,16 @@ static void off_ellipsoid(const char *name, const double *origin,
 	double r;
 
 	l[2] = z_min + i * delta_z;
-	r = 1.0 - l[2] * l[2] / (axes[2] * axes[2]);
+	r = axes[0] * sqrt(1.0 - l[2] * l[2] / (axes[2] * axes[2]));
+
 	if (r < GSL_SQRT_DBL_EPSILON)
 	    r = GSL_SQRT_DBL_EPSILON;
 
 	for (j = 0; j < N_ROT; j++) {
 	    const double phi = j * delta_phi;
 
-	    l[0] = r * axes[0] * sin(phi);
-	    l[1] = r * axes[1] * cos(phi);
+	    l[0] = r * sin(phi);
+	    l[1] = r * cos(phi);
 
 	    l2g_off(origin, l, g, alpha, beta);
 
@@ -445,15 +447,16 @@ static void off_ellipsoid(const char *name, const double *origin,
 	double r;
 
 	l[2] = z_min + i * delta_z;
-	r = dz * (1.0 - l[2] * l[2] / (axes[2] * axes[2]));
+	r = dz * axes[0] * sqrt(1.0 - l[2] * l[2] / (axes[2] * axes[2]));
+
 	if (r < GSL_SQRT_DBL_EPSILON)
 	    r = GSL_SQRT_DBL_EPSILON;
 
 	for (j = 0; j < N_ROT; j++) {
 	    const double phi = j * delta_phi;
 
-	    l[0] = r * axes[0] * sin(phi);
-	    l[1] = r * axes[1] * cos(phi);
+	    l[0] = r * sin(phi);
+	    l[1] = r * cos(phi);
 
 	    l2g_off(origin, l, g, alpha, beta);
 
