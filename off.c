@@ -393,8 +393,8 @@ static void off_ellipsoid(const char *name, const double *origin,
 			  const double go, const double bo,
 			  const double dz)
 {
-#define N_TRANS 5
-#define N_ROT 12
+#define N_TRANS 11
+#define N_ROT 24
 
     int i, j;
     double alpha, beta;
