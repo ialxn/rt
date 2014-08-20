@@ -127,13 +127,12 @@ static double *ann_get_intercept(void *vstate, ray_t * ray)
     g2l(state->M, state->point, intercept, l_intercept);
 
     /*
-     * r2_intercep is sqared distance from center of annulus to intercept
-     * in the plane of the annulus. we are in local system that
-     * is offset by intercept[2], so leave the latter out.
+     * r2_intercep is squared distance from center of annulus to intercept
+     * in the plane of the annulus. we are in local system.
      * compare r^2 to avoid sqrt()
      */
     r2_intercept =
-	intercept[0] * intercept[0] + intercept[1] * intercept[1];
+	l_intercept[0] * l_intercept[0] + l_intercept[1] * l_intercept[1];
     if ((r2_intercept > state->R2)
 	|| (r2_intercept < state->r2)) {
 
