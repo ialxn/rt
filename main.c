@@ -51,6 +51,7 @@ static pthread_mutex_t mutex_print2 = PTHREAD_MUTEX_INITIALIZER;
 static int print2 = 0;
 
 static int n_threads = 1;	/* default single threaded */
+static int n_log = 0;		/* default do not log path of rays */
 
 static void init_PTD(source_list_t * source_list,
 		     target_list_t * target_list)
@@ -253,6 +254,8 @@ static void help(void)
     fprintf(stdout, "Usage: rt\n");
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
+    fprintf(stdout,
+	    "       --log, -l        log path of first l rays per source [0].\n");
     fprintf(stdout, "       --mode, -m        select run mode [0].\n");
     fprintf(stdout,
 	    "                         0: check and print input.\n");
@@ -326,6 +329,7 @@ int main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 	    {"append", required_argument, 0, 'a'},
+	    {"log", required_argument, 0, 'l'},
 	    {"mode", required_argument, 0, 'm'},
 	    {"threads", required_argument, 0, 't'},
 	    {"Version", no_argument, 0, 'V'},
@@ -333,7 +337,7 @@ int main(int argc, char **argv)
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:m:t:Vh", long_options,
+	c = getopt_long(argc, argv, "a:l:m:t:Vh", long_options,
 			&option_index);
 
 	if (c == -1)
@@ -344,6 +348,10 @@ int main(int argc, char **argv)
 	case 'a':
 	    file_mode = O_APPEND;
 	    seed = atoi(optarg);
+	    break;
+
+	case 'l':
+	    n_log = atoi(optarg);
 	    break;
 
 	case 'm':
@@ -432,10 +440,17 @@ int main(int argc, char **argv)
 		    seed);
 	}
 
-	if (n_threads > 1)
-	    fprintf(stdout,
-		    "    starting %d threads (seed %d, %d, ...) \n",
-		    n_threads, seed, seed + 1);
+	if (n_threads > 1) {
+	    if (!n_log)
+		fprintf(stdout,
+			"    starting %d threads (seed %d, %d, ...) \n",
+			n_threads, seed, seed + 1);
+	    else {
+		n_threads = 1;
+		fprintf(stdout,
+			"    logging path of rays requires single threaded execution.\n");
+	    }
+	}
 
 	config_destroy(&cfg);
 
