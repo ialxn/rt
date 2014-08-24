@@ -53,6 +53,16 @@ To compile and install \rt you need a C-compiler\footnote{\rt is only tested wit
 
 \item[{\tt [--append|-a]}] Append to output files. A new seed value for the random number generator is supplied by this parameter. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays and append to existing output files. Default mode is to truncate existing files.
 
+\item[{\tt [--Log|-L]}] Log the path of some rays in raw format (give number of rays to be used as parameter) for each source in file {\tt NNN.dat} with {\tt NNN} denoting the number (ID) of the source. Output format is as follows:
+\begin{verbatim}
+x_start y_start z_start x_end y_end z_end
+x_start y_start z_start x_end y_end z_end
+.
+\end{verbatim}
+Start and end of each leg of the path is on a single line. Individual rays are separated by an empty line.  
+
+\item[{\tt [--log|-l]}] Log the path of some rays in OFF format (give number of rays to be used as parameter) for each source in file {\tt NNN.OFF} with {\tt NNN} denoting the number (ID) of the source.
+
 \item[{\tt [--mode|-m]}] Select mode [012] for this run.
 \begin{itemize}
 \item[\tt -m0]{Check syntax of input [default].}
