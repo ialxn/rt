@@ -9,7 +9,6 @@
  */
 
 #include <math.h>
-#include <stdio.h>
 #include <string.h>
 
 #include <gsl/gsl_cblas.h>
@@ -1001,4 +1000,17 @@ FILE *open_off(const char *name)
 
     snprintf(f_name, 256, "%s.off", name);
     return fopen(f_name, "w");
+}
+
+void write_ray(FILE * f, const double *start, const double *stop,
+	       const int r, const int g, const int b)
+{
+#define DIAMETER 0.05
+
+    fprintf(f, "{ = OFF\n");
+    fprintf(f, "8 6 0\n");
+
+    block_vertices(f, start, stop, DIAMETER, DIAMETER);
+    block_faces(f, 0, r, g, b);
+    fprintf(f, "}\n");
 }

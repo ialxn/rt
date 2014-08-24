@@ -12,6 +12,8 @@
 #define __OFF_H__
 
 #include <libconfig.h>
+#include <stdio.h>
+
 
 extern void output_geometry(config_t * cfg);
 
@@ -20,6 +22,8 @@ extern void g2l_off(const double *P, const double *N, double *L,
 extern void l2g_off(const double *P, const double *L, double *G,
 		    const double alpha, const double beta);
 extern FILE *open_off(const char *name);
+extern void write_ray(FILE * f, const double *start, const double *stop,
+		      const int r, const int g, const int b);
 
 
 

@@ -117,6 +117,7 @@ static void *run_simulation(void *args)
 {
     struct run_simulation_args *a = (struct run_simulation_args *) args;
 
+    int this_source = 0;
     struct list_head *s_pos;
     const gsl_rng_type *T = gsl_rng_default;
     gsl_rng *r = gsl_rng_alloc(T);
@@ -144,6 +145,16 @@ static void *run_simulation(void *args)
 	source_list_t *this_s = list_entry(s_pos, source_list_t, list);
 	source_t *current_source = this_s->s;
 	ray_t *ray;
+	int this_source_n_log = n_log;
+	FILE *log_file;
+
+	if (n_log) {		/* log ray path enabled */
+	    char fname[256];
+
+	    snprintf(fname, 250, "%03d", this_source);
+	    log_file = open_off(fname);
+	    fprintf(log_file, "LIST\n");
+	}
 
 	print2_once(get_source_type(current_source),
 		    get_source_name(current_source));
@@ -153,6 +164,12 @@ static void *run_simulation(void *args)
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
 	     */
+	    if (n_log)		/* log ray path enabled */
+		if (!this_source_n_log)
+		    /*
+		     * sufficient ray logged, stop this source
+		     */
+		    break;
 
 	    while (ray) {
 		/*
@@ -222,6 +239,10 @@ static void *run_simulation(void *args)
 		     *        the "while (ray) {}" loop and a new
 		     *        ray will be emitted by the current source.
 		     */
+		    if (n_log)	/* log ray path enabled */
+			write_ray(log_file, ray->orig, closest_icpt, 0, 0,
+				  0);
+
 		    ray = out_ray(closest_target, ray, closest_icpt, r);
 		    free(closest_icpt);
 		    closest_icpt = NULL;
@@ -233,6 +254,16 @@ static void *run_simulation(void *args)
 		     * trigger emmision of new ray from current source
 		     * by assigning NULL to 'ray'
 		     */
+		    if (n_log) {	/* log ray path enabled */
+			double end[3];
+
+			a_plus_cb(end, ray->orig, 1.0, ray->dir);
+			/*
+			 * this is a ray to infinity. mark red.
+			 */
+			write_ray(log_file, ray->orig, end, 1, 0, 0);
+		    }
+
 		    retval->n_lost++;
 		    retval->p_lost += ray->power;
 		    free(ray);
@@ -240,7 +271,17 @@ static void *run_simulation(void *args)
 
 		}
 	    }			/* 'ray' absorbed or lost */
+
+	    if (n_log)		/* log ray path enabled */
+		this_source_n_log--;
+
 	}			/* 'current_source' is exhausted */
+
+	if (n_log) {		/* log ray path enabled */
+	    fclose(log_file);
+	    this_source++;
+	}
+
     }				/* all sources exhausted */
     gsl_rng_free(r);
     flush_outbufs(a->target_list);
