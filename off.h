@@ -19,6 +19,8 @@ extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
 extern void l2g_off(const double *P, const double *L, double *G,
 		    const double alpha, const double beta);
+extern FILE *open_off(const char *name);
+
 
 
 #endif				/* __OFF_H__ */

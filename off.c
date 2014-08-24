@@ -23,14 +23,6 @@
 #define AXES_LENGTH 5.0
 
 
-static FILE *open_off(const char *name)
-{
-    char f_name[256];
-
-    snprintf(f_name, 256, "%s.off", name);
-    return fopen(f_name, "w");
-}
-
 static void block_vertices(FILE * f, const double *P, const double *N,
 			   const double x, const double y)
 /*
@@ -1001,4 +993,12 @@ void l2g_off(const double *P, const double *L, double *G,
     for (i = 0; i < 3; i++)
 	G[i] += P[i];
 
+}
+
+FILE *open_off(const char *name)
+{
+    char f_name[256];
+
+    snprintf(f_name, 256, "%s.off", name);
+    return fopen(f_name, "w");
 }
