@@ -52,6 +52,7 @@ static int print2 = 0;
 
 static int n_threads = 1;	/* default single threaded */
 static int n_log = 0;		/* default do not log path of rays */
+static int log_OFF;		/* TRUE: log OFF file (FALSE: raw) */
 
 static void init_PTD(source_list_t * source_list,
 		     target_list_t * target_list)
@@ -151,9 +152,14 @@ static void *run_simulation(void *args)
 	if (n_log) {		/* log ray path enabled */
 	    char fname[256];
 
-	    snprintf(fname, 250, "%03d", this_source);
-	    log_file = open_off(fname);
-	    fprintf(log_file, "LIST\n");
+	    if (log_OFF) {
+		snprintf(fname, 250, "%03d", this_source);
+		log_file = open_off(fname);
+		fprintf(log_file, "LIST\n");
+	    } else {
+		snprintf(fname, 250, "%03d.dat", this_source);
+		log_file = fopen(fname, "w");
+	    }
 	}
 
 	print2_once(get_source_type(current_source),
@@ -239,10 +245,16 @@ static void *run_simulation(void *args)
 		     *        the "while (ray) {}" loop and a new
 		     *        ray will be emitted by the current source.
 		     */
-		    if (n_log)	/* log ray path enabled */
-			write_ray(log_file, ray->orig, closest_icpt, 0, 0,
-				  0);
-
+		    if (n_log) {	/* log ray path enabled */
+			if (log_OFF)
+			    write_ray(log_file, ray->orig, closest_icpt, 0,
+				      0, 0);
+			else
+			    fprintf(log_file, "%e\t%e\t%e\t%e\t%e\t%e\n",
+				    ray->orig[0], ray->orig[1],
+				    ray->orig[2], closest_icpt[0],
+				    closest_icpt[1], closest_icpt[2]);
+		    }
 		    ray = out_ray(closest_target, ray, closest_icpt, r);
 		    free(closest_icpt);
 		    closest_icpt = NULL;
@@ -261,7 +273,12 @@ static void *run_simulation(void *args)
 			/*
 			 * this is a ray to infinity. mark red.
 			 */
-			write_ray(log_file, ray->orig, end, 1, 0, 0);
+			if (log_OFF)
+			    write_ray(log_file, ray->orig, end, 0, 0, 0);
+			else
+			    fprintf(log_file, "%e\t%e\t%e\t%e\t%e\t%e\n",
+				    ray->orig[0], ray->orig[1],
+				    ray->orig[2], end[0], end[1], end[2]);
 		    }
 
 		    retval->n_lost++;
@@ -272,8 +289,11 @@ static void *run_simulation(void *args)
 		}
 	    }			/* 'ray' absorbed or lost */
 
-	    if (n_log)		/* log ray path enabled */
+	    if (n_log) {	/* log ray path enabled */
 		this_source_n_log--;
+		if (!log_OFF)
+		    fprintf(log_file, "\n");
+	    }
 
 	}			/* 'current_source' is exhausted */
 
@@ -296,7 +316,11 @@ static void help(void)
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
     fprintf(stdout,
-	    "       --log, -l        log path of first l rays per source [0].\n");
+	    "       --Log, -L         log path of first n rays per source [0].\n");
+    fprintf(stdout, "                         Raw format used.\n");
+    fprintf(stdout,
+	    "       --log, -l         log path of first l rays per source [0].\n");
+    fprintf(stdout, "                         OFF format used.\n");
     fprintf(stdout, "       --mode, -m        select run mode [0].\n");
     fprintf(stdout,
 	    "                         0: check and print input.\n");
@@ -370,6 +394,7 @@ int main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 	    {"append", required_argument, 0, 'a'},
+	    {"Log", required_argument, 0, 'L'},
 	    {"log", required_argument, 0, 'l'},
 	    {"mode", required_argument, 0, 'm'},
 	    {"threads", required_argument, 0, 't'},
@@ -378,7 +403,7 @@ int main(int argc, char **argv)
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:l:m:t:Vh", long_options,
+	c = getopt_long(argc, argv, "a:L:l:m:t:Vh", long_options,
 			&option_index);
 
 	if (c == -1)
@@ -391,8 +416,14 @@ int main(int argc, char **argv)
 	    seed = atoi(optarg);
 	    break;
 
+	case 'L':
+	    n_log = atoi(optarg);
+	    log_OFF = 0;
+	    break;
+
 	case 'l':
 	    n_log = atoi(optarg);
+	    log_OFF = 1;
 	    break;
 
 	case 'm':
