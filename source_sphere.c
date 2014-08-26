@@ -155,6 +155,13 @@ static int64_t sp_get_source_n_rays(void *vstate)
     return state->n_rays;
 }
 
+static double sp_get_source_power(void *vstate)
+{
+    sp_state_t *state = (sp_state_t *) vstate;
+
+    return state->power;
+}
+
 static void sp_init_rays_remain(void *vstate)
 {
     sp_state_t *state = (sp_state_t *) vstate;
@@ -174,6 +181,7 @@ static const source_type_t sp_t = {
     &sp_emit_ray,
     &sp_get_source_name,
     &sp_get_source_n_rays,
+    &sp_get_source_power,
     &sp_init_rays_remain
 };
 
