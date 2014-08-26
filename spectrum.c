@@ -152,7 +152,7 @@ static gsl_histogram *init_hist(const double start_wl,
 
 static void help(void)
 {
-    fprintf(stdout, "\nspectrum Version %s(%s) AI52\n\n", RELEASE,
+    fprintf(stdout, "\nspectrum Version %s (%s) AI52\n\n", RELEASE,
 	    RELEASE_DATE);
     fprintf(stdout, "Usage: spectrum\n");
     fprintf(stdout, "       --num, -n         number of bins [10]\n");

@@ -210,7 +210,7 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 
 static void help(void)
 {
-    fprintf(stdout, "\nflux_2D Version %s(%s) AI52\n\n", RELEASE,
+    fprintf(stdout, "\nflux_2D Version %s (%s) AI52\n\n", RELEASE,
 	    RELEASE_DATE);
     fprintf(stdout, "Usage: flux_2D\n");
     fprintf(stdout, "       --nx, -a          number of x bins  [10]\n");

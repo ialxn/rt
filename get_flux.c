@@ -21,7 +21,7 @@
 
 static void help(void)
 {
-    fprintf(stdout, "\nget_flux Version %s(%s) AI52\n\n", RELEASE,
+    fprintf(stdout, "\nget_flux Version %s (%s) AI52\n\n", RELEASE,
 	    RELEASE_DATE);
     fprintf(stdout, "Usage: get_flux\n");
     fprintf(stdout, "       --help, -h        Print this help message\n");
