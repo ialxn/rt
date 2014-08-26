@@ -138,8 +138,13 @@ static const char *ssp_get_source_name(void *vstate)
 static int64_t ssp_get_source_n_rays(void *vstate)
 {
     ssp_state_t *state = (ssp_state_t *) vstate;
+    int64_t n;
 
-    return state->n_rays;
+    pthread_mutex_lock(&state->mutex_n_rays);
+    n = state->n_rays;
+    pthread_mutex_unlock(&state->mutex_n_rays);
+
+    return n;
 }
 
 static double ssp_get_source_power(void *vstate)
