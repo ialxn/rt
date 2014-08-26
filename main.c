@@ -102,12 +102,15 @@ static void print1_once(const char *rng_name)
     pthread_mutex_unlock(&mutex_print1);
 }
 
-static void print2_once(const char *s_type, const char *s_name)
+static void print2_once(const char *s_type, const char *s_name, int64_t n,
+			double power)
 {
     pthread_mutex_lock(&mutex_print2);
 
     if (print2 % n_threads == 0) {	/* only true during first call */
 	fprintf(stdout, "        %s (%s) started\n", s_name, s_type);
+	fprintf(stdout, "            %" PRId64 " rays to trace\n", n);
+	fprintf(stdout, "            with total power of %e\n", power);
 	fflush(stdout);
     }
 
@@ -167,7 +170,9 @@ static void *run_simulation(void *args)
 	}
 
 	print2_once(get_source_type(current_source),
-		    get_source_name(current_source));
+		    get_source_name(current_source),
+		    get_source_n_rays(current_source),
+		    get_source_power(current_source));
 
 	while ((ray = emit_ray(current_source, r))) {
 	    /*

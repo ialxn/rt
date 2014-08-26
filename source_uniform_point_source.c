@@ -117,6 +117,20 @@ static const char *ups_get_source_name(void *vstate)
     return state->name;
 }
 
+static int64_t ups_get_source_n_rays(void *vstate)
+{
+    ups_state_t *state = (ups_state_t *) vstate;
+
+    return state->n_rays;
+}
+
+static double ups_get_source_power(void *vstate)
+{
+    ups_state_t *state = (ups_state_t *) vstate;
+
+    return state->power;
+}
+
 static void ups_init_rays_remain(void *vstate)
 {
     ups_state_t *state = (ups_state_t *) vstate;
@@ -135,6 +149,8 @@ static const source_type_t ups_t = {
     &ups_free_state,
     &ups_emit_ray,
     &ups_get_source_name,
+    &ups_get_source_n_rays,
+    &ups_get_source_power,
     &ups_init_rays_remain
 };
 

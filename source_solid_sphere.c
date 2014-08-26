@@ -135,6 +135,20 @@ static const char *ssp_get_source_name(void *vstate)
     return state->name;
 }
 
+static int64_t ssp_get_source_n_rays(void *vstate)
+{
+    ssp_state_t *state = (ssp_state_t *) vstate;
+
+    return state->n_rays;
+}
+
+static double ssp_get_source_power(void *vstate)
+{
+    ssp_state_t *state = (ssp_state_t *) vstate;
+
+    return state->power;
+}
+
 static void ssp_init_rays_remain(void *vstate)
 {
     ssp_state_t *state = (ssp_state_t *) vstate;
@@ -153,6 +167,8 @@ static const source_type_t ssp_t = {
     &ssp_free_state,
     &ssp_emit_ray,
     &ssp_get_source_name,
+    &ssp_get_source_n_rays,
+    &ssp_get_source_power,
     &ssp_init_rays_remain
 };
 
