@@ -35,10 +35,12 @@ struct run_simulation_args {
 };
 
 struct worker_retval {
+    int64_t n_total;		/* total number of rays traced */
     int64_t n_lost;		/* number of rays lost i.e. rays that
 				   are not absorbed anywhere. they may
 				   have hit some targets and have been
 				   reflected several times, however. */
+    double p_total;		/* total power of all rays */
     double p_lost;		/* total power of all lost rays */
 };
 
@@ -122,7 +124,9 @@ static void *run_simulation(void *args)
     struct worker_retval *retval =
 	(struct worker_retval *) malloc(sizeof(struct worker_retval));
 
+    retval->n_total = 0;
     retval->n_lost = 0;
+    retval->p_total = 0.0;
     retval->p_lost = 0.0;
 
     pthread_mutex_lock(&mutex_seed_incr);	/* begin critical section */
@@ -152,6 +156,8 @@ static void *run_simulation(void *args)
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
 	     */
+	    retval->n_total++;
+	    retval->p_total += ray->power;
 
 	    while (ray) {
 		/*
@@ -397,7 +403,9 @@ int main(int argc, char **argv)
 	target_list_t *target_list;	/* list of all sources */
 	source_list_t *source_list;	/* list of all targets */
 	struct worker_retval *retval;
+	int64_t n_total;
 	int64_t n_lost;
+	double p_total;
 	double p_lost;
 
     case CHECK_CONFIG:		/* print parsed input */
@@ -457,15 +465,26 @@ int main(int argc, char **argv)
 			   (void *) rs_args);
 
 	/* Wait for the other threads to finish */
-	for (i = 0, n_lost = 0, p_lost = 0.0; i < n_threads; i++) {
+	for (i = 0, n_total = 0, n_lost = 0, p_total = 0.0, p_lost = 0.0;
+	     i < n_threads; i++) {
 	    pthread_join(tids[i], (void **) &retval);
+	    n_total += retval->n_total;
 	    n_lost += retval->n_lost;
+	    p_total += retval->p_total;
 	    p_lost += retval->p_lost;
 	    free(retval);
 	}
 
-	fprintf(stdout, "%" PRId64 " rays lost with total power of %e\n",
-		n_lost, p_lost);
+	fprintf(stdout, "  total number of rays traced: %" PRId64 "\n",
+		n_total);
+	fprintf(stdout, "   total power of all sources: %e\n", p_total);
+	fprintf(stdout, "    total number of rays lost: %" PRId64 "\n",
+		n_lost);
+	fprintf(stdout, "             total power lost: %e\n", p_lost);
+	fprintf(stdout, "total number of rays absorbed: %" PRId64 "\n",
+		n_total - n_lost);
+	fprintf(stdout, "         total power absorbed: %e\n",
+		p_total - p_lost);
 
 	free(tids);
 	free(rs_args);
