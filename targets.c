@@ -60,26 +60,6 @@ ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
     return (T->type->get_out_ray) (T->state, ray, hit, r);
 }
 
-const char *get_target_type(const target_t * T)
-{
-    return T->type->type;
-}
-
-const char *get_target_name(const target_t * T)
-{
-    return (T->type->get_target_name) (T->state);
-}
-
-void dump_string(const target_t * T, const char *str)
-{
-    (T->type->dump_string) (T->state, str);
-}
-
-double *M(const target_t * T)
-{
-    return (T->type->M) (T->state);
-}
-
 void init_PTDT(const target_t * T)
 {
     (T->type->init_PTDT) (T->state);

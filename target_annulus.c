@@ -194,28 +194,6 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *ann_get_target_name(void *vstate)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ann_dump_string(void *vstate, const char *str)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ann_M(void *vstate)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ann_init_PTDT(void *vstate)
 {
     ann_state_t *state = (ann_state_t *) vstate;
@@ -251,9 +229,6 @@ static const target_type_t ann_t = {
     &ann_free_state,
     &ann_get_intercept,
     &ann_get_out_ray,
-    &ann_get_target_name,
-    &ann_dump_string,
-    &ann_M,
     &ann_init_PTDT,
     &ann_flush_PTDT_outbuf
 };

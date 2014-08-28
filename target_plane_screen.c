@@ -161,28 +161,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
     return ray;
 }
 
-static const char *ps_get_target_name(void *vstate)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ps_dump_string(void *vstate, const char *str)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ps_M(void *vstate)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ps_init_PTDT(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -219,9 +197,6 @@ static const target_type_t ps1_t = {
     &ps_free_state,
     &ps_get_intercept,
     &ps_get_out_ray,
-    &ps_get_target_name,
-    &ps_dump_string,
-    &ps_M,
     &ps_init_PTDT,
     &ps_flush_PTDT_outbuf
 };
@@ -233,9 +208,6 @@ static const target_type_t ps2_t = {
     &ps_free_state,
     &ps_get_intercept,
     &ps_get_out_ray,
-    &ps_get_target_name,
-    &ps_dump_string,
-    &ps_M,
     &ps_init_PTDT,
     &ps_flush_PTDT_outbuf
 };

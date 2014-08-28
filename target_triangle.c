@@ -212,28 +212,6 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *tr_get_target_name(void *vstate)
-{
-    tr_state_t *state = (tr_state_t *) vstate;
-
-    return state->name;
-}
-
-static void tr_dump_string(void *vstate, const char *str)
-{
-    tr_state_t *state = (tr_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *tr_M(void *vstate)
-{
-    tr_state_t *state = (tr_state_t *) vstate;
-
-    return state->M;
-}
-
 static void tr_init_PTDT(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
@@ -270,9 +248,6 @@ static const target_type_t tr_t = {
     &tr_free_state,
     &tr_get_intercept,
     &tr_get_out_ray,
-    &tr_get_target_name,
-    &tr_dump_string,
-    &tr_M,
     &tr_init_PTDT,
     &tr_flush_PTDT_outbuf
 };

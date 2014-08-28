@@ -190,28 +190,6 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *disk_get_target_name(void *vstate)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    return state->name;
-}
-
-static void disk_dump_string(void *vstate, const char *str)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *disk_M(void *vstate)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    return state->M;
-}
-
 static void disk_init_PTDT(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
@@ -248,9 +226,6 @@ static const target_type_t disk_t = {
     &disk_free_state,
     &disk_get_intercept,
     &disk_get_out_ray,
-    &disk_get_target_name,
-    &disk_dump_string,
-    &disk_M,
     &disk_init_PTDT,
     &disk_flush_PTDT_outbuf
 };

@@ -50,9 +50,6 @@ typedef struct target_type_t {
     double *(*get_intercept) (void *state, ray_t * ray);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * ray, double *hit,
 			   const gsl_rng * r);
-    const char *(*get_target_name) (void *state);
-    void (*dump_string) (void *state, const char *str);	/* write 'str' to dump file */
-    double *(*M) (void *state);	/* returns pointer to M matrix */
     void (*init_PTDT) (void *state);	/* allocate per thread buffer */
     void (*flush_PTDT_outbuf) (void *state);	/* flush per thread buffer */
 } target_type_t;
@@ -82,10 +79,6 @@ extern void target_free(target_t * T);
 extern double *icpt(const target_t * T, ray_t * ray);
 extern ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
 		      const gsl_rng * r);
-extern const char *get_target_type(const target_t * T);
-extern const char *get_target_name(const target_t * T);
-extern void dump_string(const target_t * T, const char *str);
-extern double *M(const target_t * T);
 extern void init_PTDT(const target_t * T);
 extern void flush_PTDT_outbuf(const target_t * T);
 extern void free_PTDT(void *p);

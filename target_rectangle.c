@@ -194,28 +194,6 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *sq_get_target_name(void *vstate)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    return state->name;
-}
-
-static void sq_dump_string(void *vstate, const char *str)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *sq_M(void *vstate)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    return state->M;
-}
-
 static void sq_init_PTDT(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
@@ -252,9 +230,6 @@ static const target_type_t sq_t = {
     &sq_free_state,
     &sq_get_intercept,
     &sq_get_out_ray,
-    &sq_get_target_name,
-    &sq_dump_string,
-    &sq_M,
     &sq_init_PTDT,
     &sq_flush_PTDT_outbuf
 };

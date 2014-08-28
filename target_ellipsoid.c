@@ -268,28 +268,6 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *ell_get_target_name(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ell_dump_string(void *vstate, const char *str)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ell_M(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ell_init_PTDT(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
@@ -326,9 +304,6 @@ static const target_type_t ell_t = {
     &ell_free_state,
     &ell_get_intercept,
     &ell_get_out_ray,
-    &ell_get_target_name,
-    &ell_dump_string,
-    &ell_M,
     &ell_init_PTDT,
     &ell_flush_PTDT_outbuf
 };
