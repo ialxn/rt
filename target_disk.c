@@ -82,6 +82,11 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
 
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->point, state->M);
+
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
 }

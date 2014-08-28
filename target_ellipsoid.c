@@ -116,6 +116,11 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->center, state->M);
+
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
 }

@@ -340,6 +340,45 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
     free(refl);
 }
 
+void write_target_header(const int fd, const char *name, const char *type,
+			 const double *origin, const double *Mat)
+{
+    char string[256];
+    int i;
+
+    snprintf(string, 256, "# %s (%s)\n#\n", name, type);
+    write(fd, string, strlen(string));
+
+    snprintf(string, 256, "# Transformations:\n");
+    write(fd, string, strlen(string));
+    snprintf(string, 256,
+	     "#    g(x, y, z) = M l(x, y, z) + origin(x, y, z))\n");
+    write(fd, string, strlen(string));
+    snprintf(string, 256,
+	     "#    l(x, y, z) = MT (g(x, y, z) - origin(x, y, z))\n");
+    write(fd, string, strlen(string));
+
+    snprintf(string, 256, "# M:\n");
+    write(fd, string, strlen(string));
+    for (i = 0; i < 3; i++) {
+	const int j = 3 * i;
+
+	snprintf(string, 256, "#   %g\t%g\t%g\n", Mat[j], Mat[j + 1],
+		 Mat[j + 2]);
+	write(fd, string, strlen(string));
+    }
+
+    snprintf(string, 256, "# origin:\n");
+    write(fd, string, strlen(string));
+    snprintf(string, 256, "#   %g\t%g\t%g\n#\n", origin[0], origin[1],
+	     origin[2]);
+    write(fd, string, strlen(string));
+
+    snprintf(string, 256,
+	     "#\n# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n#\n");
+    write(fd, string, strlen(string));
+}
+
 void init_refl_model(const config_setting_t * s, char *model,
 		     void **refl_model_params)
 {
