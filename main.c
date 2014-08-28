@@ -322,7 +322,8 @@ static void *run_simulation(void *args)
 
 static void help(void)
 {
-    fprintf(stdout, "\nrt Version %s (%s) AI52\n\n", RELEASE, RELEASE_DATE);
+    fprintf(stdout, "\nrt Version %s (%s) AI52\n\n", RELEASE,
+	    RELEASE_DATE);
     fprintf(stdout, "Usage: rt\n");
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
