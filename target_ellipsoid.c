@@ -16,6 +16,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "ellipsoid"
 #define NO_ITEMS 5
 
 
@@ -314,7 +315,7 @@ static void ell_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t ell_t = {
-    "ellipsoid",
+    TARGET_TYPE,
     sizeof(struct ell_state_t),
     &ell_init_state,
     &ell_free_state,

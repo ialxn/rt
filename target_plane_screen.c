@@ -14,6 +14,8 @@
 #include "io_utils.h"
 #include "targets.h"
 
+#define TARGET_TYPE_A "one-sided plane screen"
+#define TARGET_TYPE_B "two-sided plane screen"
 #define NO_ITEMS 4
 
 
@@ -201,7 +203,7 @@ static void ps_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t ps1_t = {
-    "one-sided plane screen",
+    TARGET_TYPE_A,
     sizeof(struct ps_state_t),
     &ps1_init_state,
     &ps_free_state,
@@ -215,7 +217,7 @@ static const target_type_t ps1_t = {
 };
 
 static const target_type_t ps2_t = {
-    "two-sided plane screen",
+    TARGET_TYPE_B,
     sizeof(struct ps_state_t),
     &ps2_init_state,
     &ps_free_state,

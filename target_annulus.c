@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "annulus"
 #define NO_ITEMS 4
 
 
@@ -239,7 +240,7 @@ static void ann_flush_PTDT_outbuf(void *vstate)
 }
 
 static const target_type_t ann_t = {
-    "annulus",
+    TARGET_TYPE,
     sizeof(struct ann_state_t),
     &ann_init_state,
     &ann_free_state,

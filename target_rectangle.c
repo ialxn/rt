@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "rectangle"
 #define NO_ITEMS 4
 
 
@@ -240,7 +241,7 @@ static void sq_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t sq_t = {
-    "rectangle",
+    TARGET_TYPE,
     sizeof(struct sq_state_t),
     &sq_init_state,
     &sq_free_state,

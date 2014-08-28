@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "triangle"
 #define NO_ITEMS 4
 
 
@@ -258,7 +259,7 @@ static void tr_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t tr_t = {
-    "triangle",
+    TARGET_TYPE,
     sizeof(struct tr_state_t),
     &tr_init_state,
     &tr_free_state,

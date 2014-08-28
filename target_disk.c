@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "disk"
 #define NO_ITEMS 4
 
 
@@ -236,7 +237,7 @@ static void disk_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t disk_t = {
-    "disk",
+    TARGET_TYPE,
     sizeof(struct disk_state_t),
     &disk_init_state,
     &disk_free_state,
