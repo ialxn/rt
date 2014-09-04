@@ -193,7 +193,6 @@ static void ps_flush_PTDT_outbuf(void *vstate)
 
 	    pthread_mutex_lock(&state->mutex_writefd);
 	    write(state->dump_file, data->buf, sizeof(float) * data->i);
-	    fsync(state->dump_file);
 	    pthread_mutex_unlock(&state->mutex_writefd);
 
 	}
