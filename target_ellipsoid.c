@@ -16,6 +16,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "ellipsoid"
 #define NO_ITEMS 5
 
 
@@ -114,6 +115,11 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     init_refl_spectrum(S, &state->refl_spectrum);
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
+
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->center, state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -262,28 +268,6 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *ell_get_target_name(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ell_dump_string(void *vstate, const char *str)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ell_M(void *vstate)
-{
-    ell_state_t *state = (ell_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ell_init_PTDT(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
@@ -313,15 +297,12 @@ static void ell_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t ell_t = {
-    "ellipsoid",
+    TARGET_TYPE,
     sizeof(struct ell_state_t),
     &ell_init_state,
     &ell_free_state,
     &ell_get_intercept,
     &ell_get_out_ray,
-    &ell_get_target_name,
-    &ell_dump_string,
-    &ell_M,
     &ell_init_PTDT,
     &ell_flush_PTDT_outbuf
 };

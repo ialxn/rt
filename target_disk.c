@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "disk"
 #define NO_ITEMS 4
 
 
@@ -80,6 +81,11 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
 
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
+
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->point, state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -184,28 +190,6 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *disk_get_target_name(void *vstate)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    return state->name;
-}
-
-static void disk_dump_string(void *vstate, const char *str)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *disk_M(void *vstate)
-{
-    disk_state_t *state = (disk_state_t *) vstate;
-
-    return state->M;
-}
-
 static void disk_init_PTDT(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
@@ -235,15 +219,12 @@ static void disk_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t disk_t = {
-    "disk",
+    TARGET_TYPE,
     sizeof(struct disk_state_t),
     &disk_init_state,
     &disk_free_state,
     &disk_get_intercept,
     &disk_get_out_ray,
-    &disk_get_target_name,
-    &disk_dump_string,
-    &disk_M,
     &disk_init_PTDT,
     &disk_flush_PTDT_outbuf
 };

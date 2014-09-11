@@ -60,26 +60,6 @@ ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
     return (T->type->get_out_ray) (T->state, ray, hit, r);
 }
 
-const char *get_target_type(const target_t * T)
-{
-    return T->type->type;
-}
-
-const char *get_target_name(const target_t * T)
-{
-    return (T->type->get_target_name) (T->state);
-}
-
-void dump_string(const target_t * T, const char *str)
-{
-    (T->type->dump_string) (T->state, str);
-}
-
-double *M(const target_t * T)
-{
-    return (T->type->M) (T->state);
-}
-
 void init_PTDT(const target_t * T)
 {
     (T->type->init_PTDT) (T->state);
@@ -338,6 +318,32 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 
     free(lambda);
     free(refl);
+}
+
+void write_target_header(const int fd, const char *name, const char *type,
+			 const double *origin, const double *Mat)
+{
+    char string[1024];
+
+    snprintf(string, 1023, 
+    "# %s (%s)\n"
+    "#\n"
+    "# Transformations:\n"
+    "#    g(x, y, z) = M l(x, y, z) + origin(x, y, z))\n"
+    "#    l(x, y, z) = MT (g(x, y, z) - origin(x, y, z))\n"
+    "# M:\n"
+    "#   \t% g\t% g\t% g\n"
+    "#   \t% g\t% g\t% g\n"
+    "#   \t% g\t% g\t% g\n"
+    "# origin:\n"
+    "#   \t% g\t% g\t% g\n#\n"
+    "#\n"
+    "# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n"
+    "#\n",
+    name, type, Mat[0], Mat[1], Mat[2], Mat[3], Mat[4], Mat[5], Mat[6], Mat[7], Mat[8],
+    origin[0], origin[1], origin[2]);
+
+    write(fd, string, strlen(string));
 }
 
 void init_refl_model(const config_setting_t * s, char *model,

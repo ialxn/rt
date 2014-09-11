@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "annulus"
 #define NO_ITEMS 4
 
 
@@ -83,6 +84,11 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     state->R2 = t * t;
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
+
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->point, state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -188,28 +194,6 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *ann_get_target_name(void *vstate)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ann_dump_string(void *vstate, const char *str)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ann_M(void *vstate)
-{
-    ann_state_t *state = (ann_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ann_init_PTDT(void *vstate)
 {
     ann_state_t *state = (ann_state_t *) vstate;
@@ -238,15 +222,12 @@ static void ann_flush_PTDT_outbuf(void *vstate)
 }
 
 static const target_type_t ann_t = {
-    "annulus",
+    TARGET_TYPE,
     sizeof(struct ann_state_t),
     &ann_init_state,
     &ann_free_state,
     &ann_get_intercept,
     &ann_get_out_ray,
-    &ann_get_target_name,
-    &ann_dump_string,
-    &ann_M,
     &ann_init_PTDT,
     &ann_flush_PTDT_outbuf
 };

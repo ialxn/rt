@@ -15,6 +15,7 @@
 #include "reflect.h"
 #include "targets.h"
 
+#define TARGET_TYPE "rectangle"
 #define NO_ITEMS 4
 
 
@@ -91,6 +92,11 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
     init_refl_spectrum(S, &state->refl_spectrum);
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
+
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC)
+	write_target_header(state->dump_file, state->name, TARGET_TYPE,
+			    state->point, state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -188,28 +194,6 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
     }
 }
 
-static const char *sq_get_target_name(void *vstate)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    return state->name;
-}
-
-static void sq_dump_string(void *vstate, const char *str)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *sq_M(void *vstate)
-{
-    sq_state_t *state = (sq_state_t *) vstate;
-
-    return state->M;
-}
-
 static void sq_init_PTDT(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
@@ -239,15 +223,12 @@ static void sq_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t sq_t = {
-    "rectangle",
+    TARGET_TYPE,
     sizeof(struct sq_state_t),
     &sq_init_state,
     &sq_free_state,
     &sq_get_intercept,
     &sq_get_out_ray,
-    &sq_get_target_name,
-    &sq_dump_string,
-    &sq_M,
     &sq_init_PTDT,
     &sq_flush_PTDT_outbuf
 };

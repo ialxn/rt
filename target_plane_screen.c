@@ -14,6 +14,8 @@
 #include "io_utils.h"
 #include "targets.h"
 
+#define TARGET_TYPE_A "one-sided plane screen"
+#define TARGET_TYPE_B "two-sided plane screen"
 #define NO_ITEMS 4
 
 
@@ -66,6 +68,16 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 
     /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
+
+    /* write header to dump file */
+    if (state->dump_file != -1 && file_mode == O_TRUNC) {
+	if (state->one_sided)
+	    write_target_header(state->dump_file, state->name,
+				TARGET_TYPE_A, state->point, state->M);
+	else
+	    write_target_header(state->dump_file, state->name,
+				TARGET_TYPE_A, state->point, state->M);
+    }
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -149,28 +161,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
     return ray;
 }
 
-static const char *ps_get_target_name(void *vstate)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    return state->name;
-}
-
-static void ps_dump_string(void *vstate, const char *str)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    if (state->dump_file != -1)
-	write(state->dump_file, str, strlen(str));
-}
-
-static double *ps_M(void *vstate)
-{
-    ps_state_t *state = (ps_state_t *) vstate;
-
-    return state->M;
-}
-
 static void ps_init_PTDT(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
@@ -200,29 +190,23 @@ static void ps_flush_PTDT_outbuf(void *vstate)
 
 
 static const target_type_t ps1_t = {
-    "one-sided plane screen",
+    TARGET_TYPE_A,
     sizeof(struct ps_state_t),
     &ps1_init_state,
     &ps_free_state,
     &ps_get_intercept,
     &ps_get_out_ray,
-    &ps_get_target_name,
-    &ps_dump_string,
-    &ps_M,
     &ps_init_PTDT,
     &ps_flush_PTDT_outbuf
 };
 
 static const target_type_t ps2_t = {
-    "two-sided plane screen",
+    TARGET_TYPE_B,
     sizeof(struct ps_state_t),
     &ps2_init_state,
     &ps_free_state,
     &ps_get_intercept,
     &ps_get_out_ray,
-    &ps_get_target_name,
-    &ps_dump_string,
-    &ps_M,
     &ps_init_PTDT,
     &ps_flush_PTDT_outbuf
 };

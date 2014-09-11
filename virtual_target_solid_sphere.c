@@ -107,9 +107,6 @@ static const target_type_t vt_ssp_t = {
     NULL,
     &vtssp_get_intercept,
     &vtssp_get_out_ray,
-    NULL,
-    NULL,
-    NULL,
     &vtssp_init_PTDT,
     NULL
 };
