@@ -214,6 +214,8 @@ static void help(void)
     fprintf(stdout, "Usage: flux_2D\n");
     fprintf(stdout, "       --nx, -a          number of x bins  [10]\n");
     fprintf(stdout, "       --ny, -b          number of y bins  [10]\n");
+    fprintf(stdout, "       --global, -g      report flux distribution in global\n");
+    fprintf(stdout, "                         coordinate system [local]\n");
     fprintf(stdout, "       --minx, -x        Minimum x value  [-10.0]\n");
     fprintf(stdout, "       --maxx, -X        Maximum x value  [10.0]\n");
     fprintf(stdout, "       --miny, -y        Minimum y value  [-10.0]\n");
@@ -236,6 +238,7 @@ int main(int argc, char **argv)
     double p_inc = 0.0;
     int n_missed = 0;		/* data not included in histogram */
     double p_missed = 0;
+    int coordinates = LOCAL;
 
     gsl_histogram2d *h;
 
@@ -249,12 +252,13 @@ int main(int argc, char **argv)
 	    {"maxy", required_argument, 0, 'Y'},
 	    {"nx", required_argument, 0, 'a'},
 	    {"ny", required_argument, 0, 'b'},
+	    {"global", no_argument, 0, 'g'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:b:x:X:y:Y:Vh", long_options,
+	c = getopt_long(argc, argv, "a:b:gx:X:y:Y:Vh", long_options,
 			&option_index);
 
 	if (c == -1)
@@ -268,6 +272,10 @@ int main(int argc, char **argv)
 
 	case 'b':
 	    y_bins = (size_t) atoi(optarg);
+	    break;
+
+	case 'g':
+	    coordinates = GLOBAL;
 	    break;
 
 	case 'x':

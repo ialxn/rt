@@ -16,6 +16,9 @@
 #define NO_ERR 0
 #define ERR 1
 
+#define LOCAL 0
+#define GLOBAL 1
+
 #define LINE_LEN 256
 #define BSIZE 256
 #define T_HEADER_LINES 15	/* number of header lines in target output */
