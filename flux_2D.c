@@ -15,7 +15,7 @@
 #include <gsl/gsl_histogram2d.h>
 
 #include "io_utils.h"
-
+#include "math_utils.h"
 
 static int wrong_target_type(FILE * f_in)
 {
@@ -191,13 +191,16 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 
     fprintf(f_out, "#\n");
 
-    if (coordinates == GLOBAL)
+    if (coordinates == GLOBAL) {
 	fprintf(f_out, "# coordinates are reported in global system\n");
-    else
+	fprintf(f_out,
+		"#     x    \t      y    \t      z    \t    Flux\n");
+    } else {
 	fprintf(f_out, "# coordinates are reported in local system\n");
-
-    fprintf(f_out,
-	    "#     x    \t      y    \t      z    \t    Flux    \t  xbin_min  \t  xbin_max  \t  ybin_min  \t  ybin_max\n");
+	fprintf(f_out, "#     x    \t      y    \t    Flux    \t  ");
+	fprintf(f_out,
+		"xbin_min  \t  xbin_max  \t  ybin_min  \t  ybin_max\n");
+    }
 
     for (i = 0; i < nx; i++) {
 	double x, x_lo, x_hi;
@@ -212,8 +215,22 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 	    y = (y_hi + y_lo) / 2.0;
 
 	    t = gsl_histogram2d_get(h, i, j);
-	    fprintf(f_out, "% e\t% e\t%e\t% e\t% e\t% e\t% e\n", x, y, t,
-		    x_lo, x_hi, y_lo, y_hi);
+
+	    if (coordinates == GLOBAL) {
+		double l_xyz[3];
+		double g_xyz[3];
+
+		l_xyz[0] = x;
+		l_xyz[1] = y;
+		l_xyz[2] = 0.0;
+
+		l2g(M, origin, l_xyz, g_xyz);
+		fprintf(f_out, "% e\t% e\t%e\t% e\n", g_xyz[0], g_xyz[1],
+			g_xyz[2], t);
+
+	    } else
+		fprintf(f_out, "% e\t% e\t%e\t% e\t% e\t% e\t% e\n", x, y,
+			t, x_lo, x_hi, y_lo, y_hi);
 	}
     }
 }
