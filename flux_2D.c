@@ -66,13 +66,17 @@ static gsl_histogram2d *init_hist(const double xmax,
 }
 
 static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
-		     double *p_inc, int *n_missed, double *p_missed)
+		     double *p_inc, int *n_missed, double *p_missed,
+		     const int coordinates, double M[], double origin[])
 {
     float t[MAX_ITEMS];
     size_t n_items_read;
 
-    if (skip_header(f_in) == ERR)
-	return ERR;
+    if (coordinates == LOCAL) {
+	if (skip_header(f_in) == ERR)
+	    return ERR;
+    } else
+	read_transformation(f_in, M, origin);
 
     /*
      * read data. (x,y,power,lambda)
@@ -110,7 +114,8 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 
 static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 			const double p_inc, const int n_missed,
-			const double p_missed)
+			const double p_missed, const int coordinates,
+			const double M[], const double origin[])
 {
     size_t i, j;
     size_t nx, ny;
@@ -130,7 +135,7 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
     A = (xmax - xmin) * (ymax - ymin);
     gsl_histogram2d_scale(h, 1.0 / A);
 
-    fprintf(f_out, "#   histogram definition\n");
+    fprintf(f_out, "#   histogram definition (local system)\n");
     t = gsl_histogram2d_xmin(h);
     fprintf(f_out, "#      minimum x-value: % e\n", t);
     t = gsl_histogram2d_xmax(h);
@@ -186,8 +191,13 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 
     fprintf(f_out, "#\n");
 
+    if (coordinates == GLOBAL)
+	fprintf(f_out, "# coordinates are reported in global system\n");
+    else
+	fprintf(f_out, "# coordinates are reported in local system\n");
+
     fprintf(f_out,
-	    "#     x    \t      y    \t    Flux    \t  xbin_min  \t  xbin_max  \t  ybin_min  \t  ybin_max\n");
+	    "#     x    \t      y    \t      z    \t    Flux    \t  xbin_min  \t  xbin_max  \t  ybin_min  \t  ybin_max\n");
 
     for (i = 0; i < nx; i++) {
 	double x, x_lo, x_hi;
@@ -214,8 +224,10 @@ static void help(void)
     fprintf(stdout, "Usage: flux_2D\n");
     fprintf(stdout, "       --nx, -a          number of x bins  [10]\n");
     fprintf(stdout, "       --ny, -b          number of y bins  [10]\n");
-    fprintf(stdout, "       --global, -g      report flux distribution in global\n");
-    fprintf(stdout, "                         coordinate system [local]\n");
+    fprintf(stdout,
+	    "       --global, -g      report flux distribution in global\n");
+    fprintf(stdout,
+	    "                         coordinate system [local]\n");
     fprintf(stdout, "       --minx, -x        Minimum x value  [-10.0]\n");
     fprintf(stdout, "       --maxx, -X        Maximum x value  [10.0]\n");
     fprintf(stdout, "       --miny, -y        Minimum y value  [-10.0]\n");
@@ -239,6 +251,8 @@ int main(int argc, char **argv)
     int n_missed = 0;		/* data not included in histogram */
     double p_missed = 0;
     int coordinates = LOCAL;
+    double M[9];
+    double origin[3];
 
     gsl_histogram2d *h;
 
@@ -324,8 +338,11 @@ int main(int argc, char **argv)
 
     h = init_hist(x_max, x_min, x_bins, y_max, y_min, y_bins);
 
-    if (!read_hist(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed))
-	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed);
+    if (!read_hist
+	(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, coordinates, M,
+	 origin))
+	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed,
+		    coordinates, M, origin);
 
     gsl_histogram2d_free(h);
     exit(EXIT_SUCCESS);

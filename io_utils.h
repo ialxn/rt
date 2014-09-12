@@ -49,6 +49,7 @@ extern void read_vector_normalize(const config_setting_t * s,
 				  const char *name, double *const vec);
 extern int read_data(FILE * f, double **x, double **y, size_t * n);
 extern int skip_header(FILE * f);
+extern void read_transformation(FILE * f_in, double M[], double origin[]);
 extern double *range(const double min, const double max, const size_t n);
 extern int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power);
 

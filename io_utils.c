@@ -321,6 +321,29 @@ int skip_header(FILE * f)
     return (NO_ERR);
 }
 
+void read_transformation(FILE * f_in, double M[], double origin[])
+{
+    char line[LINE_LEN];
+    size_t i;
+
+    for (i = 0; i < 5; i++)	/* skip comments */
+	fgets(line, LINE_LEN, f_in);
+
+    for (i = 0; i < 3; i++) {
+	fgets(line, LINE_LEN, f_in);
+	sscanf(&line[1], "%lf%lf%lf", &M[3 * i], &M[3 * i + 1],
+	       &M[3 * i + 2]);
+    }
+
+    fgets(line, LINE_LEN, f_in);	/* skip comment */
+
+    fgets(line, LINE_LEN, f_in);
+    sscanf(&line[1], "%lf%lf%lf", &origin[0], &origin[1], &origin[2]);
+
+    for (i = 0; i < 4; i++)	/* skip rest of comments */
+	fgets(line, LINE_LEN, f_in);
+}
+
 double *range(const double min, const double max, const size_t n)
 {
     size_t i;
