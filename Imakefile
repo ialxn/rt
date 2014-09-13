@@ -1,6 +1,6 @@
-#CCOPTIONS= -g -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
-CCOPTIONS= -g -O0 -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs
-#CCOPTIONS= -pg -pedantic -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
+#CCOPTIONS= -g -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
+CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs
+#CCOPTIONS= -pg -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs
 
 SRCS= main.c \
       io_utils.c \
