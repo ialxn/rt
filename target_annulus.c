@@ -53,7 +53,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
 	snprintf(f_name, 256, "%s.dat", state->name);
 	state->dump_file =
 	    open(f_name, O_CREAT | O_WRONLY | file_mode,
-		 S_IRUSR | S_IWUSR);
+		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     } else
 	state->dump_file = -1;
 
