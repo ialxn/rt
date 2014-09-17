@@ -15,7 +15,6 @@
 #include <gsl/gsl_histogram.h>
 
 #include "io_utils.h"
-#include "version.h"
 
 
 static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
@@ -152,8 +151,7 @@ static gsl_histogram *init_hist(const double start_wl,
 
 static void help(void)
 {
-    fprintf(stdout, "\nspectrum Version %s (%s) AI52\n\n", RELEASE,
-	    RELEASE_DATE);
+    fprintf(stdout, "\nrt Version: %s  %s\n\n", RELEASE, RELEASE_INFO);
     fprintf(stdout, "Usage: spectrum\n");
     fprintf(stdout, "       --num, -n         number of bins [10]\n");
     fprintf(stdout, "       --start, -a       Start wavelength [0.0]\n");
@@ -208,9 +206,7 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, " spectrum Version %s(%s) AI52\n", RELEASE,
-		    RELEASE_DATE);
-	    exit(EXIT_SUCCESS);
+	    fprintf(stdout, "spectrum Version: %s  %s\n", RELEASE, RELEASE_INFO);	    exit(EXIT_SUCCESS);
 	    break;
 
 	case 'h':

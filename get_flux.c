@@ -15,14 +15,11 @@
 #include <gsl/gsl_histogram.h>
 
 #include "io_utils.h"
-#include "version.h"
-
 
 
 static void help(void)
 {
-    fprintf(stdout, "\nget_flux Version %s (%s) AI52\n\n", RELEASE,
-	    RELEASE_DATE);
+    fprintf(stdout, "\nget_flux Version: %s  %s\n", RELEASE, RELEASE_INFO);
     fprintf(stdout, "Usage: get_flux\n");
     fprintf(stdout, "       --help, -h        Print this help message\n");
     fprintf(stdout, "       --Version, -V     Print version number\n");
@@ -53,8 +50,7 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'V':
-	    fprintf(stdout, " get_flux Version %s (%s) AI52\n", RELEASE,
-		    RELEASE_DATE);
+	    fprintf(stdout, "get_flux Version: %s  %s\n", RELEASE, RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 

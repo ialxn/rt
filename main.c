@@ -21,7 +21,6 @@
 
 #include "obj_lists.h"
 #include "off.h"
-#include "version.h"
 
 #define CHECK_CONFIG 0
 #define PRINT_GEOMETRY 1
@@ -322,8 +321,7 @@ static void *run_simulation(void *args)
 
 static void help(void)
 {
-    fprintf(stdout, "\nrt Version %s (%s) AI52\n\n", RELEASE,
-	    RELEASE_DATE);
+    fprintf(stdout, "\nrt Version: %s  %s\n\n", RELEASE, RELEASE_INFO);
     fprintf(stdout, "Usage: rt\n");
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
@@ -451,8 +449,7 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, " rt Version %s(%s) AI52\n", RELEASE,
-		    RELEASE_DATE);
+	    fprintf(stdout, "rt Version: %s  %s\n", RELEASE, RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 
