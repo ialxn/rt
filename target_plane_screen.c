@@ -48,7 +48,7 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 	snprintf(f_name, 256, "%s.dat", state->name);
 	state->dump_file =
 	    open(f_name, O_CREAT | O_WRONLY | file_mode,
-		 S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+		 S_IRUSR | S_IWUSR);
     } else
 	state->dump_file = -1;
 
@@ -56,8 +56,8 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
-     * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
-     * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+     * l2g:   g(x, y, z) = MT l(x, y, z) + o(x, y, z)
+     * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
      */
     /* get normal vector of plane (serving also as basis vector z) */
     read_vector_normalize(this_target, "normal", state->normal);

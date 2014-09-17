@@ -103,7 +103,7 @@ void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
  * expresses vector 'vec' (global) in local coordinates
- *     l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+ *     l(x, y, z) = M (g(x, y, z) - o(x, y, z))
  */
 {
     int i;
@@ -119,7 +119,7 @@ void l2g(const double *mat, const double *origin, const double *l,
 	 double *g)
 /*
  * expresses vector 'vec' (local) in global coordinates
- *     g(x, y, z) = M l(x, y, z) + o(x, y, z)
+ *     g(x, y, z) = MT l(x, y, z) + o(x, y, z)
  */
 {
     int i;
