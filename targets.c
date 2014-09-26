@@ -361,7 +361,7 @@ int init_output(const int file_mode, const char *target_type,
 
 	snprintf(f_name, 256, "%s.dat", name);
 	fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
-		  S_IRUSR | S_IWUSR);
+		  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
 
 	/* write header to dump file */
 	if (file_mode == O_TRUNC)
