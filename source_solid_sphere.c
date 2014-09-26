@@ -130,9 +130,7 @@ static ray_t *ssp_emit_ray(void *vstate, const gsl_rng * r)
 
 static const char *ssp_get_source_name(void *vstate)
 {
-    ssp_state_t *state = (ssp_state_t *) vstate;
-
-    return state->name;
+    return ((ssp_state_t *) vstate)->name;
 }
 
 static int64_t ssp_get_source_n_rays(void *vstate)
@@ -149,9 +147,7 @@ static int64_t ssp_get_source_n_rays(void *vstate)
 
 static double ssp_get_source_power(void *vstate)
 {
-    ssp_state_t *state = (ssp_state_t *) vstate;
-
-    return state->power;
+    return ((ssp_state_t *) vstate)->power;
 }
 
 static void ssp_init_rays_remain(void *vstate)

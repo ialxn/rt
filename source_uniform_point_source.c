@@ -112,9 +112,7 @@ static ray_t *ups_emit_ray(void *vstate, const gsl_rng * r)
 
 static const char *ups_get_source_name(void *vstate)
 {
-    ups_state_t *state = (ups_state_t *) vstate;
-
-    return state->name;
+    return ((ups_state_t *) vstate)->name;
 }
 
 static int64_t ups_get_source_n_rays(void *vstate)
@@ -131,9 +129,7 @@ static int64_t ups_get_source_n_rays(void *vstate)
 
 static double ups_get_source_power(void *vstate)
 {
-    ups_state_t *state = (ups_state_t *) vstate;
-
-    return state->power;
+    return ((ups_state_t *) vstate)->power;
 }
 
 static void ups_init_rays_remain(void *vstate)
