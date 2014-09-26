@@ -395,6 +395,17 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
+void per_thread_init(pthread_key_t key, size_t n)
+{
+    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
+
+    data->buf = (float *) malloc(BUF_SIZE * n * sizeof(float));
+    data->i = 0;
+    data->flag = 0;
+
+    pthread_setspecific(key, data);
+}
+
 static void free_refl_model(const char model, void *refl_model_params)
 /*
  * free's model specific parameters
@@ -423,8 +434,6 @@ void state_free(int fh, gsl_spline * s, char model, void *p)
     if (model)
 	free_refl_model(model, p);
 }
-
-
 
 static double *validate_intercepts(const ray_t * ray, const double t1,
 				   const double t2)

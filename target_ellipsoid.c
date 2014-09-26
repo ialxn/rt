@@ -250,14 +250,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 static void ell_init_PTDT(void *vstate)
 {
-    ell_state_t *state = (ell_state_t *) vstate;
-    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
-
-    data->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
-    data->i = 0;
-    data->flag = 0;
-
-    pthread_setspecific(state->PTDT_key, data);
+    per_thread_init(((ell_state_t *) vstate)->PTDT_key, NO_ITEMS);
 }
 
 static void ell_flush_PTDT_outbuf(void *vstate)

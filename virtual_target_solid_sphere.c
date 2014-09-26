@@ -90,14 +90,7 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 static void vtssp_init_PTDT(void *vstate)
 {
-    vtssp_state_t *state = (vtssp_state_t *) vstate;
-    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
-
-    data->buf = NULL;
-    data->i = 0;
-    data->flag = 0;
-
-    pthread_setspecific(state->PTDT_key, data);
+    per_thread_init(((vtssp_state_t *) vstate)->PTDT_key, NO_ITEMS);
 }
 
 static const target_type_t vt_ssp_t = {

@@ -142,14 +142,7 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 static void ps_init_PTDT(void *vstate)
 {
-    ps_state_t *state = (ps_state_t *) vstate;
-    PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
-
-    data->buf = (float *) malloc(BUF_SIZE * NO_ITEMS * sizeof(float));
-    data->i = 0;
-    data->flag = 0;
-
-    pthread_setspecific(state->PTDT_key, data);
+    per_thread_init(((ps_state_t *) vstate)->PTDT_key, NO_ITEMS);
 }
 
 static void ps_flush_PTDT_outbuf(void *vstate)
