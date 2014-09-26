@@ -88,9 +88,9 @@ extern void free_PTDT(void *p);
  * utility functions
  */
 extern int check_targets(config_t * cfg);
-extern void write_target_header(const int fd, const char *name,
-				const char *, const double *offset,
-				const double *M);
+extern int init_output(const int file_mode, const char *target_type,
+		       config_setting_t * this_target, double point[],
+		       double M[]);
 extern void init_refl_spectrum(const char *f_name,
 			       gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,

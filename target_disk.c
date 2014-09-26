@@ -20,7 +20,6 @@
 
 
 typedef struct disk_state_t {
-    char *name;			/* name (identifier) of target */
     char reflectivity_model;	/* reflectivity model used for this target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
@@ -33,28 +32,13 @@ typedef struct disk_state_t {
     void *refl_model_params;
 } disk_state_t;
 
-
 static void disk_init_state(void *vstate, config_setting_t * this_target,
 			    const int file_mode)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
     const char *S;
-    char f_name[256];
     double t;
-    int i;
-
-    config_setting_lookup_string(this_target, "name", &S);
-    state->name = strdup(S);
-
-    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
-	CONFIG_FALSE || i == 0) {
-	snprintf(f_name, 256, "%s.dat", state->name);
-	state->dump_file =
-	    open(f_name, O_CREAT | O_WRONLY | file_mode,
-		 S_IRUSR | S_IWUSR);
-    } else
-	state->dump_file = -1;
 
     read_vector(this_target, "P", state->point);
     /*
@@ -82,10 +66,9 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
 
-    /* write header to dump file */
-    if (state->dump_file != -1 && file_mode == O_TRUNC)
-	write_target_header(state->dump_file, state->name, TARGET_TYPE,
-			    state->point, state->M);
+    state->dump_file =
+	init_output(file_mode, TARGET_TYPE, this_target, state->point,
+		    state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -98,7 +81,6 @@ static void disk_free_state(void *vstate)
     if (state->dump_file != -1)
 	close(state->dump_file);
 
-    free(state->name);
     gsl_spline_free(state->refl_spectrum);
     free_refl_model(state->reflectivity_model, state->refl_model_params);
 }

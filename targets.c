@@ -320,30 +320,56 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
     free(refl);
 }
 
-void write_target_header(const int fd, const char *name, const char *type,
-			 const double *origin, const double *Mat)
+static void write_target_header(const int fd, const char *name,
+				const char *type, const double *origin,
+				const double *Mat)
 {
     char string[1024];
 
-    snprintf(string, 1023, 
-    "# %s (%s)\n"
-    "#\n"
-    "# Transformations:\n"
-    "#    g(x, y, z) = MT l(x, y, z) + origin(x, y, z)\n"
-    "#    l(x, y, z) = M (g(x, y, z) - origin(x, y, z))\n"
-    "# M:\n"
-    "#   \t% g\t% g\t% g\n"
-    "#   \t% g\t% g\t% g\n"
-    "#   \t% g\t% g\t% g\n"
-    "# origin:\n"
-    "#   \t% g\t% g\t% g\n#\n"
-    "#\n"
-    "# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n"
-    "#\n",
-    name, type, Mat[0], Mat[1], Mat[2], Mat[3], Mat[4], Mat[5], Mat[6], Mat[7], Mat[8],
-    origin[0], origin[1], origin[2]);
+    snprintf(string, 1023,
+	     "# %s (%s)\n"
+	     "#\n"
+	     "# Transformations:\n"
+	     "#    g(x, y, z) = MT l(x, y, z) + origin(x, y, z)\n"
+	     "#    l(x, y, z) = M (g(x, y, z) - origin(x, y, z))\n"
+	     "# M:\n"
+	     "#   \t% g\t% g\t% g\n"
+	     "#   \t% g\t% g\t% g\n"
+	     "#   \t% g\t% g\t% g\n"
+	     "# origin:\n"
+	     "#   \t% g\t% g\t% g\n#\n"
+	     "#\n"
+	     "# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n"
+	     "#\n",
+	     name, type, Mat[0], Mat[1], Mat[2], Mat[3], Mat[4], Mat[5],
+	     Mat[6], Mat[7], Mat[8], origin[0], origin[1], origin[2]);
 
     write(fd, string, strlen(string));
+}
+
+int init_output(const int file_mode, const char *target_type,
+		config_setting_t * this_target, double point[], double M[])
+{
+    const char *name;
+    int i;
+    int fh = -1;
+
+    config_setting_lookup_string(this_target, "name", &name);
+    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
+	CONFIG_FALSE || i == 0) {
+	char f_name[256];
+
+	snprintf(f_name, 256, "%s.dat", name);
+	fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
+		  S_IRUSR | S_IWUSR);
+
+	/* write header to dump file */
+	if (file_mode == O_TRUNC)
+	    write_target_header(fh, name, target_type, point, M);
+
+    }
+
+    return fh;
 }
 
 void init_refl_model(const config_setting_t * s, char *model,

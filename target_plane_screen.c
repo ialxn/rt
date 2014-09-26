@@ -20,7 +20,6 @@
 
 
 typedef struct ps_state_t {
-    char *name;			/* name (identifier) of target */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
     char one_sided;		/* flag [one-sided|two-sided] */
@@ -35,22 +34,6 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 			  const int file_mode)
 {
     ps_state_t *state = (ps_state_t *) vstate;
-
-    const char *S;
-    char f_name[256];
-    int i;
-
-    config_setting_lookup_string(this_target, "name", &S);
-    state->name = strdup(S);
-
-    if (config_setting_lookup_bool(this_target, "no_output", &i) ==
-	CONFIG_FALSE || i == 0) {
-	snprintf(f_name, 256, "%s.dat", state->name);
-	state->dump_file =
-	    open(f_name, O_CREAT | O_WRONLY | file_mode,
-		 S_IRUSR | S_IWUSR);
-    } else
-	state->dump_file = -1;
 
     read_vector(this_target, "point", state->point);
     /*
@@ -69,15 +52,14 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
     /* state->M[3-5] = y = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
 
-    /* write header to dump file */
-    if (state->dump_file != -1 && file_mode == O_TRUNC) {
-	if (state->one_sided)
-	    write_target_header(state->dump_file, state->name,
-				TARGET_TYPE_A, state->point, state->M);
-	else
-	    write_target_header(state->dump_file, state->name,
-				TARGET_TYPE_A, state->point, state->M);
-    }
+    if (state->one_sided)
+	state->dump_file =
+	    init_output(file_mode, TARGET_TYPE_B, this_target,
+			state->point, state->M);
+    else
+	state->dump_file =
+	    init_output(file_mode, TARGET_TYPE_A, this_target,
+			state->point, state->M);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -107,8 +89,6 @@ static void ps_free_state(void *vstate)
 
     if (state->dump_file != -1)
 	close(state->dump_file);
-
-    free(state->name);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * ray)
