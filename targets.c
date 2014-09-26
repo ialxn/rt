@@ -13,7 +13,6 @@
 #include <gsl/gsl_cblas.h>
 
 #include "io_utils.h"
-#include "reflect.h"
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type,
@@ -396,7 +395,7 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
-void free_refl_model(const char model, void *refl_model_params)
+static void free_refl_model(const char model, void *refl_model_params)
 /*
  * free's model specific parameters
  */
@@ -412,6 +411,20 @@ void free_refl_model(const char model, void *refl_model_params)
     }
 
 }
+
+void state_free(int fh, gsl_spline * s, char model, void *p)
+{
+    if (fh != -1)
+	close(fh);
+
+    if (s)
+	gsl_spline_free(s);
+
+    if (model)
+	free_refl_model(model, p);
+}
+
+
 
 static double *validate_intercepts(const ray_t * ray, const double t1,
 				   const double t2)

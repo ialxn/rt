@@ -87,8 +87,7 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    if (state->dump_file != -1)
-	close(state->dump_file);
+    state_free(state->dump_file, NULL, MODEL_NONE, NULL);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * ray)

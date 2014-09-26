@@ -18,6 +18,7 @@
 /*
  * reflectivity models
  */
+#define MODEL_NONE		0
 #define SPECULAR		1
 #define LAMBERTIAN		2
 #define MICROFACET_GAUSSIAN	3

@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "io_utils.h"
-#include "reflect.h"
 #include "targets.h"
 
 #define TARGET_TYPE "rectangle"
@@ -91,11 +90,8 @@ static void sq_free_state(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    if (state->dump_file != -1)
-	close(state->dump_file);
-
-    gsl_spline_free(state->refl_spectrum);
-    free_refl_model(state->reflectivity_model, state->refl_model_params);
+    state_free(state->dump_file, state->refl_spectrum,
+	       state->reflectivity_model, state->refl_model_params);
 }
 
 static double *sq_get_intercept(void *vstate, ray_t * ray)
