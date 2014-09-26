@@ -200,16 +200,9 @@ static void tr_init_PTDT(void *vstate)
 static void tr_flush_PTDT_outbuf(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
-    PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    if (data->i != 0)		/* write rest of buffer to file. */
-	if (state->dump_file != -1) {
-
-	    pthread_mutex_lock(&state->mutex_writefd);
-	    write(state->dump_file, data->buf, sizeof(float) * data->i);
-	    pthread_mutex_unlock(&state->mutex_writefd);
-
-	}
+    per_thread_flush(state->dump_file, state->PTDT_key,
+		     state->mutex_writefd);
 }
 
 

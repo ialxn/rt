@@ -406,6 +406,18 @@ void per_thread_init(pthread_key_t key, size_t n)
     pthread_setspecific(key, data);
 }
 
+void per_thread_flush(int fh, pthread_key_t key, pthread_mutex_t mutex)
+{
+    PTDT_t *data = pthread_getspecific(key);
+
+    if (data->i != 0)		/* write rest of buffer to file. */
+	if (fh != -1) {
+	    pthread_mutex_lock(&mutex);
+	    write(fh, data->buf, sizeof(float) * data->i);
+	    pthread_mutex_unlock(&mutex);
+	}
+}
+
 static void free_refl_model(const char model, void *refl_model_params)
 /*
  * free's model specific parameters
