@@ -88,8 +88,8 @@ static void ps1_init_state(void *vstate, config_setting_t * this_target,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, this_target, file_name);
     state->one_sided = 1;
+    ps_init_state(vstate, this_target, file_name);
 }
 
 static void ps2_init_state(void *vstate, config_setting_t * this_target,
@@ -97,8 +97,8 @@ static void ps2_init_state(void *vstate, config_setting_t * this_target,
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    ps_init_state(vstate, this_target, file_name);
     state->one_sided = 0;
+    ps_init_state(vstate, this_target, file_name);
 }
 
 static void ps_free_state(void *vstate)
