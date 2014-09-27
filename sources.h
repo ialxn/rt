@@ -69,5 +69,7 @@ extern void init_rays_remain(const source_t * S);
 extern int check_sources(config_t * cfg);
 extern void init_spectrum(const char *f_name, gsl_spline ** spectrum);
 extern void per_thread_init_rays_remain(pthread_key_t key);
+extern int64_t per_thread_get_source_n_rays(pthread_mutex_t * mutex,
+					    int64_t * n_rays);
 
 #endif				/* __SOURCES_H__ */

@@ -217,3 +217,15 @@ void per_thread_init_rays_remain(pthread_key_t key)
     *rays_remain = 0;
     pthread_setspecific(key, rays_remain);
 }
+
+int64_t per_thread_get_source_n_rays(pthread_mutex_t * mutex,
+				     int64_t * n_rays)
+{
+    int64_t n;
+
+    pthread_mutex_lock(mutex);
+    n = *n_rays;
+    pthread_mutex_unlock(mutex);
+
+    return n;
+}

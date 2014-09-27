@@ -149,13 +149,9 @@ static const char *sp_get_source_name(void *vstate)
 static int64_t sp_get_source_n_rays(void *vstate)
 {
     sp_state_t *state = (sp_state_t *) vstate;
-    int64_t n;
 
-    pthread_mutex_lock(&state->mutex_n_rays);
-    n = state->n_rays;
-    pthread_mutex_unlock(&state->mutex_n_rays);
-
-    return n;
+    return per_thread_get_source_n_rays(&state->mutex_n_rays,
+					&state->n_rays);
 }
 
 static double sp_get_source_power(void *vstate)
