@@ -174,12 +174,7 @@ static double sp_get_source_power(void
 
 static void sp_init_rays_remain(void *vstate)
 {
-    sp_state_t *state = (sp_state_t *) vstate;
-
-    int64_t *rays_remain = (int64_t *) malloc(sizeof(int64_t));
-
-    *rays_remain = 0;
-    pthread_setspecific(state->rays_remain_key, rays_remain);
+    per_thread_init_rays_remain(((sp_state_t *) vstate)->rays_remain_key);
 }
 
 

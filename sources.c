@@ -209,3 +209,11 @@ void init_spectrum(const char *f_name, gsl_spline ** spectrum)
     free(I);
     free(CDF);
 }
+
+void per_thread_init_rays_remain(pthread_key_t key)
+{
+    int64_t *rays_remain = (int64_t *) malloc(sizeof(int64_t));
+
+    *rays_remain = 0;
+    pthread_setspecific(key, rays_remain);
+}
