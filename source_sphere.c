@@ -70,29 +70,10 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
     ray_t *ray = NULL;
     int64_t *rays_remain = pthread_getspecific(state->rays_remain_key);
 
-    if (!*rays_remain) {
-	/*
-	 * group of rays has been consumed. check if source is not
-	 * yet exhausted
-	 */
-	int64_t work_needed;
-
-	pthread_mutex_lock(&state->mutex_n_rays);
-	work_needed = state->n_rays;
-
-	if (work_needed >= RAYS_PER_GROUP) {	/* get new group */
-	    state->n_rays -= RAYS_PER_GROUP;
-	    *rays_remain = RAYS_PER_GROUP;
-	} else {		/* make source empty */
-	    state->n_rays = 0;
-	    *rays_remain = work_needed;
-	    /*
-	     * if source was already exhausted, work_needed is zero
-	     * and no ray will be emitted
-	     */
-	}
-	pthread_mutex_unlock(&state->mutex_n_rays);
-    }
+    if (!*rays_remain)
+	*rays_remain =
+	    per_thread_get_new_raygroup(&state->mutex_n_rays,
+					&state->n_rays);
 
     if (*rays_remain > 0) {	/* rays still available in group */
 	double R, point[3];

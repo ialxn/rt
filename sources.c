@@ -229,3 +229,32 @@ int64_t per_thread_get_source_n_rays(pthread_mutex_t * mutex,
 
     return n;
 }
+
+int64_t per_thread_get_new_raygroup(pthread_mutex_t *mutex,
+				    int64_t * n_rays)
+{
+/*
+ * group of rays has been consumed. check if source is not
+ * yet exhausted
+ */
+    int64_t work_needed;
+    int64_t rays_remain;
+
+    pthread_mutex_lock(mutex);
+    work_needed = *n_rays;
+
+    if (work_needed >= RAYS_PER_GROUP) {	/* get new group */
+	*n_rays -= RAYS_PER_GROUP;
+	rays_remain = RAYS_PER_GROUP;
+    } else {			/* make source empty */
+	*n_rays = 0;
+	rays_remain = work_needed;
+	/*
+	 * if source was already exhausted, work_needed is zero
+	 * and no ray will be emitted
+	 */
+    }
+    pthread_mutex_unlock(mutex);
+
+    return rays_remain;
+}
