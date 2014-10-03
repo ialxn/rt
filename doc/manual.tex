@@ -341,6 +341,33 @@ Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal ve
 \vspace{0.25cm}
 Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the annulus has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
 
+\subsubsection{Cylinder}
+
+\noindent {\tt type="cylinder;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt C=[X.x, Y.y, Z.z];}
+
+\noindent {\tt a=[X.x, Y.y, Z.z];}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt l=R.r;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+
+\noindent {\tt reflecting\_surface="SURFACE";}
+
+
+
+\vspace{0.25cm}
+Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center of the first face is at {\tt C}. The orientation of the cylinder is define by its axis vector {\tt a}\footnote{not necessarily normalized} pointing towards its second face. One surface is defined as reflecting ({\tt reflecting\_surface} can be {\tt inside} or {\tt outside}) while the other surface has implicit absorptivity of 1.0. The spectral reflectivity of the reflecting surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt a} the z axis of the local coordinate system of the cylinder. The local y axis is calculated from $y = N \times x$.
+
 \subsection{Reflectivity Models} \label{sec:refl_models}
 
 \subsubsection{Specular Reflection}
