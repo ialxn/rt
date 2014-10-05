@@ -118,11 +118,11 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 
 	/* copy / initialize rest of structure */
 	memcpy(ray->orig, state->orig, 3 * sizeof(double));
-	ray->power = state->ppr;
 
-	/* choose random wavelength */
+	ray->power = state->ppr;
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+	ray->n_refl = 0;
     }
 
     return ray;

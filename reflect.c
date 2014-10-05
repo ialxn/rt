@@ -140,5 +140,6 @@ void reflect(ray_t * r, const double N[3], const double P[3],
 	}
 
     }
+    ++r->n_refl;
 
 }

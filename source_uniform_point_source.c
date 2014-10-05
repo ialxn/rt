@@ -83,9 +83,11 @@ static ray_t *ups_emit_ray(void *vstate, const gsl_rng * r)
 
 	get_uniform_random_vector(ray->dir, 1.0, r);
 	memcpy(ray->orig, state->orig, 3 * sizeof(double));
+
 	ray->power = state->ppr;
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+	ray->n_refl = 0;
     }
 
     return ray;
