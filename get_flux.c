@@ -8,6 +8,7 @@
  *
  */
 #include <getopt.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -29,9 +30,10 @@ static void help(void)
 
 int main(int argc, char **argv)
 {
-    float t[MAX_ITEMS];
+    float t[MAX_FLOAT_ITEMS];
+    unsigned char tmp_8;
     size_t idx_p, idx_l;
-    size_t n_items_read;
+    size_t n_float_items_read, n_uchar_items_read;
 
     while (1) {
 	int c;
@@ -50,7 +52,8 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'V':
-	    fprintf(stdout, "get_flux Version: %s  %s\n", RELEASE, RELEASE_INFO);
+	    fprintf(stdout, "get_flux Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 
@@ -83,30 +86,33 @@ int main(int argc, char **argv)
     /*
      * read data. (x,y,[z,]power,lambda)
      */
-    n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+    n_float_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
 
-    if (!n_items_read) {
+    if (!n_float_items_read) {
 	fprintf(stderr, "No data found\n");
 	exit(EXIT_FAILURE);
     }
+    n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, stdin);
 
-    while (n_items_read) {
+    while (n_float_items_read && n_uchar_items_read) {
 
-	if (n_items_read < idx_l + 1) {	/* insufficient data read */
+	if ((n_float_items_read < idx_l + 1) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
-		    "Incomplete data set read (%d instead of %d)\n",
-		    n_items_read, idx_l + 1);
+		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    n_float_items_read, idx_l + 1, n_uchar_items_read);
 	    exit(EXIT_FAILURE);
 	}
 
-	if (idx_l == MAX_ITEMS - 1)
-	    fprintf(stdout, "%e\t%e\t%e\t%e\t%e\n", t[0], t[1], t[2],
-		    t[idx_p], t[idx_l]);
+	if (idx_l == MAX_FLOAT_ITEMS - 1)
+	    fprintf(stdout, "%e\t%e\t%e\t%e\t%e\t%u\n", t[0],
+		    t[1], t[2], t[idx_p], t[idx_l], tmp_8);
 	else
-	    fprintf(stdout, "%e\t%e\t%e\t%e\n", t[0], t[1], t[idx_p],
-		    t[idx_l]);
+	    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
+		    t[idx_p], t[idx_l], tmp_8);
 
-	n_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+	n_float_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+	n_uchar_items_read =
+	    fread(&tmp_8, sizeof(unsigned char), 1, stdin);
 
     }
 

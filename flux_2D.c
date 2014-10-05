@@ -8,6 +8,7 @@
  *
  */
 #include <getopt.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
@@ -68,8 +69,9 @@ static gsl_histogram2d *init_hist(const double xmax,
 static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 		     double *p_inc, int *n_missed, double *p_missed)
 {
-    float t[MAX_ITEMS];
-    size_t n_items_read;
+    float t[MAX_FLOAT_ITEMS];
+    unsigned char tmp_8;
+    size_t n_float_items_read, n_uchar_items_read;
 
     if (skip_header(f_in) == ERR)
 	return ERR;
@@ -77,18 +79,25 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
     /*
      * read data. (x,y,power,lambda)
      */
-    n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
+    n_float_items_read =
+	fread(t, sizeof(float), MAX_FLOAT_ITEMS - 1, f_in);
 
-    if (!n_items_read) {
+    if (!n_float_items_read) {
 	fprintf(stderr, "No data found\n");
 	return (ERR);
     }
+    n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, f_in);
 
-    while (n_items_read) {
-	if (n_items_read < MAX_ITEMS - 1) {	/* insufficient data read */
+    while (n_float_items_read && n_uchar_items_read) {
+	if ((n_float_items_read < MAX_FLOAT_ITEMS - 1)
+	    || !n_uchar_items_read) {
+	    /*
+	     * insufficient data read
+	     */
 	    fprintf(stderr,
-		    "Incomplete data set read (%d instead of %d)\n",
-		    n_items_read, MAX_ITEMS - 1);
+		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    n_float_items_read, MAX_FLOAT_ITEMS - 1,
+		    n_uchar_items_read);
 	    return (ERR);
 	}
 
@@ -101,7 +110,9 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	    *p_inc += t[2];
 	}
 
-	n_items_read = fread(t, sizeof(float), MAX_ITEMS - 1, f_in);
+	n_float_items_read =
+	    fread(t, sizeof(float), MAX_FLOAT_ITEMS - 1, f_in);
+	n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, f_in);
     }
 
     return NO_ERR;
@@ -287,7 +298,8 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, "flux_2D Version: %s  %s\n", RELEASE, RELEASE_INFO);
+	    fprintf(stdout, "flux_2D Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 

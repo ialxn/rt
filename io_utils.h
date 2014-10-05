@@ -19,7 +19,7 @@
 #define LINE_LEN 256
 #define BSIZE 256
 #define T_HEADER_LINES 15	/* number of header lines in target output */
-#define MAX_ITEMS 5		/* maximum number of items per data set
+#define MAX_FLOAT_ITEMS 5	/* maximum number of items per data set
 				   (x,y,z,power,lambda) */
 
 
