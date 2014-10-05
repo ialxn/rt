@@ -170,7 +170,8 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 static void disk_init_PTDT(void *vstate)
 {
-    per_thread_init(((disk_state_t *) vstate)->PTDT_key, NO_ITEMS);
+    per_thread_init(((disk_state_t *) vstate)->PTDT_key,
+		    NO_ITEMS * sizeof(float) + sizeof(unsigned char));
 }
 
 static void disk_flush_PTDT_outbuf(void *vstate)

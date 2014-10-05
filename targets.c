@@ -399,7 +399,7 @@ void per_thread_init(pthread_key_t key, size_t n)
 {
     PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
 
-    data->buf = (float *) malloc(BUF_SIZE * n * sizeof(float));
+    data->buf = (char *) malloc(BUF_SIZE * n);
     data->i = 0;
     data->flag = 0;
 
@@ -413,7 +413,7 @@ void per_thread_flush(int fh, pthread_key_t key, pthread_mutex_t mutex)
     if (data->i != 0)		/* write rest of buffer to file. */
 	if (fh != -1) {
 	    pthread_mutex_lock(&mutex);
-	    write(fh, data->buf, sizeof(float) * data->i);
+	    write(fh, data->buf, sizeof(char) * data->i);
 	    pthread_mutex_unlock(&mutex);
 	}
 }
@@ -619,6 +619,12 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 
 }
 
+#define WRITE_FLOAT(VAR,BUF_PTR,BUF_IDX) do { \
+	float f = (float) VAR; \
+	memcpy(&(BUF_PTR[BUF_IDX]), &f, sizeof(float)); \
+	BUF_IDX += sizeof(float); \
+} while(0);
+
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd)
@@ -628,19 +634,24 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * 4) {	/* buffer full, write to disk */
-
+    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char))) {
+	/*
+	 * buffer full, write to disk
+	 */
 	pthread_mutex_lock(mutex_writefd);
-	write(fd, data->buf, sizeof(float) * data->i);
+	write(fd, data->buf, sizeof(char) * data->i);
 	pthread_mutex_unlock(mutex_writefd);
 
 	data->i = 0;
     }
 
-    data->buf[data->i++] = (float) hit_local[0];
-    data->buf[data->i++] = (float) hit_local[1];
-    data->buf[data->i++] = (float) ray->power;
-    data->buf[data->i++] = (float) ray->lambda;
+    WRITE_FLOAT(hit_local[0], data->buf, data->i);
+    WRITE_FLOAT(hit_local[1], data->buf, data->i);
+    WRITE_FLOAT(ray->power, data->buf, data->i);
+    WRITE_FLOAT(ray->lambda, data->buf, data->i);
+
+    memcpy(&(data->buf[data->i]), &ray->n_refl, sizeof(unsigned char));
+    data->i += sizeof(unsigned char);
 }
 
 extern void store_xyz(const int fd, ray_t * ray, const double *hit,
@@ -652,18 +663,23 @@ extern void store_xyz(const int fd, ray_t * ray, const double *hit,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * 5) {	/* buffer full, write to disk */
-
+    if (data->i == BUF_SIZE * (5 * sizeof(float) + sizeof(unsigned char))) {
+	/*
+	 * buffer full, write to disk
+	 */
 	pthread_mutex_lock(mutex_writefd);
-	write(fd, data->buf, sizeof(float) * data->i);
+	write(fd, data->buf, sizeof(char) * data->i);
 	pthread_mutex_unlock(mutex_writefd);
 
 	data->i = 0;
     }
 
-    data->buf[data->i++] = (float) hit_local[0];
-    data->buf[data->i++] = (float) hit_local[1];
-    data->buf[data->i++] = (float) hit_local[2];
-    data->buf[data->i++] = (float) ray->power;
-    data->buf[data->i++] = (float) ray->lambda;
+    WRITE_FLOAT(hit_local[0], data->buf, data->i);
+    WRITE_FLOAT(hit_local[1], data->buf, data->i);
+    WRITE_FLOAT(hit_local[2], data->buf, data->i);
+    WRITE_FLOAT(ray->power, data->buf, data->i);
+    WRITE_FLOAT(ray->lambda, data->buf, data->i);
+
+    memcpy(&(data->buf[data->i]), &ray->n_refl, sizeof(unsigned char));
+    data->i += sizeof(unsigned char);
 }
