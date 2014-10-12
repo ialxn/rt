@@ -35,7 +35,7 @@
 #define BUF_SIZE 4096
 
 typedef struct PTDT_t {		/* per thread data of every target */
-    float *buf;			/* output buffer */
+    char *buf;			/* output buffer */
     size_t i;			/* current position within output buffer */
     int flag;			/* various flags. */
 } PTDT_t;

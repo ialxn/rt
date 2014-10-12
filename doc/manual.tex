@@ -358,6 +358,9 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 
 
 \section{Utilities}
+
+The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed ray) follow consisting of 4\footnote{5, for non-planar targets} single precicions floats and one unsigned character (x, y, z\footnote{missing for planar targets}, $\lambda$, power, $n_{\mathrm{refl}}$) per absorbed ray.   
+
 \subsection{{\tt spectrum}}
 
 {\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a one- or two-sided plane screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. The spectrum is reported as power per wavelength interval.

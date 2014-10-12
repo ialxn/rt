@@ -22,8 +22,9 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 		     double *p_missed, const size_t idx_lambda,
 		     const size_t idx_power)
 {
-    float t[MAX_ITEMS];
-    size_t n_items_read;
+    float t[MAX_FLOAT_ITEMS];
+    unsigned char tmp_8;
+    size_t n_float_items_read, n_uchar_items_read;
 
     if (skip_header(f_in) == ERR)
 	return ERR;
@@ -31,19 +32,21 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
     /*
      * read data. (x,y,[z,]power,lambda)
      */
-    n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+    n_float_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
 
-    if (!n_items_read) {
+    if (!n_float_items_read) {
 	fprintf(stderr, "No data found\n");
 	return (ERR);
     }
+    n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, f_in);
 
-    while (n_items_read) {
+    while (n_float_items_read && n_uchar_items_read) {
 
-	if (n_items_read < idx_lambda + 1) {	/* insufficient data read */
+	if ((n_float_items_read < idx_lambda + 1) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
-		    "Incomplete data set read (%d instead of %d)\n",
-		    n_items_read, idx_lambda + 1);
+		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    n_float_items_read, idx_lambda + 1,
+		    n_uchar_items_read);
 	    return (ERR);
 	}
 
@@ -56,7 +59,8 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 	    *p_inc += t[idx_power];
 	}
 
-	n_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+	n_float_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
+	n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, f_in);
 
     }
 
@@ -206,7 +210,9 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, "spectrum Version: %s  %s\n", RELEASE, RELEASE_INFO);	    exit(EXIT_SUCCESS);
+	    fprintf(stdout, "spectrum Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
+	    exit(EXIT_SUCCESS);
 	    break;
 
 	case 'h':

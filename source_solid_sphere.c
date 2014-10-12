@@ -105,7 +105,9 @@ static ray_t *ssp_emit_ray(void *vstate, const gsl_rng * r)
 	ray->power = state->ppr;
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+	ray->n_refl = 0;
     }
+
     return ray;
 }
 
