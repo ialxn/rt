@@ -652,7 +652,108 @@ static void off_annulus(const char *name, const double *origin,
     fclose(outf);
 }
 
+static void off_cylinder(const char *name, const double *origin,
+			 const double *dir, const double L,
+			 const double radius, const double r,
+			 const double g, const double b,
+			 const double Radius, const double R,
+			 const double G, const double B)
+{
+/*
+ * writes 'OFF' file to 'name.off' for cylinder with radius 'Radius',
+ * length 'L' with direction of axis 'dir'. 'radius', 'r', 'g', 'b' define
+ * inside wall of cylinder while 'Radius', 'R', 'G', 'B' define its outside
+ * wall
+ */
+    double P[3], g_P[3];
+    const double O[] = { 0.0, 0.0, 0.0 };
+    double alpha, beta;
+    int i;
 
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "48 24 0\n");
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off(O, dir, P, &alpha, &beta);
+
+    /*
+     * OUTSIDE: vertices at first face
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = Radius * sa;
+	P[1] = Radius * ca;
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * OUTSIDE: vertices at second face (+ 'L')
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = Radius * sa;
+	P[1] = Radius * ca;
+	P[2] = L;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * INSIDE: vertices at first face
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = radius * sa;
+	P[1] = radius * ca;
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * INSIDE: vertices at second face (+ 'L')
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = radius * sa;
+	P[1] = radius * ca;
+	P[2] = L;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+    /*
+     * print cylinder OUTSIDE wall
+     */
+    for (i = 0; i < 11; i++)
+	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
+		i + 13, i + 12, i, R, G, B);
+    fprintf(outf, "5 11 0 12 23 %f %f %f 1.0\n", R, G, B);
+
+    /*
+     * print cylinder INSIDE wall
+     */
+    for (i = 12; i < 23; i++)
+	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
+		i + 13, i + 12, i, r, g, b);
+    fprintf(outf, "5 35 24 36 47 %f %f %f 1.0\n", r, g, b);
+
+    fclose(outf);
+}
 
 static void output_targets(const config_t * cfg)
 {
@@ -851,7 +952,31 @@ static void output_targets(const config_t * cfg)
 	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
 			DZ);
 
+	} else if (!strcmp(type, "cylinder")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double r, l;
+	    const char *S;
+
+	    read_vector(this_t, "C", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "a", Z);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_float(this_t, "r", &r);
+	    config_setting_lookup_float(this_t, "l", &l);
+
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_cylinder(name, O, Z, l, r * (1.0 - DZ), 0.39, 0.785,
+			     0.785, r, 0.0, 0.0, 0.0);
+	    else
+		off_cylinder(name, O, Z, l, r * (1.0 - DZ), 0.0, 0.0, 0.0,
+			     r, 0.39, 0.785, 0.785);
 	}
+
     }				/* end all targets */
 }
 

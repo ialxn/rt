@@ -156,7 +156,6 @@ int check_reflectivity_model(const char *section,
     return status;
 }
 
-
 int check_file(const char *section, const config_setting_t * s,
 	       const char *name, const int nr)
 {
@@ -385,6 +384,9 @@ int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
     } else if (strstr(line, "(disk)")) {
 	*idx_lambda = 3;
 	*idx_power = 2;
+    } else if (strstr(line, "(cylinder)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
     } else {
 	fprintf(stderr, "Unknown target type (%s) found\n", line);
 	status = ERR;
