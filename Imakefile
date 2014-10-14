@@ -23,6 +23,7 @@ SRCS= main.c \
       target_ellipsoid.c \
       target_annulus.c \
       target_disk.c \
+      target_cylinder.c \
       virtual_target_solid_sphere.c \
       off.c \
       math_utils.c \
@@ -43,6 +44,7 @@ OBJ= main.o \
      target_ellipsoid.o \
      target_annulus.o \
      target_disk.o \
+     target_cylinder.o \
      virtual_target_solid_sphere.o \
      off.o \
      math_utils.o \

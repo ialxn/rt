@@ -31,6 +31,7 @@
 
 #define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
+#define ICPT_ON_CONVEX_SIDE	(1<<2)	/* ray intercepted by convex side */
 
 #define BUF_SIZE 4096
 
@@ -71,6 +72,7 @@ const target_type_t *target_triangle;
 const target_type_t *target_ellipsoid;
 const target_type_t *target_annulus;
 const target_type_t *target_disk;
+const target_type_t *target_cylinder;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */
@@ -106,6 +108,12 @@ extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_point, int *hits_front);
 extern double *intercept_sphere(const ray_t * ray, const double *center,
 				const double radius);
+extern void cyl_surf_normal(double *const icpt, const double *C,
+			    const double *a, const double r,
+			    double *const normal);
+extern double *intercept_cylinder(const ray_t * ray, const double *c,
+				  const double *a, const double r,
+				  const double l, int *hits_outside);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);

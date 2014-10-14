@@ -313,11 +313,14 @@ int check_targets(config_t * cfg)
 		status += check_float("targets", this_t, "l", i);
 		status += check_array("targets", this_t, "x", i);
 		status +=
-		    check_string("targets", this_t, "reflecting_surface", i);
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
-		status += check_string("targets", this_t, "reflectivity_model", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -646,6 +649,170 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 
     return intercept;
 
+}
+
+void cyl_surf_normal(double *const icpt, const double *C,
+		     const double *a, const double r, double *const normal)
+{
+/*
+ * calculate surface normal 'normal' at 'icpt' on cylinder wall
+ */
+    double IC[3];
+    double t;
+
+    diff(IC, icpt, C);
+    t = cblas_ddot(3, IC, 1, a, 1);
+    a_plus_cb(normal, IC, -t, a);
+
+    cblas_dscal(3, 1.0 / r, normal, 1);
+}
+
+static double *test_cyl_intercept(const double x, const double *orig,
+				  const double *dir, const double *c,
+				  const double *a, const double l)
+{
+/*
+ * check if intercept is between two faces
+ * based on file LinePosition3d.m from same source.
+ *
+ * projection of vector 'icpt' - 'c' onto 'a' must fullfill 0 < x < 'd'
+ * if we exclude faces
+ */
+    double *icpt = NULL;
+
+    if (x > GSL_DBL_EPSILON) {	/* cylider in front */
+	double t1, t3[3];
+
+	icpt = (double *) malloc(3 * sizeof(double));
+	a_plus_cb(icpt, orig, x, dir);
+	diff(t3, icpt, c);
+	t1 = cblas_ddot(3, t3, 1, a, 1);
+
+	if (t1 < 0.0 || t1 > l) {	/* out of bounds */
+	    free(icpt);
+	    icpt = NULL;
+	}
+    }
+    return icpt;
+}
+
+extern double *intercept_cylinder(const ray_t * ray, const double *c,
+				  const double *a, const double r,
+				  const double l, int *hits_outside)
+{
+/*
+ * returns first (closes to origin of ray) intercept (x,y,z) between
+ * ray and cylinder wall.
+ * cylinder is defined by:
+ *     - center point 'c' of first face
+ *     - normalized vector 'a' pointing in direction of second face.
+ *     - radius 'r' of cylinder
+ *     - length 'l' of the cylinder.
+ *
+ * based on:
+ * http://www.mathworks.com/matlabcentral/fileexchange/24484-geom3d/content/geom3d/geom3d/
+ * file: intersectLineCylinder.m
+ */
+    double t1, t3[3];
+    double e[3], f[3];
+    double A, B, C;
+    double delta;
+    double *intercept;
+
+    /*
+     * Starting point of the line:              l0 = line(1:3)';
+     *						     = ray->origin
+     * Direction vector of the line:            dl = line(4:6)';
+     *						     = ray->dir
+     * Starting position of the cylinder:       c0 = cylinder(1:3)';
+     *						     = c
+     * Direction vector of the cylinder:        dc = cylinder(4:6)' - c0;
+     *						     = a*l
+     * Radius of the cylinder:                   r = cylinder(7);
+     *
+     * Resolution of a quadratic equation to find the increment
+     * Substitution of parameters
+     * e = dl - (dot(dl,dc)/dot(dc,dc))*dc;
+     * f = (l0-c0) - (dot(l0-c0,dc)/dot(dc,dc))*dc;
+     * Note: 'a' is normalized. 'd' * 'a' -> dc
+     */
+
+    t1 = cblas_ddot(3, ray->dir, 1, a, 1);	/* dot(dl,dc)/dot(dc,dc) */
+    a_plus_cb(e, ray->dir, -t1 * l, a);
+
+    diff(t3, ray->orig, c);	/* l0-c0 */
+    t1 = cblas_ddot(3, t3, 1, a, 1);	/* dot((l0-c0),dc)/dot(dc,dc) */
+    a_plus_cb(f, t3, -t1 * l, a);
+
+    /*
+     * Coefficients of 2-nd order equation
+     * A = dot(e, e);
+     * B = 2*dot(e,f);
+     * C = dot(f,f) - r^2;
+     */
+    A = cblas_ddot(3, e, 1, e, 1);
+    B = 2.0 * cblas_ddot(3, e, 1, f, 1);
+    C = cblas_ddot(3, f, 1, f, 1) - r * r;
+
+    /*
+     * compute discriminant
+     */
+    delta = B * B - 4.0 * A * C;
+
+    /*
+     * check existence of solution(s)
+     */
+    if (delta < 0.0)		/* no interception */
+	return NULL;
+    else {
+	/*
+	 * 2 (maybe degenerate) solutions (intercepts with infinite cylinder).
+	 * identify the ones intercepting the cylinder between
+	 * its end faces (0, 1, or 2 solutions). projection of vector
+	 * 'icpt' - 'c' onto 'a' must fullfill 0 < x < 'd'
+	 * pick the one closest to origin of ray and assign it to icpt
+	 */
+	const double s = sqrt(delta);
+	const double AA = 1.0 / (2.0 * A);
+	const double x1 = (-B + s) * AA;
+	const double x2 = (-B - s) * AA;
+	double xmin, xmax;
+
+	/*
+	 * determine the correct solution corresponding
+	 * to the smalles positive 'x' within the length
+	 * of the cylinder.
+	 */
+	if (x1 > x2) {
+	    xmax = x1;
+	    xmin = x2;
+	} else {
+	    xmax = x2;
+	    xmin = x1;
+	}
+
+	if ((intercept =
+	     test_cyl_intercept(xmin, ray->orig, ray->dir, c, a,
+				l)) == NULL)
+	    /*
+	     * xmin not valid, try xmax instead
+	     */
+	    intercept =
+		test_cyl_intercept(xmax, ray->orig, ray->dir, c, a, l);
+
+	/*
+	 * if valid intercept found, test if outside surface is hit
+	 * where 'ray->dir' dot "surface_normal" is negative
+	 */
+	if (intercept) {
+	    cyl_surf_normal(intercept, c, a, r, t3);
+	    if (cblas_ddot(3, ray->dir, 1, t3, 1) < 0.0)
+		*hits_outside = 1;
+	    else
+		*hits_outside = 0;
+	}
+	return intercept;
+    }
 }
 
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
