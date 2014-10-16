@@ -71,6 +71,7 @@ const target_type_t *target_triangle;
 const target_type_t *target_ellipsoid;
 const target_type_t *target_annulus;
 const target_type_t *target_disk;
+const target_type_t *target_window;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */
@@ -106,6 +107,9 @@ extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_point, int *hits_front);
 extern double *intercept_sphere(const ray_t * ray, const double *center,
 				const double radius);
+extern double *intercept_cylinder(const ray_t * ray, const double *c,
+				  const double *a, const double r,
+				  const double d);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);

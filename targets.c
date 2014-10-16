@@ -326,7 +326,6 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
-
 	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
@@ -648,6 +647,110 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 
     intercept = (double *) malloc(3 * sizeof(double));
     a_plus_cb(intercept, ray->orig, d, ray->dir);
+
+    return intercept;
+
+}
+
+extern double *intercept_cylinder(const ray_t * ray, const double *c,
+				  const double *a, const double r,
+				  const double d)
+{
+/*
+ * returns first (closes to origin of ray) intercept (x,y,z) between
+ * ray and cylinder wall.
+ * cylinder is defined by:
+ *     - center point 'c' of first face 
+ *     - normalized vector 'a' pointing in direction of second face.
+ *     - radius 'r' of cylinder
+ *     - length 'd' of the cylinder.
+ *
+ * based on:
+ * http://www.mathworks.com/matlabcentral/fileexchange/24484-geom3d/content/geom3d/geom3d/
+ * file: intersectLineCylinder.m
+ */
+    double t1, t3[3];
+    double e[3], f[3];
+    double A, B, C;
+    double delta;
+    double *intercept;
+
+    /*
+     * Starting point of the line:              l0 = line(1:3)';
+     * Direction vector of the line:            dl = line(4:6)';
+     * Starting position of the cylinder:       c0 = cylinder(1:3)';
+     * Direction vector of the cylinder:        dc = cylinder(4:6)' - c0;
+     * Radius of the cylinder:                   r = cylinder(7);
+     */
+
+    /*
+     * Resolution of a quadratic equation to find the increment
+     * Substitution of parameters
+     * e = dl - (dot(dl,dc)/dot(dc,dc))*dc;
+     * f = (l0-c0) - (dot(l0-c0,dc)/dot(dc,dc))*dc;
+     * Note: 'a' is normalized. 'd' * 'a' -> dc
+     */
+    t1 = cblas_ddot(3, ray->dir, 1, a, 1);
+    a_plus_cb(e, ray->dir, -t1 * d, a);
+
+    diff(t3, ray->orig, c);
+    t1 = cblas_ddot(3, t3, 1, a, 1);
+    a_plus_cb(f, t3, -t1 * d, a);
+
+    /*
+     * Coefficients of 2-nd order equation
+     * A = dot(e, e);
+     * B = 2*dot(e,f);
+     * C = dot(f,f) - r^2;
+     */
+    A = cblas_dnrm2(3, e, 1);
+    B = 2.0 * cblas_ddot(3, e, 1, f, 1);
+    C = cblas_dnrm2(3, f, 1) - r * r;
+
+    /*
+     * compute discriminant
+     */
+    delta = B * B - 4.0 * A * C;
+
+    /*
+     * check existence of solution(s)
+     */
+    if (delta < 0)		/* no solution */
+	return NULL;
+    else {
+	/*
+	 * one or two solutions, pick the one closest to origin of ray
+	 * and assign it to icpt
+	 */
+	const double s = sqrt(delta);
+	const double x1 = (-B + s) / (2.0 * A);
+	const double x2 = (-B - s) / (2.0 * A);
+
+	if ((x1 < 0.0) && (x2 < 0.0))
+	    return NULL;	/* cylinder is not in front */
+
+	intercept = (double *) malloc(3 * sizeof(double));
+
+	if (x1 > x2)
+	    a_plus_cb(intercept, ray->orig, x2, ray->dir);
+	else
+	    a_plus_cb(intercept, ray->orig, x1, ray->dir);
+
+	/*
+	 * check if intercept is between two faces
+	 * based on file LinePosition3d.m from same source.
+	 *
+	 * projection of vector 'icpt' - 'c' onto 'a' must fullfill 0 < x < 'd'
+	 * if we exclude faces
+	 */
+	diff(t3, intercept, c);
+	t1 = cblas_ddot(3, t3, 1, a, 1);
+
+	if (t1 < 0.0 || t1 > d) {	/* out of bounds */
+	    free(intercept);
+	    intercept = NULL;
+	}
+    }
 
     return intercept;
 

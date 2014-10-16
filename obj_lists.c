@@ -116,6 +116,9 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 		target_alloc(target_annulus, this_target, file_mode);
 	else if (!strcmp(type, "disk"))
 	    new_target = target_alloc(target_disk, this_target, file_mode);
+	else if (!strcmp(type, "window"))
+	    new_target =
+		target_alloc(target_window, this_target, file_mode);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",
