@@ -341,6 +341,31 @@ Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal ve
 \vspace{0.25cm}
 Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the annulus has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
 
+\subsubsection{Window}
+
+\noindent {\tt type="window;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt C=[X.x, Y.y, Z.z];}
+
+\noindent {\tt a=[X.x, Y.y, Z.z];}
+
+\noindent {\tt d=D.d;}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt idx\_refraction="FILE\_NAME";}
+
+\noindent {\tt absorptivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+
+\vspace{0.25cm}
+Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorption {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local x axis, the local y axis is calculated from $y = a \times x$.
+
 \subsection{Reflectivity Models} \label{sec:refl_models}
 
 \subsubsection{Specular Reflection}
