@@ -230,7 +230,7 @@ int64_t per_thread_get_source_n_rays(pthread_mutex_t * mutex,
     return n;
 }
 
-int64_t per_thread_get_new_raygroup(pthread_mutex_t *mutex,
+int64_t per_thread_get_new_raygroup(pthread_mutex_t * mutex,
 				    int64_t * n_rays)
 {
 /*

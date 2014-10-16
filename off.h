@@ -16,7 +16,6 @@
 
 
 extern void output_geometry(config_t * cfg);
-
 extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
 extern void l2g_off(const double *P, const double *L, double *G,

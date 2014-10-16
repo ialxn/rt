@@ -73,6 +73,7 @@ const target_type_t *target_ellipsoid;
 const target_type_t *target_annulus;
 const target_type_t *target_disk;
 const target_type_t *target_cylinder;
+const target_type_t *target_window;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */

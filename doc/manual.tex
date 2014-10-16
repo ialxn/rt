@@ -345,15 +345,13 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 
 \noindent {\tt type="cylinder;"}
 
-\noindent {\tt name="NAME";}
-
 \noindent {\tt C=[X.x, Y.y, Z.z];}
 
 \noindent {\tt a=[X.x, Y.y, Z.z];}
 
 \noindent {\tt r=R.r;}
 
-\noindent {\tt l=R.r;}
+\noindent {\tt l=L.l;}
 
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
@@ -363,10 +361,35 @@ Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. Th
 
 \noindent {\tt reflecting\_surface="SURFACE";}
 
-
-
 \vspace{0.25cm}
 Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center of the first face is at {\tt C}. The orientation of the cylinder is define by its axis vector {\tt a}\footnote{not necessarily normalized} pointing towards its second face. One surface is defined as reflecting ({\tt reflecting\_surface} can be {\tt inside} or {\tt outside}) while the other surface has implicit absorptivity of 1.0. The spectral reflectivity of the reflecting surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt a} the z axis of the local coordinate system of the cylinder. The local y axis is calculated from $y = N \times x$.
+
+
+\subsubsection{Window}
+
+\noindent {\tt type="window;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt C=[X.x, Y.y, Z.z];}
+
+\noindent {\tt a=[X.x, Y.y, Z.z];}
+
+\noindent {\tt d=D.d;}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt idx\_refraction="FILE\_NAME";}
+
+\noindent {\tt absorptivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+
+\vspace{0.25cm}
+Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorption {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local x axis, the local y axis is calculated from $y = a \times x$.
+
 
 \subsection{Reflectivity Models} \label{sec:refl_models}
 

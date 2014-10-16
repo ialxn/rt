@@ -132,6 +132,12 @@ int check_targets(config_t * cfg)
 	     *                                      defined by direction of surface
 	     *                                      normal. total absorption on rear
 	     *                                      surface.
+	     *          - "window":                 round window. reflectivity defined
+	     *                                      by index of refraction. total
+	     *                                      absorbtion on cylinder walls
+	     *                                      (inside and outside). absorption
+	     *                                      inside governed by absorption
+	     *                                      spectrum.
 	     */
 	    status += check_string("targets", this_t, "name", i);
 
@@ -325,7 +331,34 @@ int check_targets(config_t * cfg)
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
 
-	    }			/* end 'cylinder' */
+	    } /* end 'cylinder' */
+	    else if (!strcmp(type, "window")) {
+		/*
+		 * window:
+		 *  - array 'C' (center of front surface) [x,y,z] / double
+		 *  - array 'a' (direction of cylinder axis) [x,y,z] / double
+		 *  - 'd' (thickness of window) double
+		 *  - 'r' (radius of window) double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'absorptivity' (file name of absorption spectrum)
+		 *  - string 'idx_refraction' (file name of dispersion curve)
+		 */
+		status += check_array("targets", this_t, "C", i);
+		status += check_array("targets", this_t, "a", i);
+		status += check_float("targets", this_t, "d", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "absorptivity", i);
+		status += check_file("targets", this_t, "absorptivity", i);
+		status +=
+		    check_string("targets", this_t, "idx_refraction", i);
+		status +=
+		    check_file("targets", this_t, "idx_refraction", i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
@@ -721,13 +754,13 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
 
     /*
      * Starting point of the line:              l0 = line(1:3)';
-     *						     = ray->origin
+     *                                               = ray->origin
      * Direction vector of the line:            dl = line(4:6)';
-     *						     = ray->dir
+     *                                               = ray->dir
      * Starting position of the cylinder:       c0 = cylinder(1:3)';
-     *						     = c
+     *                                               = c
      * Direction vector of the cylinder:        dc = cylinder(4:6)' - c0;
-     *						     = a*l
+     *                                               = a*l
      * Radius of the cylinder:                   r = cylinder(7);
      *
      * Resolution of a quadratic equation to find the increment
