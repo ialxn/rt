@@ -362,6 +362,9 @@ int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
     } else if (strstr(line, "(disk)")) {
 	*idx_lambda = 3;
 	*idx_power = 2;
+    } else if (strstr(line, "(window)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
     } else {
 	fprintf(stderr, "Unknown target type (%s) found\n", line);
 	status = ERR;
