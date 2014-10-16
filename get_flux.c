@@ -50,7 +50,8 @@ int main(int argc, char **argv)
 	switch (c) {
 
 	case 'V':
-	    fprintf(stdout, "get_flux Version: %s  %s\n", RELEASE, RELEASE_INFO);
+	    fprintf(stdout, "get_flux Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 

@@ -206,7 +206,9 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, "spectrum Version: %s  %s\n", RELEASE, RELEASE_INFO);	    exit(EXIT_SUCCESS);
+	    fprintf(stdout, "spectrum Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
+	    exit(EXIT_SUCCESS);
 	    break;
 
 	case 'h':

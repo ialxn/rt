@@ -287,7 +287,8 @@ int main(int argc, char **argv)
 	    break;
 
 	case 'V':
-	    fprintf(stdout, "flux_2D Version: %s  %s\n", RELEASE, RELEASE_INFO);
+	    fprintf(stdout, "flux_2D Version: %s  %s\n", RELEASE,
+		    RELEASE_INFO);
 	    exit(EXIT_SUCCESS);
 	    break;
 
