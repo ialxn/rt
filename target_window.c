@@ -197,9 +197,9 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
  */
     window_state_t *state = (window_state_t *) vstate;
 
-    double *i1, *i2;
-    double d_face = GSL_DBL_MAX;
+    double *f_icpt, *w_icpt;
     double center_face2[3];
+    int surf_hit;
 
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
@@ -209,70 +209,35 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
     }
 
     /*
-     * get intercepts with both faces
-     * face1: center point is state->C
-     * face2: center point is state->C + state->d*state->a
-     *        offset by 'd' in direction 'a'
+     * get intercepts with closer face:
+     * face1 (center point is state->C), if state->a is parallel to
+     * ray->dir
+     * face2 (center point is state->C + state->d*state->a), if
+     * if state->a is anti-parallel to ray->dir
      */
-    i1 = intercept_face(ray, state, state->C);
-    a_plus_cb(center_face2, state->C, state->d, state->a);
-    i2 = intercept_face(ray, state, center_face2);
-
-    if (i1 && i2) {
-	/*
-	 * two intercepts.
-	 * Note: this just states that 'ray' is intercepted by
-	 *       one of the two faces and not by the cylinder wall
-	 *       (i.e. the edge) of the window.
-	 * return intercept closest to the origin of 'ray'
-	 */
-	const double d1 = d_sqr(i1, ray->orig);	/* distance (squared) to origin */
-	const double d2 = d_sqr(i2, ray->orig);	/* distance (squared) to origin */
-
-	if (d1 < d2) {
-	    free(i2);
-	    d_face = d1;
-	    return i1;
-	} else {
-	    free(i1);
-	    d_face = d2;
-	    return i2;
-	}
-
-    } else {			/* one or zero intercepts. also check wall */
-	double *f_icpt;
-	double *w_icpt;
-	double d_wall = GSL_DBL_MAX;
-	int surf_hit;
-
-	if (i1)
-	    f_icpt = i1;
-	else
-	    f_icpt = i2;	/* may be NULL */
-
-	if ((w_icpt =
-	     intercept_cylinder(ray, state->C, state->a, state->r,
-				state->d, &surf_hit)) != NULL)
-	    d_wall = d_sqr(w_icpt, ray->orig);
-
-	/*
-	 * return intercept closest to the origin of 'ray'
-	 */
-	if (d_face < d_wall) {	/* face hit */
-	    if (w_icpt)
-		free(w_icpt);
-
-	    return f_icpt;
-	} else if (d_wall < d_face) {	/* wall hit (absorbed) */
-	    if (f_icpt)
-		free(f_icpt);
-
-	    data->flag |= ABSORBED;
-	    return w_icpt;
-	} else {		/* no hit at all */
-	    return NULL;
-	}
+    if (cblas_ddot(3, state->a, 1, ray->dir, 1) > 0)
+	f_icpt = intercept_face(ray, state, state->C);
+    else {
+	a_plus_cb(center_face2, state->C, state->d, state->a);
+	f_icpt = intercept_face(ray, state, center_face2);
     }
+
+    if (f_icpt)			/* intecept found with face, nneed to check wall */
+	return f_icpt;
+
+    w_icpt =
+	intercept_cylinder(ray, state->C, state->a, state->r, state->d,
+			   &surf_hit);
+
+    if (w_icpt) {		/* intercept with outside wall */
+	data->flag |= ABSORBED;
+	return w_icpt;
+    }
+
+    /*
+     * no hit at all
+     */
+    return NULL;
 }
 
 static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
@@ -280,6 +245,12 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 {
     window_state_t *state = (window_state_t *) vstate;
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
+    int origin_is_face1;
+    double center[3];
+    double normal[3];
+    int inside = 1;
+    double R_tot;
+    double n_in;
 
     if (data->flag & ABSORBED) {
 	/*
@@ -298,37 +269,60 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	free(ray);
 	return NULL;
 
-    } else {			/* calculate 'out_ray' */
-	int origin_is_face1;
-	int inside;
-	double R_tot;
-	double n_in;
+    }
+    /*
+     * test which face of window was hit.
+     * face1 (center point is state->C), if state->a is parallel to
+     * ray->dir
+     * face2 (center point is state->C + state->d*state->a), if
+     * if state->a is anti-parallel to ray->dir
+     */
+    if (cblas_ddot(3, ray->dir, 1, state->a, 1) > 0) {
+	origin_is_face1 = 1;
+	memcpy(center, state->C, 3 * sizeof(double));
+	memcpy(normal, state->a, 3 * sizeof(double));
+    } else {
+	size_t i;
 
-	n_in = gsl_spline_eval(state->dispersion, ray->lambda, NULL);
-	R_tot = R_fresnell(ray, state->a, 1.0, n_in);
-	if (gsl_rng_uniform(r) <= R_tot) {	/* external reflection occurs */
-	    /*
-	     * rays can reflect off both faces of the window. if face1 is hit
-	     * the normal vector 'state->a' is parallel to 'ray->dir' and
-	     * anti.parallel if face2 is hit ('state->dir points from face1 to
-	     * face2). does not seem to matter for 'reflect()'.
-	     */
-	    reflect(ray, state->a, hit, state->reflectivity_model, r,
-		    state->refl_model_params);
+	origin_is_face1 = 0;
+	a_plus_cb(center, state->C, state->d, state->a);
+	for (i = 0; i < 3; i++)
+	    normal[i] = -state->a[i];
+    }
 
-	    data->flag |= LAST_WAS_HIT;
-
-	    return ray;
-	}
-
+    n_in = gsl_spline_eval(state->dispersion, ray->lambda, NULL);
+    R_tot = R_fresnell(ray, normal, 1.0, n_in);
+    if (gsl_rng_uniform(r) <= R_tot) {	/* external reflection occurs */
 	/*
-	 * ray is not externally reflected and enters window.
-	 * update its origin (originates at 'hit')
+	 * rays can reflect off both faces of the window. if face1 is hit
+	 * the normal vector 'state->a' is parallel to 'ray->dir' and
+	 * anti.parallel if face2 is hit ('state->dir points from face1 to
+	 * face2). does not seem to matter for 'reflect()'.
 	 */
-	memcpy(ray->orig, hit, 3 * sizeof(double));
+	reflect(ray, normal, hit, state->reflectivity_model, r,
+		state->refl_model_params);
 
+	data->flag |= LAST_WAS_HIT;
+	return ray;
+    }
+
+    /*
+     * ray is not externally reflected and enters window.
+     * update its origin (originates at 'hit')
+     */
+    memcpy(ray->orig, hit, 3 * sizeof(double));
+
+    /*
+     * calculate new direction after ray has entered window. we need not
+     * check for total internal reflection as we pass from less dense
+     * medium into the denser one.
+     * Note: 'ray' cannot originate from inside the window.
+     */
+    snell(ray, normal, 1.0, n_in);
+
+    while (inside) {
 	/*
-	 * check if we enter via face 1 or 2
+	 * we checked before whether we entered via face 1 or 2
 	 * by definition:
 	 *     - 'a' dot 'ray->dir' > 0 (parallel) at face 1
 	 *     - 'a' dot 'ray->dir' < 0 (anti-parallel) at face 2
@@ -341,138 +335,76 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * after every reflection at any ofthe two faces 'origin_is_face1++'
 	 * switches origin from one face to the other. here we just initialize
 	 * the flag properly.
+	 *
+	 *
+	 * outline of algorithm:
+	 * hits other face?
+	 *  YES:
+	 *          ABSORBED inside window?
+	 *                  YES:
+	 *                          return NULL
+	 *                  NO:
+	 *                          exits window?
+	 *                                  YES:
+	 *                                          return ray
+	 *                                  NO:
+	 *                                          reflect ray
+	 *  NO:
+	 *          find intercept with wall
+	 *          return NULL
 	 */
-	if (cblas_ddot(3, ray->dir, 1, state->a, 1) > 0)
-	    origin_is_face1 = 1;
-	else
-	    origin_is_face1 = 0;
-
+	double *intercept;
+	double center_other_face[3];
+	double normal_other_face[3];
 	/*
-	 * calculate new direction after ray has entered window. we need not
-	 * check for total internal reflection as we pass from less dense
-	 * medium into the denser one.
-	 * Note: 'ray' cannot originate from inside the window.
+	 * calculate center of other face and calculate intercept
+	 * with ray.
+	 * Note: face2 is at a distance of 'd' in direction 'a'
+	 *       from face1:
+	 *       'center_other_face' = 'state->C' + 'state->d' * 'state->a'
 	 */
-	snell(ray, state->a, 1.0, n_in);
-	inside = 1;
+	if (origin_is_face1 % 2) {	/* other face is face2 */
 
-	while (inside) {
-/*
- * hits other face?
- *	YES:
- *		ABSORBED inside window?
- *			YES:
- *				return NULL
- *			NO:
- *				exits window?
- *					YES:
- *						return ray
- *					NO:
- *						reflect ray
- *	NO:
- *		find intercept with wall
- *		return NULL
- */
-	    double *intercept;
-	    double center_other_face[3];
+	    a_plus_cb(center_other_face, state->C, state->d, state->a);
+	    memcpy(normal_other_face, state->a, 3 * sizeof(double));
 
+	} else {		/* other face is face1 */
+	    size_t i;
+
+	    memcpy(center_other_face, state->C, 3 * sizeof(double));
+	    for (i = 0; i < 3; i++)
+		normal_other_face[i] = -state->a[i];
+
+	}
+
+	if ((intercept =
+	     intercept_face(ray, state, center_other_face)) != NULL) {
 	    /*
-	     * calculate center of other face and calculate intercept
-	     * with ray.
-	     * Note: face2 is at a distance of 'd' in direction 'a'
-	     *       from face1:
-	     *       'center_other_face' = 'state->C' + 'state->d' * 'state->a'
+	     * ray hits other face.
+	     * no need to check wall but check if ray is absorbed between the two faces
 	     */
-	    if (origin_is_face1 % 2)	/* other face is face2 */
-		a_plus_cb(center_other_face, state->C, state->d, state->a);
-	    else		/* other face is face1 */
-		memcpy(center_other_face, state->C, 3 * sizeof(double));
+	    const double d_travelled = sqrt(d_sqr(ray->orig, intercept));
+	    const double a_coeff =
+		gsl_spline_eval(state->abs_spectrum, ray->lambda,
+				NULL);
+	    const double A = exp(-d_travelled / a_coeff);
 
-	    if ((intercept =
-		 intercept_face(ray, state, center_other_face)) != NULL) {
+	    if (gsl_rng_uniform(r) <= A) {	/* ray is absorbed */
 		/*
-		 * ray hits other face.
-		 * no need to check wall but check if ray is absorbed between the two faces
+		 * FIXME: ray is NOT absorbed at 'intercept' i.e. at face1 or face2
+		 *        but earlier between 'ray->orig' and 'intercept'.
+		 *        error introduced is small as, generally:
+		 *            - windows are (relatively) thin and most rays
+		 *              travel at a low angle relative to 'state->a'.
+		 *              both result in a small lateral offset between
+		 *              'intercept' and the position where ray is absorbed.
+		 *            - only a few ray will be absorbed inside window
+		 *              as windows absorptivity is small (definition).
 		 */
-		const double d_travelled =
-		    sqrt(d_sqr(ray->orig, intercept));
-		const double a_coeff =
-		    gsl_spline_eval(state->abs_spectrum, ray->lambda,
-				    NULL);
-		const double A = exp(-d_travelled / a_coeff);
-
-		if (gsl_rng_uniform(r) <= A) {	/* ray is absorbed */
-		    /*
-		     * FIXME: ray is NOT absorbed at 'intercept' i.e. at face1 or face2
-		     *        but earlier between 'ray->orig' and 'intercept'.
-		     *        error introduced is small as, generally:
-		     *            - windows are (relatively) thin and most rays
-		     *              travel at a low angle relative to 'state->a'.
-		     *              both result in a small lateral offset between
-		     *              'intercept' and the position where ray is absorbed.
-		     *            - only a few ray will be absorbed inside window
-		     *              as windows absorptivity is small (definition).
-		     */
-		    if (state->dump_file != -1)
-			store_xy(state->dump_file, ray, intercept,
-				 state->M, state->C, data,
-				 &state->mutex_writefd);
-
-		    data->flag &= ~(LAST_WAS_HIT | ABSORBED);
-
-		    free(ray);
-		    free(intercept);
-
-		    return NULL;
-		}
-
-		/*
-		 * ray reflected at other window?
-		 * 'R_tot' = 1.0 in case of total internal reflection at face.
-		 */
-		R_tot = R_fresnell(ray, state->a, n_in, 1.0);
-		if (gsl_rng_uniform(r) <= R_tot) {
-		    /*
-		     * fresnel reflection or total internal reflection occurs.
-		     * reflect ray and switch face.
-		     *
-		     * rays can reflect off both faces of the window. if face1 is hit
-		     * the normal vector 'state->a' is parallel to 'ray->dir' and
-		     * anti.parallel if face2 is hit ('state->dir points from face1 to
-		     * face2). does not seem to matter for 'reflect()'.
-		     */
-		    reflect(ray, state->a, intercept,
-			    state->reflectivity_model, r,
-			    state->refl_model_params);
-
-		    origin_is_face1++;
-		    free(intercept);
-
-		} else {
-		    /*
-		     * ray leaves window.
-		     * calculated new direction and update origin of ray.
-		     */
-		    snell(ray, state->a, n_in, 1.0);
-		    memcpy(ray->orig, intercept, 3 * sizeof(double));
-
-		    free(intercept);
-		    data->flag |= LAST_WAS_HIT;	/* mark as hit */
-		    inside = 0;	/* terminate while loop */
-		}
-
-	    } else {
-		/*
-		 * ray hits wall and is absorbed
-		 */
-		int surf_hit;
-
-		intercept =
-		    intercept_cylinder(ray, state->C, state->a, state->r,
-				       state->d, &surf_hit);
 		if (state->dump_file != -1)
-		    store_xy(state->dump_file, ray, hit, state->M,
-			     state->C, data, &state->mutex_writefd);
+		    store_xy(state->dump_file, ray, intercept,
+			     state->M, state->C, data,
+			     &state->mutex_writefd);
 
 		data->flag &= ~(LAST_WAS_HIT | ABSORBED);
 
@@ -481,8 +413,63 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 		return NULL;
 	    }
-	}			/* end while(inside) */
-    }				/* end else-branch of if(data->flag & ABSORBED) */
+
+	    /*
+	     * ray reflected at other window?
+	     * 'R_tot' = 1.0 in case of total internal reflection at face.
+	     */
+	    R_tot = R_fresnell(ray, normal_other_face, n_in, 1.0);
+	    if (gsl_rng_uniform(r) <= R_tot) {
+		/*
+		 * fresnel reflection or total internal reflection occurs.
+		 * reflect ray and switch face.
+		 *
+		 * rays can reflect off both faces of the window. if face1 is hit
+		 * the normal vector 'state->a' is parallel to 'ray->dir' and
+		 * anti.parallel if face2 is hit ('state->dir points from face1 to
+		 * face2). does not seem to matter for 'reflect()'.
+		 */
+		reflect(ray, normal_other_face, intercept,
+			state->reflectivity_model, r,
+			state->refl_model_params);
+
+		origin_is_face1++;
+		free(intercept);
+
+	    } else {
+		/*
+		 * ray leaves window.
+		 * calculated new direction and update origin of ray.
+		 */
+		snell(ray, normal_other_face, n_in, 1.0);
+		memcpy(ray->orig, intercept, 3 * sizeof(double));
+
+		free(intercept);
+		data->flag |= LAST_WAS_HIT;	/* mark as hit */
+		inside = 0;	/* terminate while loop */
+	    }
+
+	} else {
+	    /*
+	     * ray hits wall and is absorbed
+	     */
+	    int surf_hit;
+
+	    intercept =
+		intercept_cylinder(ray, state->C, state->a, state->r,
+				   state->d, &surf_hit);
+	    if (state->dump_file != -1)
+		store_xy(state->dump_file, ray, hit, state->M,
+			 state->C, data, &state->mutex_writefd);
+
+	    data->flag &= ~(LAST_WAS_HIT | ABSORBED);
+
+	    free(ray);
+	    free(intercept);
+
+	    return NULL;
+	}
+    }				/* end while(inside) */
     return ray;
 }
 
