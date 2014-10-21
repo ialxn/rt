@@ -234,9 +234,6 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
 	return w_icpt;
     }
 
-    /*
-     * no hit at all
-     */
     return NULL;
 }
 
@@ -282,12 +279,9 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	memcpy(center, state->C, 3 * sizeof(double));
 	memcpy(normal, state->a, 3 * sizeof(double));
     } else {
-	size_t i;
-
 	origin_is_face1 = 0;
 	a_plus_cb(center, state->C, state->d, state->a);
-	for (i = 0; i < 3; i++)
-	    normal[i] = -state->a[i];
+	a_times_const(normal, state->a, -1.0);
     }
 
     n_in = gsl_spline_eval(state->dispersion, ray->lambda, NULL);
@@ -364,17 +358,11 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 *       'center_other_face' = 'state->C' + 'state->d' * 'state->a'
 	 */
 	if (origin_is_face1 % 2) {	/* other face is face2 */
-
 	    a_plus_cb(center_other_face, state->C, state->d, state->a);
 	    memcpy(normal_other_face, state->a, 3 * sizeof(double));
-
 	} else {		/* other face is face1 */
-	    size_t i;
-
 	    memcpy(center_other_face, state->C, 3 * sizeof(double));
-	    for (i = 0; i < 3; i++)
-		normal_other_face[i] = -state->a[i];
-
+	    a_times_const(normal_other_face, state->a, -1.0);
 	}
 
 	if ((intercept =

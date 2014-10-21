@@ -29,6 +29,14 @@ void a_plus_cb(double result[3], const double a[3], const double c,
 	result[i] = a[i] + c * b[i];
 }
 
+void a_times_const(double result[3], const double a[3], const double c)
+{
+    size_t i;
+
+    for (i = 0; i < 3; i++)
+	result[i] = a[i] * c;
+}
+
 void diff(double result[3], const double a[3], const double b[3])
 /*
  * calculate difference of vectors 'a' and 'b'

@@ -21,6 +21,8 @@
 
 extern void a_plus_cb(double result[3], const double a[3],
 		      const double c, const double b[3]);
+extern void a_times_const(double result[3], const double a[3],
+			  const double c);
 extern void diff(double result[3], const double a[3], const double b[3]);
 extern double d_sqr(const double a[3], const double b[3]);
 extern void cross_product(const double a[3], const double b[3],
