@@ -471,15 +471,15 @@ void per_thread_init(pthread_key_t key, size_t n)
     pthread_setspecific(key, data);
 }
 
-void per_thread_flush(int fh, pthread_key_t key, pthread_mutex_t mutex)
+void per_thread_flush(int fh, pthread_key_t key, pthread_mutex_t * mutex)
 {
     PTDT_t *data = pthread_getspecific(key);
 
     if (data->i != 0)		/* write rest of buffer to file. */
 	if (fh != -1) {
-	    pthread_mutex_lock(&mutex);
+	    pthread_mutex_lock(mutex);
 	    write(fh, data->buf, sizeof(char) * data->i);
-	    pthread_mutex_unlock(&mutex);
+	    pthread_mutex_unlock(mutex);
 	}
 }
 

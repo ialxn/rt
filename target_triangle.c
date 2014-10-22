@@ -203,7 +203,7 @@ static void tr_flush_PTDT_outbuf(void *vstate)
     tr_state_t *state = (tr_state_t *) vstate;
 
     per_thread_flush(state->dump_file, state->PTDT_key,
-		     state->mutex_writefd);
+		     &state->mutex_writefd);
 }
 
 

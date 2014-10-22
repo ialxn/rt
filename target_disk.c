@@ -179,7 +179,7 @@ static void disk_flush_PTDT_outbuf(void *vstate)
     disk_state_t *state = (disk_state_t *) vstate;
 
     per_thread_flush(state->dump_file, state->PTDT_key,
-		     state->mutex_writefd);
+		     &state->mutex_writefd);
 }
 
 

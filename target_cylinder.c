@@ -200,7 +200,7 @@ static void cyl_flush_PTDT_outbuf(void *vstate)
     cyl_state_t *state = (cyl_state_t *) vstate;
 
     per_thread_flush(state->dump_file, state->PTDT_key,
-		     state->mutex_writefd);
+		     &state->mutex_writefd);
 }
 
 static const target_type_t cyl_t = {

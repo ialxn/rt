@@ -259,7 +259,7 @@ static void ell_flush_PTDT_outbuf(void *vstate)
     ell_state_t *state = (ell_state_t *) vstate;
 
     per_thread_flush(state->dump_file, state->PTDT_key,
-		     state->mutex_writefd);
+		     &state->mutex_writefd);
 }
 
 

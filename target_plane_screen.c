@@ -151,7 +151,7 @@ static void ps_flush_PTDT_outbuf(void *vstate)
     ps_state_t *state = (ps_state_t *) vstate;
 
     per_thread_flush(state->dump_file, state->PTDT_key,
-		     state->mutex_writefd);
+		     &state->mutex_writefd);
 }
 
 

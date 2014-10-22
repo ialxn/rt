@@ -102,7 +102,7 @@ extern void init_refl_model(const struct config_setting_t *s, char *model,
 			    void **refl_model_params);
 extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(int fh, pthread_key_t key,
-			     pthread_mutex_t mutex);
+			     pthread_mutex_t * mutex);
 extern void state_free(int fh, gsl_spline * s, char model, void *p);
 extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
