@@ -181,7 +181,6 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 		state->refl_model_params);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
-
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */
 	    data->flag &= ~ICPT_ON_CONVEX_SIDE;
 	}
