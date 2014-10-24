@@ -153,8 +153,9 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
-	store_xyz(state->dump_file, ray, hit, state->M, state->C,
-		  data, &state->mutex_writefd);
+	if (state->dump_file != -1)
+	    store_xyz(state->dump_file, ray, hit, state->M, state->C,
+		      data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED | ICPT_ON_CONVEX_SIDE);	/* clear flags */
 
