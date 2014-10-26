@@ -13,7 +13,7 @@
 #include "reflect.h"
 #include "virtual_targets.h"
 
-#define NO_ITEMS 4
+#define NO_ITEMS 0	/* no data will be stored */
 
 
 typedef struct vtssp_state_t {
