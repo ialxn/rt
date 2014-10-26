@@ -179,15 +179,18 @@ static void *run_simulation(void *args)
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
 	     */
-	    retval->n_total++;
-	    retval->p_total += ray->power;
-
 	    if (n_log)		/* log ray path enabled */
-		if (!this_source_n_log)
+		if (!this_source_n_log) {
 		    /*
 		     * sufficient ray logged, stop this source
 		     */
+		    free(ray);
 		    break;
+		}
+
+	    retval->n_total++;
+	    retval->p_total += ray->power;
+
 	    while (ray) {
 		/*
 		 * loop until 'ray' is absorbed or leaves system
