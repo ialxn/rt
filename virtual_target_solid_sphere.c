@@ -13,7 +13,7 @@
 #include "reflect.h"
 #include "virtual_targets.h"
 
-#define NO_ITEMS 0	/* no data will be stored */
+#define NO_ITEMS 0		/* no data will be stored */
 
 
 typedef struct vtssp_state_t {
@@ -94,7 +94,7 @@ static void vtssp_init_PTDT(void *vstate)
 }
 
 static const target_type_t vt_ssp_t = {
-    "",
+    NULL,
     sizeof(struct vtssp_state_t),
     &vtssp_init_state,
     NULL,
