@@ -358,7 +358,38 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
-	    }			/* end 'window' */
+	    } /* end 'window' */
+	    else if (!strcmp(type, "sphere")) {
+		/*
+		 * sphere:
+		 *  - array 'origin' (center of sphere) [x,y,z] / double
+		 *  - 'radius' (radius of sphere) double
+		 *  - array 'z' (direction of local z-axis) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - 'z-min', 'z-max' (ellipsoid only valid for 'z-min' <= z <= 'z-max' / doubles
+		 *  - string 'reflectivity' (file name of reflection spectrum)
+		 *  - string 'reflectivity_model'
+		 *  - string 'reflecting_surface'
+		 */
+		status += check_array("targets", this_t, "origin", i);
+		status += check_float("targets", this_t, "radius", i);
+		status += check_array("targets", this_t, "z", i);
+		status += check_array("targets", this_t, "x", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+		status +=
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
+	    }			/* end 'sphere' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
