@@ -34,31 +34,6 @@ typedef struct ell_state_t {
 } ell_state_t;
 
 
-static void ell_surf_normal(const double *point, const double *axes,
-			    double *const normal)
-{
-/*
- * from
- * http://www.freemathhelp.com/forum/threads/80712-Question-about-Normal-to-an-Ellipsoid
- *
- * this normal is for ellisoid cetered at (0,0,0) i.e.
- *
- *      x^2/a^2 + y^2/b^2 + z^2/c^2 - 1 = 0
- *
- * and points inwards! (note -2.0 * .....)
- */
-    int i;
-    double norm;
-
-    for (i = 0, norm = 0.0; i < 3; i++) {
-	normal[i] = -2.0 * point[i] / axes[i];
-	norm += normal[i] * normal[i];
-    }
-    norm = sqrt(norm);
-    cblas_dscal(3, 1.0 / norm, normal, 1);
-
-}
-
 static void ell_init_state(void *vstate, config_setting_t * this_target,
 			   const int file_mode)
 {
@@ -122,87 +97,13 @@ static double *ell_get_intercept(void *vstate, ray_t * ray)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    int i;
-    double r_O[3], r_N[3];	/* origin, direction of ray in local system */
-    double O[] = { 0.0, 0.0, 0.0 };
-    double A = 0.0, B = 0.0, C = -1.0;
-    double D;
+    double *intercept;
 
-    /*
-     * calculate point of interception D
-     */
-    /*
-     * transform 'ray' from global to local system
-     * origin 'ray': rotate / translate by origin of local system
-     * dir 'ray': rotate only
-     */
-    g2l(state->M, state->center, ray->orig, r_O);
-    g2l(state->M, O, ray->dir, r_N);
+    intercept =
+	intercept_ellipsoid(ray, state->M, state->center, state->axes,
+			    state->z_min, state->z_max);
 
-    /*
-     * solve quadratic equation
-     */
-    for (i = 0; i < 3; i++) {
-	A += r_N[i] * r_N[i] / state->axes[i];
-	B += 2.0 * r_O[i] * r_N[i] / state->axes[i];
-	C += r_O[i] * r_O[i] / state->axes[i];
-    }
-
-    D = B * B - 4.0 * A * C;
-
-    if (D < GSL_SQRT_DBL_EPSILON)	/* no or one (tangent ray) interception */
-	return NULL;
-    else {			/* two interceptions, h- and h+ */
-	const double t = sqrt(D);
-	const double A2 = 2.0 * A;
-	double h, z;
-	/*
-	 * - 'A' must be positive as it is the sum of squares.
-	 * - the solution that contains the term '-t' must be smaller
-	 *   i.e. further towards -inf.
-	 * - the ray travels in forward direction thus only positive
-	 *   solutions are of interest.
-	 * thus:
-	 * 1) check if the solution (h-) with '-t' is positive and
-	 *    its z component 'z' is inside the allowed range, i.e.
-	 *    'z_min' <= 'z' <= 'z_max'.
-	 * 2) only if 1) does not produce a valid solution repeat with
-	 *    '+t' (h+)
-	 * 3) if 2) produces no valid solution return 'NULL'
-	 */
-
-	h = (-B - t) / A2;
-	if (h <= GSL_SQRT_DBL_EPSILON)	/* h- not positive / valid */
-	    h = (-B + t) / A2;
-	if (h <= GSL_SQRT_DBL_EPSILON)	/* h+ not positive / valid */
-	    return NULL;
-
-	z = r_O[2] + h * r_N[2];	/* z component of h */
-	if (z < state->z_min || z > state->z_max)
-	    return NULL;	/* z component outside range */
-	else {
-	    PTDT_t *data = pthread_getspecific(state->PTDT_key);
-	    double dot;
-	    double l_intercept[3];
-	    double normal[3];
-	    double *intercept = (double *) malloc(3 * sizeof(double));
-
-	    l_intercept[0] = r_O[0] + h * r_N[0];
-	    l_intercept[1] = r_O[1] + h * r_N[1];
-	    l_intercept[2] = z;	/* use precomputed value */
-
-	    ell_surf_normal(l_intercept, state->axes, normal);
-	    dot = cblas_ddot(3, normal, 1, r_N, 1);
-
-	    if (dot > 0.0)	/* parallel. hits outside, absorbed */
-		data->flag |= ABSORBED;
-
-	    /* convert to global coordinates, origin is 'state->center' */
-	    l2g(state->M, state->center, l_intercept, intercept);
-
-	    return intercept;
-	}
-    }
+    return intercept;
 }
 
 static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,

@@ -97,6 +97,28 @@ void cyl_surf_normal(double *const icpt, const double *C,
     cblas_dscal(3, 1.0 / r, normal, 1);
 }
 
+void ell_surf_normal(const double *point, const double *axes,
+		     double *const normal)
+{
+/*
+ * this normal is for ellisoid cetered at (0,0,0) i.e.
+ *
+ *      x^2/a^2 + y^2/b^2 + z^2/c^2 - 1 = 0
+ *
+ * and points inwards! (note -2.0 * .....)
+ */
+    int i;
+    double norm;
+
+    for (i = 0, norm = 0.0; i < 3; i++) {
+	normal[i] = -2.0 * point[i] / axes[i];
+	norm += normal[i] * normal[i];
+    }
+    norm = sqrt(norm);
+    cblas_dscal(3, 1.0 / norm, normal, 1);
+}
+
+
 
 /*
  * intercepts
@@ -218,6 +240,88 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
 	}
 	return intercept;
     }
+}
+
+double *intercept_ellipsoid(const ray_t * ray, const double *M,
+			    const double center[3], const double axes[3],
+			    const double z_min, const double z_max)
+{
+
+
+    int i;
+    double r_O[3], r_N[3];	/* origin, direction of ray in local system */
+    double O[] = { 0.0, 0.0, 0.0 };
+    double A = 0.0, B = 0.0, C = -1.0;
+    double D;
+    double t;
+    double A2;
+    double h, z;
+    double l_intercept[3];
+    double *intercept;
+
+
+    /*
+     * calculate point of interception D
+     */
+    /*
+     * transform 'ray' from global to local system
+     * origin 'ray': rotate / translate by origin of local system
+     * dir 'ray': rotate only
+     */
+    g2l(M, center, ray->orig, r_O);
+    g2l(M, O, ray->dir, r_N);
+
+    /*
+     * solve quadratic equation
+     */
+    for (i = 0; i < 3; i++) {
+	A += r_N[i] * r_N[i] / axes[i];
+	B += 2.0 * r_O[i] * r_N[i] / axes[i];
+	C += r_O[i] * r_O[i] / axes[i];
+    }
+
+    D = B * B - 4.0 * A * C;
+
+    if (D < GSL_SQRT_DBL_EPSILON)	/* no or one (tangent ray) interception */
+	return NULL;
+
+    t = sqrt(D);
+    A2 = 2.0 * A;
+    /*
+     * - 'A' must be positive as it is the sum of squares.
+     * - the solution that contains the term '-t' must be smaller
+     *   i.e. further towards -inf.
+     * - the ray travels in forward direction thus only positive
+     *   solutions are of interest.
+     * thus:
+     * 1) check if the solution (h-) with '-t' is positive and
+     *    its z component 'z' is inside the allowed range, i.e.
+     *    'z_min' <= 'z' <= 'z_max'.
+     * 2) only if 1) does not produce a valid solution repeat with
+     *    '+t' (h+)
+     * 3) if 2) produces no valid solution return 'NULL'
+     */
+
+    h = (-B - t) / A2;
+    if (h <= GSL_SQRT_DBL_EPSILON)	/* h- not positive / valid */
+	h = (-B + t) / A2;
+    if (h <= GSL_SQRT_DBL_EPSILON)	/* h+ not positive / valid */
+	return NULL;
+
+    z = r_O[2] + h * r_N[2];	/* z component of h */
+    if (z < z_min || z > z_max)
+	return NULL;		/* z component outside range */
+
+    intercept = (double *) malloc(3 * sizeof(double));
+
+    l_intercept[0] = r_O[0] + h * r_N[0];
+    l_intercept[1] = r_O[1] + h * r_N[1];
+    l_intercept[2] = z;		/* use precomputed value */
+
+    /* convert to global coordinates, origin is 'state->center' */
+    l2g(M, center, l_intercept, intercept);
+
+    return intercept;
 }
 
 double *intercept_plane(const ray_t * ray, const double *plane_normal,
@@ -357,4 +461,3 @@ double *intercept_sphere(const ray_t * ray, const double *center,
 	return validate_intercepts(ray, q, C / q);
     }
 }
-

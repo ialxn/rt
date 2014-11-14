@@ -40,6 +40,8 @@
 extern void cyl_surf_normal(double *const icpt, const double *C,
 			    const double *a, const double r,
 			    double *const normal);
+void ell_surf_normal(const double *point, const double *axes,
+		     double *const normal);
 
 
 /*
@@ -48,6 +50,10 @@ extern void cyl_surf_normal(double *const icpt, const double *C,
 extern double *intercept_cylinder(const ray_t * ray, const double *c,
 				  const double *a, const double r,
 				  const double l, int *hits_outside);
+extern double *intercept_ellipsoid(const ray_t * ray, const double *M,
+				   const double center[3],
+				   const double axes[3],
+				   const double z_min, const double z_max);
 extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
 			       const double *plane_point, int *hits_front);
