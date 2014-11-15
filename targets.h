@@ -33,6 +33,9 @@
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
 #define ICPT_ON_CONVEX_SIDE	(1<<2)	/* ray intercepted by convex side */
 
+#define INSIDE 0
+#define OUTSIDE 1
+
 #define BUF_SIZE 4096
 
 typedef struct PTDT_t {		/* per thread data of every target */

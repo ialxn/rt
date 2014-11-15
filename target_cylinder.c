@@ -18,9 +18,6 @@
 #define TARGET_TYPE "cylinder"
 #define NO_ITEMS 5
 
-#define INSIDE 0
-#define OUTSIDE 1
-
 
 typedef struct cyl_state_t {
     char reflectivity_model;	/* reflectivity model used for this target */
