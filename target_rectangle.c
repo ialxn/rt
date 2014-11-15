@@ -27,7 +27,6 @@ typedef struct sq_state_t {
     double dx;			/* rectangle is '2*dx' times '2*dy' local coordinates */
     double dy;
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } sq_state_t;
@@ -68,9 +67,7 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
     state->dx = normalize(state->M) / 2.0;
     state->dy = normalize(&state->M[3]) / 2.0;
 
-    /* state->normal = state->M[6,7,8] = z = x cross y */
-    cross_product(state->M, &state->M[3], state->normal);
-    memcpy(&state->M[6], state->normal, 3 * sizeof(double));
+    cross_product(state->M, &state->M[3], &state->M[6]);
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
@@ -110,7 +107,7 @@ static double *sq_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_plane(ray, state->normal, state->point, &hits_front);
+	intercept_plane(ray, &state->M[6], state->point, &hits_front);
 
     if (!intercept)		/* ray does not hit target */
 	return NULL;
@@ -165,7 +162,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+	reflect(ray, &state->M[6], hit, state->reflectivity_model, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */

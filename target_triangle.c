@@ -26,7 +26,6 @@ typedef struct tr_state_t {
     double P1[3];		/* corner point of triangle */
     double E2[3];		/* edge 'P2' - 'P1' */
     double E3[3];		/* edge 'P3' - 'P1' */
-    double normal[3];		/* normal vector of plane */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double M[9];		/* transform matrix local -> global coordinates */
     void *refl_model_params;
@@ -70,9 +69,6 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
 
     /* y = state->M[3-5] = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
-
-    /* copy normal vector of plane */
-    memcpy(state->normal, &state->M[6], 3 * sizeof(double));
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
@@ -183,7 +179,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+	reflect(ray, &state->M[6], hit, state->reflectivity_model, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */

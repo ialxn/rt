@@ -25,7 +25,6 @@ typedef struct ps_state_t {
     char one_sided;		/* flag [one-sided|two-sided] */
     int dump_file;
     double point[3];		/* point on plane */
-    double normal[3];		/* normal vector of plane */
     double M[9];		/* transform matrix local -> global coordinates */
 } ps_state_t;
 
@@ -43,8 +42,7 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
      * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
      */
     /* get normal vector of plane (serving also as basis vector z) */
-    read_vector_normalize(this_target, "normal", state->normal);
-    memcpy(&state->M[6], state->normal, 3 * sizeof(double));
+    read_vector_normalize(this_target, "normal", &state->M[6]);
 
     /* get basis vector x */
     read_vector_normalize(this_target, "x", state->M);
@@ -106,7 +104,7 @@ static double *ps_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_plane(ray, state->normal, state->point, &hits_front);
+	intercept_plane(ray, &state->M[6], state->point, &hits_front);
 
     if (!intercept)		/* ray does not hit target */
 	return NULL;

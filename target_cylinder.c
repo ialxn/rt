@@ -30,7 +30,6 @@ typedef struct cyl_state_t {
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double C[3];		/* center of face 1, origin of local system */
-    double a[3];		/* cylinder axis (local z) pointing to face 2 */
     double r;			/* radius of cylinder */
     double l;			/* length of cylinder */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
@@ -46,7 +45,7 @@ static void cyl_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
 
     read_vector(this_target, "C", state->C);
-    read_vector_normalize(this_target, "a", state->a);
+    read_vector_normalize(this_target, "a", &state->M[6]);
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
@@ -58,11 +57,6 @@ static void cyl_init_state(void *vstate, config_setting_t * this_target,
      * save normalized vector in the transformation matrix 'M'
      */
     read_vector_normalize(this_target, "x", state->M);
-    /*
-     * get 'z' vector,
-     * save normalized vector in the transformation matrix 'M'
-     */
-    read_vector_normalize(this_target, "a", &state->M[6]);
 
     orthonormalize(state->M, &state->M[3], &state->M[6]);
 
@@ -115,7 +109,7 @@ static double *cyl_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_cylinder(ray, state->C, state->a, state->r, state->l,
+	intercept_cylinder(ray, state->C, &state->M[6], state->r, state->l,
 			   &hits_outside);
 
     if (!intercept)		/* ray does not hit target */
@@ -167,9 +161,15 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	double O[] = { 0.0, 0.0, 0.0 };
 	double hit_local[3];
 
-	g2l(state->M, state->C, hit, hit_local);	/* transform to local coordinates */
-	cyl_surf_normal(hit_local, state->C, state->a, state->r, l_N);	/* normal vector local system */
-	l2g(state->M, O, l_N, N);	/* normal vector global system */
+	/*
+	 * calculate normal vector 'N' @ 'hit':
+	 * - convert 'hit' to local coordinates
+	 * - calculate normal vector in local coordinates
+	 * - transform normal vector to global coordinates
+	 */
+	g2l(state->M, state->C, hit, hit_local);
+	cyl_surf_normal(hit_local, state->C, &state->M[6], state->r, l_N);
+	l2g(state->M, O, l_N, N);
 
 	if (state->reflecting_surface == INSIDE) {
 	    int i;

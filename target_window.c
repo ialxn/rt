@@ -24,7 +24,6 @@ typedef struct window_state_t {
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double C[3];		/* center coordinate of first face */
-    double a[3];		/* vector of cylinder axis */
     double r;			/* radius of window */
     double d;			/* tickness of window */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
@@ -116,15 +115,13 @@ static void window_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
 
     read_vector(this_target, "C", state->C);
-    read_vector_normalize(this_target, "a", state->a);
+    read_vector_normalize(this_target, "a", &state->M[6]);
     /*
      * generate transform matrix M to convert
      * between local and global coordinates
      * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
      * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
      */
-    /* get normal vector of plane (serving also as basis vector z) */
-    memcpy(&state->M[6], state->a, 3 * sizeof(double));
 
     /* get basis vector x */
     read_vector_normalize(this_target, "x", state->M);
@@ -173,7 +170,8 @@ static double *intercept_face(const ray_t * in_ray,
     int dummy_i;
 
     if ((intercept =
-	 intercept_plane(in_ray, state->a, center, &dummy_i)) != NULL) {
+	 intercept_plane(in_ray, &state->M[6], center,
+			 &dummy_i)) != NULL) {
 
 	g2l(state->M, center, intercept, icpt);
 
@@ -215,10 +213,10 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
      * face2 (center point is state->C + state->d*state->a), if
      * if state->a is anti-parallel to ray->dir
      */
-    if (cblas_ddot(3, state->a, 1, ray->dir, 1) > 0)
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0)
 	f_icpt = intercept_face(ray, state, state->C);
     else {
-	a_plus_cb(center_face2, state->C, state->d, state->a);
+	a_plus_cb(center_face2, state->C, state->d, &state->M[6]);
 	f_icpt = intercept_face(ray, state, center_face2);
     }
 
@@ -226,7 +224,7 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
 	return f_icpt;
 
     w_icpt =
-	intercept_cylinder(ray, state->C, state->a, state->r, state->d,
+	intercept_cylinder(ray, state->C, &state->M[6], state->r, state->d,
 			   &surf_hit);
 
     if (w_icpt) {		/* intercept with outside wall */
@@ -274,14 +272,14 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
      * face2 (center point is state->C + state->d*state->a), if
      * if state->a is anti-parallel to ray->dir
      */
-    if (cblas_ddot(3, ray->dir, 1, state->a, 1) > 0) {
+    if (cblas_ddot(3, ray->dir, 1, &state->M[6], 1) > 0) {
 	origin_is_face1 = 1;
 	memcpy(center, state->C, 3 * sizeof(double));
-	memcpy(normal, state->a, 3 * sizeof(double));
+	memcpy(normal, &state->M[6], 3 * sizeof(double));
     } else {
 	origin_is_face1 = 0;
-	a_plus_cb(center, state->C, state->d, state->a);
-	a_times_const(normal, state->a, -1.0);
+	a_plus_cb(center, state->C, state->d, &state->M[6]);
+	a_times_const(normal, &state->M[6], -1.0);
     }
 
     n_in = gsl_spline_eval(state->dispersion, ray->lambda, NULL);
@@ -358,11 +356,11 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 *       'center_other_face' = 'state->C' + 'state->d' * 'state->a'
 	 */
 	if (origin_is_face1 % 2) {	/* other face is face2 */
-	    a_plus_cb(center_other_face, state->C, state->d, state->a);
-	    memcpy(normal_other_face, state->a, 3 * sizeof(double));
+	    a_plus_cb(center_other_face, state->C, state->d, &state->M[6]);
+	    memcpy(normal_other_face, &state->M[6], 3 * sizeof(double));
 	} else {		/* other face is face1 */
 	    memcpy(center_other_face, state->C, 3 * sizeof(double));
-	    a_times_const(normal_other_face, state->a, -1.0);
+	    a_times_const(normal_other_face, &state->M[6], -1.0);
 	}
 
 	if ((intercept =
@@ -444,7 +442,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    int surf_hit;
 
 	    intercept =
-		intercept_cylinder(ray, state->C, state->a, state->r,
+		intercept_cylinder(ray, state->C, &state->M[6], state->r,
 				   state->d, &surf_hit);
 	    if (state->dump_file != -1)
 		store_xy(state->dump_file, ray, hit, state->M,

@@ -24,7 +24,6 @@ typedef struct ann_state_t {
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
     int dump_file;
     double point[3];		/* center coordinate of annulus */
-    double normal[3];		/* normal vector of annulus */
     double R2;			/* inner radius^2 of annulus */
     double r2;			/* inner radius^2 of annulus */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
@@ -49,8 +48,7 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
      * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
      */
     /* get normal vector of plane (serving also as basis vector z) */
-    read_vector_normalize(this_target, "N", state->normal);
-    memcpy(&state->M[6], state->normal, 3 * sizeof(double));
+    read_vector_normalize(this_target, "N", &state->M[6]);
 
     /* get basis vector x */
     read_vector_normalize(this_target, "x", state->M);
@@ -103,7 +101,7 @@ static double *ann_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_plane(ray, state->normal, state->point, &hits_front);
+	intercept_plane(ray, &state->M[6], state->point, &hits_front);
 
     if (!intercept)		/* ray does not hit target */
 	return NULL;
@@ -164,7 +162,7 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, state->normal, hit, state->reflectivity_model, r,
+	reflect(ray, &state->M[6], hit, state->reflectivity_model, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
