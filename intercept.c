@@ -105,13 +105,13 @@ void ell_surf_normal(const double *point, const double *axes,
  *
  *      x^2/a^2 + y^2/b^2 + z^2/c^2 - 1 = 0
  *
- * and points inwards! (note -2.0 * .....)
+ * and points outwards!
  */
     int i;
     double norm;
 
     for (i = 0, norm = 0.0; i < 3; i++) {
-	normal[i] = -2.0 * point[i] / axes[i];
+	normal[i] = 2.0 * point[i] / axes[i];
 	norm += normal[i] * normal[i];
     }
     norm = sqrt(norm);

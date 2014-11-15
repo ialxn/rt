@@ -125,6 +125,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	g2l(state->M, state->center, hit, hit_local);	/* transform to local coordinates */
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g_rot(state->M, l_N, N);	/* normal vector global system */
+	cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
 	reflect(ray, N, hit, state->reflectivity_model, r,
 		state->refl_model_params);
