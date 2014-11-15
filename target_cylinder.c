@@ -54,11 +54,7 @@ static void cyl_init_state(void *vstate, config_setting_t * this_target,
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
-    config_setting_lookup_string(this_target, "reflecting_surface", &S);
-    if (!strcmp(S, "inside"))
-	state->reflecting_surface = INSIDE;
-    else
-	state->reflecting_surface = OUTSIDE;
+    state->reflecting_surface = init_refl_s(this_target);
 
     state->dump_file =
 	init_output(file_mode, TARGET_TYPE, this_target, state->C,

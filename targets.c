@@ -460,6 +460,18 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
+char init_refl_s(config_setting_t * this_target)
+{
+    const char *S;
+
+    config_setting_lookup_string(this_target, "reflecting_surface", &S);
+    if (!strcmp(S, "inside"))
+	return INSIDE;
+    else
+	return OUTSIDE;
+}
+
+
 double *init_M(config_setting_t * this_target, const char *x,
 	       const char *z)
 {
