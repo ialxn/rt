@@ -20,6 +20,10 @@ extern void g2l_off(const double *P, const double *N, double *L,
 		    double *alpha, double *beta);
 extern void l2g_off(const double *P, const double *L, double *G,
 		    const double alpha, const double beta);
+extern void g2l_off_rot(const double *N, double *L, double *alpha,
+			double *beta);
+extern void l2g_off_rot(const double *L, double *G, const double alpha,
+			const double beta);
 extern FILE *open_off(const char *name);
 extern void write_ray(FILE * f, const double *start, const double *stop,
 		      const int r, const int g, const int b);

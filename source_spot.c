@@ -41,7 +41,6 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
 {
     sp_state_t *state = (sp_state_t *) vstate;
 
-    const double O[] = { 0.0, 0.0, 0.0 };
     double t[3];
     const char *S;
 
@@ -58,7 +57,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
     read_vector_normalize(this_s, "direction", state->dir);
 
     /* determine alpha, beta. discard t */
-    g2l_off(O, state->dir, t, &state->alpha, &state->beta);
+    g2l_off_rot(state->dir, t, &state->alpha, &state->beta);
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
@@ -93,7 +92,6 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 	ray = (ray_t *) malloc(sizeof(ray_t));
 
 	if (state->cos_theta < 1.0) {	/* theta != 0.0 */
-	    const double O[] = { 0.0, 0.0, 0.0 };
 	    double l_ray[3];	/* direction of ray in local system */
 	    double sin_theta, cos_theta;
 	    double phi, sin_phi, cos_phi;
@@ -111,7 +109,7 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 	    l_ray[1] = sin_theta * sin_phi;
 	    l_ray[2] = cos_theta;
 
-	    l2g_off(O, l_ray, ray->dir, state->alpha, state->beta);
+	    l2g_off_rot(l_ray, ray->dir, state->alpha, state->beta);
 
 	} else			/* all rays in direction 'dir' */
 	    memcpy(ray->dir, state->dir, 3 * sizeof(double));

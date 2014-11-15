@@ -71,7 +71,6 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
  */
     double dot_product = 1.0;
     double alpha, beta;
-    const double O[] = { 0.0, 0.0, 0.0 };
     double dummy[3];
     double original_ray_dir[3];
 
@@ -79,7 +78,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
      * determine alpha / beta to transform 'N' into local
      * system where it becomes 0,0,1 (returned as 'dummy' and discarded).
      */
-    g2l_off(O, N, dummy, &alpha, &beta);
+    g2l_off_rot(N, dummy, &alpha, &beta);
 
     memcpy(original_ray_dir, r->dir, 3 * sizeof(double));	/* save */
 
@@ -108,7 +107,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	/*
 	 * transform 'random_N' into global system
 	 */
-	l2g_off(O, random_N, new_N, alpha, beta);
+	l2g_off_rot(random_N, new_N, alpha, beta);
 
 	reflect_specular(r, new_N, P);
 	dot_product = cblas_ddot(3, r->dir, 1, N, 1);

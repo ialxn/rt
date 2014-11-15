@@ -207,7 +207,6 @@ static void off_cone(const char *name, double *origin, double *dir,
 		     const double b)
 {
     double P[3], g_P[3];
-    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -220,7 +219,7 @@ static void off_cone(const char *name, double *origin, double *dir,
      * determine alpha, beta for transformation from local to global system.
      * discard 'P'
      */
-    g2l_off(O, dir, P, &alpha, &beta);
+    g2l_off_rot(dir, P, &alpha, &beta);
 
     fprintf(outf, "%f\t%f\t%f\n", origin[0], origin[1], origin[2]);
     /*
@@ -389,7 +388,6 @@ static void off_ellipsoid(const char *name, const double *origin,
 
     int i, j;
     double alpha, beta;
-    double O[] = { 0.0, 0.0, 0.0 };
     const double delta_z = (z_max - z_min) / (N_TRANS - 1);
     const double delta_phi = 2.0 * M_PI / N_ROT;
     double l[3], g[3];
@@ -403,7 +401,7 @@ static void off_ellipsoid(const char *name, const double *origin,
      * determine alpha, beta for transformation from local to global system.
      * discard 'l'
      */
-    g2l_off(O, Z, l, &alpha, &beta);
+    g2l_off_rot(Z, l, &alpha, &beta);
 
     /*
      * calculate and output vertices
@@ -511,7 +509,6 @@ static void off_disk(const char *name, const double *origin,
  */
 {
     double P[3], g_P[3];
-    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -524,7 +521,7 @@ static void off_disk(const char *name, const double *origin,
      * determine alpha, beta for transformation from local to global system.
      * discard 'P'
      */
-    g2l_off(O, dir, P, &alpha, &beta);
+    g2l_off_rot(dir, P, &alpha, &beta);
 
     /*
      * vertices at center
@@ -579,7 +576,6 @@ static void off_annulus(const char *name, const double *origin,
  */
 {
     double P[3], g_P[3];
-    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -593,7 +589,7 @@ static void off_annulus(const char *name, const double *origin,
      * determine alpha, beta for transformation from local to global system.
      * discard 'P'
      */
-    g2l_off(O, dir, P, &alpha, &beta);
+    g2l_off_rot(dir, P, &alpha, &beta);
 
     /*
      * vertices at center
@@ -662,7 +658,6 @@ static void off_window(const char *name, const double *origin,
  * its radius 'r', and its thickness.
  */
     double P[3], g_P[3];
-    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -677,7 +672,7 @@ static void off_window(const char *name, const double *origin,
      * determine alpha, beta for transformation from local to global system.
      * discard 'P'
      */
-    g2l_off(O, dir, P, &alpha, &beta);
+    g2l_off_rot(dir, P, &alpha, &beta);
 
     /*
      * vertices at first face
@@ -745,7 +740,6 @@ static void off_cylinder(const char *name, const double *origin,
  * wall
  */
     double P[3], g_P[3];
-    const double O[] = { 0.0, 0.0, 0.0 };
     double alpha, beta;
     int i;
 
@@ -758,7 +752,7 @@ static void off_cylinder(const char *name, const double *origin,
      * determine alpha, beta for transformation from local to global system.
      * discard 'P'
      */
-    g2l_off(O, dir, P, &alpha, &beta);
+    g2l_off_rot(dir, P, &alpha, &beta);
 
     /*
      * OUTSIDE: vertices at first face
@@ -1217,6 +1211,57 @@ void l2g_off(const double *P, const double *L, double *G,
     for (i = 0; i < 3; i++)
 	G[i] += P[i];
 
+}
+
+void g2l_off_rot(const double *N, double *L, double *alpha, double *beta)
+/*
+ * convert vector N from global coordinate system to local
+ * rotation only by
+ *
+ * 1a) determine beta
+ * 1b) rotation around z axis into x-z plane (beta)
+ * 2a) determine alpha
+ * 2b) rotation around y axis onto z axis (alpha)
+ *
+ * return alpha, beta, and resulting vector in L
+ */
+{
+    const double norm = cblas_dnrm2(3, N, 1);	/* length of L */
+
+    *beta = atan2(N[1], N[0]);
+    *alpha = atan2(N[0] * cos(-*beta) - N[1] * sin(-*beta), N[2]);
+
+    /*
+     * after translation, rotation L lies on z axis
+     * and therefore becomes {0, 0, norm}
+     */
+    L[0] = 0.0;
+    L[1] = 0.0;
+    L[2] = norm;
+}
+
+void l2g_off_rot(const double *L, double *G, const double alpha,
+		 const double beta)
+/*
+ * convert vector L from local coordinate system to global
+ * rotation only by
+ *
+ * 1) rotation around y axis by -alpha
+ * 2) rotation around z axis by -beta
+ *
+ * return alpha, beta, and resulting vector in G
+ */
+{
+    const double ca = cos(-alpha);
+    const double cb = cos(-beta);
+    const double sa = sin(-alpha);
+    const double sb = sin(-beta);
+
+    const double x = L[0] * ca - L[2] * sa;
+
+    G[0] = x * cb - L[1] * sb;
+    G[1] = -x * sb - L[1] * cb;
+    G[2] = L[0] * sa + L[2] * ca;;
 }
 
 FILE *open_off(const char *name)
