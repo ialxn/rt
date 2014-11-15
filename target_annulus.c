@@ -28,7 +28,7 @@ typedef struct ann_state_t {
     double R2;			/* inner radius^2 of annulus */
     double r2;			/* inner radius^2 of annulus */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } ann_state_t;
 
@@ -42,20 +42,8 @@ static void ann_init_state(void *vstate, config_setting_t * this_target,
     double t;
 
     read_vector(this_target, "P", state->point);
-    /*
-     * generate transform matrix M to convert
-     * between local and global coordinates
-     * l2g:   g(x, y, z) = MT l(x, y, z) + o(x, y, z)
-     * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
-     */
-    /* get normal vector of plane (serving also as basis vector z) */
-    read_vector_normalize(this_target, "N", &state->M[6]);
 
-    /* get basis vector x */
-    read_vector_normalize(this_target, "x", state->M);
-
-    /* state->M[3-5] = y = z cross x */
-    cross_product(&state->M[6], state->M, &state->M[3]);
+    state->M = init_M(this_target, "x", "N");
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
@@ -80,7 +68,7 @@ static void ann_free_state(void *vstate)
 {
     ann_state_t *state = (ann_state_t *) vstate;
 
-    state_free(state->dump_file, state->refl_spectrum,
+    state_free(state->dump_file, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 

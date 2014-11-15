@@ -33,7 +33,7 @@ typedef struct cyl_state_t {
     double r;			/* radius of cylinder */
     double l;			/* length of cylinder */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
 } cyl_state_t;
 
 
@@ -45,20 +45,8 @@ static void cyl_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
 
     read_vector(this_target, "C", state->C);
-    read_vector_normalize(this_target, "a", &state->M[6]);
-    /*
-     * generate transform matrix M to convert
-     * between local and global coordinates
-     * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
-     * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
-     */
-    /*
-     * get 'x' vector,
-     * save normalized vector in the transformation matrix 'M'
-     */
-    read_vector_normalize(this_target, "x", state->M);
 
-    orthonormalize(state->M, &state->M[3], &state->M[6]);
+    state->M = init_M(this_target, "x", "a");
 
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "l", &state->l);
@@ -87,7 +75,7 @@ static void cyl_free_state(void *vstate)
 {
     cyl_state_t *state = (cyl_state_t *) vstate;
 
-    state_free(state->dump_file, state->refl_spectrum,
+    state_free(state->dump_file, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 

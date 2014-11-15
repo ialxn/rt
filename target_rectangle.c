@@ -28,7 +28,7 @@ typedef struct sq_state_t {
     double dx;			/* rectangle is '2*dx' times '2*dy' local coordinates */
     double dy;
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } sq_state_t;
 
@@ -53,6 +53,7 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
      * axis of the plane. note for the axes 'x'='P2'-'P1',
      * 'y'='P3'-'P1'.
      */
+    state->M = (double *) malloc(9 * sizeof(double));
     read_vector(this_target, "P2", state->M);
     read_vector(this_target, "P3", &state->M[3]);
 
@@ -88,7 +89,7 @@ static void sq_free_state(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    state_free(state->dump_file, state->refl_spectrum,
+    state_free(state->dump_file, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 

@@ -460,6 +460,27 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
+double *init_M(config_setting_t * this_target, const char *x,
+	       const char *z)
+{
+/*
+ * generate transform matrix M to convert
+ * between local and global coordinates
+ * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
+ * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
+ *
+ * input x,z and calculate y from x cross y = z
+ */
+    double *M = (double *) malloc(9 * sizeof(double));
+
+    read_vector_normalize(this_target, x, M);
+    read_vector_normalize(this_target, z, &M[6]);
+
+    orthonormalize(M, &M[3], &M[6]);
+
+    return M;
+}
+
 void per_thread_init(pthread_key_t key, size_t n)
 {
     PTDT_t *data = (PTDT_t *) malloc(sizeof(PTDT_t));
@@ -500,10 +521,12 @@ static void free_refl_model(const char model, void *refl_model_params)
 
 }
 
-void state_free(int fh, gsl_spline * s, char model, void *p)
+void state_free(int fh, double *M, gsl_spline * s, char model, void *p)
 {
     if (fh != -1)
 	close(fh);
+
+    free(M);
 
     if (s)
 	gsl_spline_free(s);

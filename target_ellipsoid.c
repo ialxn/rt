@@ -29,7 +29,7 @@ typedef struct ell_state_t {
     double axes[3];		/* a^2, b^2, c^2 parameters (semi axes) */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } ell_state_t;
 
@@ -43,24 +43,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     int i;
 
     read_vector(this_target, "center", state->center);
-    /*
-     * generate transform matrix M to convert
-     * between local and global coordinates
-     * l2g:   g(x, y, z) = MT l(x, y, z) + o(x, y, z)
-     * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
-     */
-    /*
-     * get 'x' vector,
-     * save normalized vector in the transformation matrix 'M'
-     */
-    read_vector_normalize(this_target, "x", state->M);
-    /*
-     * get 'z' vector,
-     * save normalized vector in the transformation matrix 'M'
-     */
-    read_vector_normalize(this_target, "z", &state->M[6]);
 
-    orthonormalize(state->M, &state->M[3], &state->M[6]);
+    state->M = init_M(this_target, "x", "z");
 
     read_vector(this_target, "axes", state->axes);
     for (i = 0; i < 3; i++)	/* we will use only a^2, b^2, c^2 */
@@ -89,7 +73,7 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    state_free(state->dump_file, state->refl_spectrum,
+    state_free(state->dump_file, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 

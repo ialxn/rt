@@ -28,7 +28,7 @@ typedef struct tr_state_t {
     double E2[3];		/* edge 'P2' - 'P1' */
     double E3[3];		/* edge 'P3' - 'P1' */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } tr_state_t;
 
@@ -60,6 +60,7 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
      * l2g:   g(x, y, z) = MT l(x, y, z) + o(x, y, z)
      * g2l:   l(x, y, z) = M (g(x, y, z) - o(x, y, z))
      */
+    state->M = (double *) malloc(9 * sizeof(double));
     /* x = 'E2' */
     memcpy(state->M, state->E2, 3 * sizeof(double));
     normalize(state->M);
@@ -89,7 +90,7 @@ static void tr_free_state(void *vstate)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
-    state_free(state->dump_file, state->refl_spectrum,
+    state_free(state->dump_file, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 

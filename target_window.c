@@ -29,7 +29,7 @@ typedef struct window_state_t {
     double d;			/* tickness of window */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
     gsl_spline *dispersion;	/* for interpolated dispersion curve */
-    double M[9];		/* transform matrix local -> global coordinates */
+    double *M;			/* transform matrix local -> global coordinates */
     void *refl_model_params;
 } window_state_t;
 
@@ -116,19 +116,8 @@ static void window_init_state(void *vstate, config_setting_t * this_target,
     const char *S;
 
     read_vector(this_target, "C", state->C);
-    read_vector_normalize(this_target, "a", &state->M[6]);
-    /*
-     * generate transform matrix M to convert
-     * between local and global coordinates
-     * l2g:   g(x, y, z) = M l(x, y, z) + o(x, y, z))
-     * g2l:   l(x, y, z) = MT (g(x, y, z) - o(x, y, z))
-     */
 
-    /* get basis vector x */
-    read_vector_normalize(this_target, "x", state->M);
-
-    /* state->M[3-5] = y = z cross x */
-    cross_product(&state->M[6], state->M, &state->M[3]);
+    state->M = init_M(this_target, "x", "a");
 
     /* initialize absorptivity spectrum */
     config_setting_lookup_string(this_target, "absorptivity", &S);
@@ -156,7 +145,7 @@ static void window_free_state(void *vstate)
 {
     window_state_t *state = (window_state_t *) vstate;
 
-    state_free(state->dump_file, NULL, state->reflectivity_model,
+    state_free(state->dump_file, state->M, NULL, state->reflectivity_model,
 	       state->refl_model_params);
     gsl_spline_free(state->abs_spectrum);
     gsl_spline_free(state->dispersion);

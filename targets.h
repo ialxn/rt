@@ -100,10 +100,13 @@ extern void init_refl_spectrum(const char *f_name,
 			       gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,
 			    void **refl_model_params);
+extern double *init_M(config_setting_t * this_target, const char *x,
+		      const char *z);
 extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(int fh, pthread_key_t key,
 			     pthread_mutex_t * mutex);
-extern void state_free(int fh, gsl_spline * s, char model, void *p);
+extern void state_free(int fh, double *M, gsl_spline * s, char model,
+		       void *p);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);
