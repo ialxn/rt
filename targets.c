@@ -547,6 +547,11 @@ void state_free(int fh, double *M, gsl_spline * s, char model, void *p)
 	free_refl_model(model, p);
 }
 
+#define WRITE_UCHAR(VAR,BUF_PTR,BUF_IDX) do { \
+	memcpy(&(BUF_PTR[BUF_IDX]), &VAR, sizeof(unsigned char)); \
+	BUF_IDX += sizeof(unsigned char); \
+} while(0);
+
 #define WRITE_FLOAT(VAR,BUF_PTR,BUF_IDX) do { \
 	float f = (float) VAR; \
 	memcpy(&(BUF_PTR[BUF_IDX]), &f, sizeof(float)); \
@@ -577,9 +582,7 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
     WRITE_FLOAT(ray->power, data->buf, data->i);
     WRITE_FLOAT(ray->lambda, data->buf, data->i);
-
-    memcpy(&(data->buf[data->i]), &ray->n_refl, sizeof(unsigned char));
-    data->i += sizeof(unsigned char);
+    WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
 
 extern void store_xyz(const int fd, ray_t * ray, const double *hit,
@@ -607,7 +610,5 @@ extern void store_xyz(const int fd, ray_t * ray, const double *hit,
     WRITE_FLOAT(hit_local[2], data->buf, data->i);
     WRITE_FLOAT(ray->power, data->buf, data->i);
     WRITE_FLOAT(ray->lambda, data->buf, data->i);
-
-    memcpy(&(data->buf[data->i]), &ray->n_refl, sizeof(unsigned char));
-    data->i += sizeof(unsigned char);
+    WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
