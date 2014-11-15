@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "io_utils.h"
+#include "intercept.h"
 #include "reflect.h"
 #include "virtual_targets.h"
 

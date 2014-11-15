@@ -10,6 +10,7 @@ CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstric
 
 SRCS= main.c \
       io_utils.c \
+      intercept.c \
       obj_lists.c \
       sources.c \
       targets.c \
@@ -32,6 +33,7 @@ SRCS= main.c \
 
 OBJ= main.o \
      io_utils.o \
+     intercept.o \
      obj_lists.o \
      sources.o \
      targets.o \

@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "io_utils.h"
+#include "intercept.h"
 #include "reflect.h"
 #include "targets.h"
 

@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "io_utils.h"
+#include "intercept.h"
 #include "targets.h"
 
 #define TARGET_TYPE_A "one-sided plane screen"

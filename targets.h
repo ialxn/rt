@@ -104,17 +104,6 @@ extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(int fh, pthread_key_t key,
 			     pthread_mutex_t * mutex);
 extern void state_free(int fh, gsl_spline * s, char model, void *p);
-extern double *intercept_plane(const ray_t * ray,
-			       const double *plane_normal,
-			       const double *plane_point, int *hits_front);
-extern double *intercept_sphere(const ray_t * ray, const double *center,
-				const double radius);
-extern void cyl_surf_normal(double *const icpt, const double *C,
-			    const double *a, const double r,
-			    double *const normal);
-extern double *intercept_cylinder(const ray_t * ray, const double *c,
-				  const double *a, const double r,
-				  const double l, int *hits_outside);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);

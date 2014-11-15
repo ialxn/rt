@@ -13,6 +13,7 @@
 
 #include "math_utils.h"
 #include "io_utils.h"
+#include "intercept.h"
 #include "targets.h"
 
 #define TARGET_TYPE "ellipsoid"
