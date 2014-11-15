@@ -158,7 +158,6 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
     } else {			/* reflect 'in_ray' */
 	double l_N[3], N[3];
-	double O[] = { 0.0, 0.0, 0.0 };
 	double hit_local[3];
 
 	/*
@@ -169,7 +168,7 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 */
 	g2l(state->M, state->C, hit, hit_local);
 	cyl_surf_normal(hit_local, state->C, &state->M[6], state->r, l_N);
-	l2g(state->M, O, l_N, N);
+	l2g_rot(state->M, l_N, N);
 
 	if (state->reflecting_surface == INSIDE)
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */

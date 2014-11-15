@@ -34,6 +34,8 @@ extern void g2l(const double *mat, const double *origin, const double *g,
 		double *l);
 extern void l2g(const double *mat, const double *origin, const double *l,
 		double *g);
+extern void g2l_rot(const double *mat, const double *g, double *l);
+extern void l2g_rot(const double *mat, const double *l, double *g);
 
 extern void get_uniform_random_vector(double *result, const double radius,
 				      const gsl_rng * r);

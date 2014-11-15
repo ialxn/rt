@@ -250,7 +250,6 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
 
     int i;
     double r_O[3], r_N[3];	/* origin, direction of ray in local system */
-    double O[] = { 0.0, 0.0, 0.0 };
     double A = 0.0, B = 0.0, C = -1.0;
     double D;
     double t;
@@ -269,7 +268,7 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
      * dir 'ray': rotate only
      */
     g2l(M, center, ray->orig, r_O);
-    g2l(M, O, ray->dir, r_N);
+    g2l_rot(M, ray->dir, r_N);
 
     /*
      * solve quadratic equation

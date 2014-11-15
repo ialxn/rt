@@ -137,6 +137,30 @@ void l2g(const double *mat, const double *origin, const double *l,
 
 }
 
+extern void g2l_rot(const double *mat, const double *g, double *l)
+/*
+ * global -> local: performs rotation part only
+ *     l(x, y, z) = M (g(x, y, z))
+ */
+{
+    int i;
+
+    for (i = 0; i < 3; i++)
+	l[i] = cblas_ddot(3, g, 1, &mat[3 * i], 1);
+}
+
+extern void l2g_rot(const double *mat, const double *l, double *g)
+/*
+ * local -> global: performs rotation part only
+ */
+{
+    int i;
+
+    for (i = 0; i < 3; i++)
+	g[i] = cblas_ddot(3, &mat[i], 3, l, 1);
+}
+
+
 void get_uniform_random_vector(double *result, const double l,
 			       const gsl_rng * r)
 {
