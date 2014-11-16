@@ -20,16 +20,16 @@
 
 
 typedef struct ann_state_t {
-    char reflectivity_model;	/* reflectivity model used for this target */
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
-    pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    int dump_file;
     double point[3];		/* center coordinate of annulus */
     double R2;			/* inner radius^2 of annulus */
     double r2;			/* inner radius^2 of annulus */
-    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double *M;			/* transform matrix local -> global coordinates */
+    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
+    char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
+    int dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } ann_state_t;
 
 

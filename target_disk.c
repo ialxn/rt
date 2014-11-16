@@ -20,15 +20,15 @@
 
 
 typedef struct disk_state_t {
-    char reflectivity_model;	/* reflectivity model used for this target */
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
-    pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    int dump_file;
     double point[3];		/* center coordinate of disk */
     double r2;			/* radius^2 of disk */
-    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double *M;			/* transform matrix local -> global coordinates */
+    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
+    char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
+    int dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } disk_state_t;
 
 static void disk_init_state(void *vstate, config_setting_t * this_target,

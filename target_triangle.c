@@ -20,16 +20,16 @@
 
 
 typedef struct tr_state_t {
-    char reflectivity_model;	/* reflectivity model used for this target */
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
-    pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    int dump_file;
     double P1[3];		/* corner point of triangle */
     double E2[3];		/* edge 'P2' - 'P1' */
     double E3[3];		/* edge 'P3' - 'P1' */
-    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double *M;			/* transform matrix local -> global coordinates */
+    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
+    char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
+    int dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } tr_state_t;
 
 

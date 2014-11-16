@@ -21,12 +21,12 @@
 
 
 typedef struct ps_state_t {
+    double point[3];		/* point on plane */
+    char one_sided;		/* flag [one-sided|two-sided] */
+    double *M;			/* transform matrix local -> global coordinates */
+    int dump_file;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    char one_sided;		/* flag [one-sided|two-sided] */
-    int dump_file;
-    double point[3];		/* point on plane */
-    double *M;			/* transform matrix local -> global coordinates */
 } ps_state_t;
 
 

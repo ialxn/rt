@@ -20,17 +20,17 @@
 
 
 typedef struct cyl_state_t {
-    char reflectivity_model;	/* reflectivity model used for this target */
-    char reflecting_surface;
-    void *refl_model_params;
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
-    pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    int dump_file;
     double C[3];		/* center of face 1, origin of local system */
     double r;			/* radius of cylinder */
     double l;			/* length of cylinder */
-    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     double *M;			/* transform matrix local -> global coordinates */
+    gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
+    char reflectivity_model;	/* reflectivity model used for this target */
+    char reflecting_surface;
+    void *refl_model_params;
+    int dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } cyl_state_t;
 
 

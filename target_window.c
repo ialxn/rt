@@ -20,17 +20,17 @@
 #define NO_ITEMS 4
 
 typedef struct window_state_t {
-    char reflectivity_model;	/* reflectivity model used for this target */
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
-    pthread_mutex_t mutex_writefd;	/* protect write(2) */
-    int dump_file;
     double C[3];		/* center coordinate of first face */
     double r;			/* radius of window */
     double d;			/* tickness of window */
+    double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
     gsl_spline *dispersion;	/* for interpolated dispersion curve */
-    double *M;			/* transform matrix local -> global coordinates */
+    char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
+    int dump_file;
+    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } window_state_t;
 
 

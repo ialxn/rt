@@ -29,11 +29,11 @@ typedef struct sp_state_t {
     double alpha;		/* used to convert from local to global system */
     double beta;		/* used to convert from local to global system */
     int64_t n_rays;		/* number of rays remaining until source is exhausted */
-    pthread_mutex_t mutex_n_rays;	/* protect n_rays */
-    pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
     double power;		/* power of source */
     double ppr;			/* power allotted to one ray */
     gsl_spline *spectrum;	/* spline holding cdf of source spectrum */
+    pthread_mutex_t mutex_n_rays;	/* protect n_rays */
+    pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
 } sp_state_t;
 
 
