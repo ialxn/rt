@@ -30,10 +30,6 @@
 #include "targets.h"
 
 
-#define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
-#define ABSORBED     (1<<1)	/* ray was absorbed on target */
-#define ICPT_ON_CONVEX_SIDE	(1<<2)	/* ray intercepted by convex side */
-
 /*
  * surface normals of non-planar targets (pointing away from convex side
  */
