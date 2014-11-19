@@ -137,7 +137,8 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
     double t1, t3[3];
     double e[3], f[3];
     double A, B, C;
-    double delta;
+    double x_small, x_large;
+    int n_solns;
     double *intercept;
 
     /*
@@ -175,65 +176,32 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
     B = 2.0 * cblas_ddot(3, e, 1, f, 1);
     C = cblas_ddot(3, f, 1, f, 1) - r * r;
 
-    /*
-     * compute discriminant
-     */
-    delta = B * B - 4.0 * A * C;
+    n_solns = gsl_poly_solve_quadratic(A, B, C, &x_small, &x_large);
 
-    /*
-     * check existence of solution(s)
-     */
-    if (delta < 0.0)		/* no interception */
+    if (n_solns == 0)
 	return NULL;
-    else {
-	/*
-	 * 2 (maybe degenerate) solutions (intercepts with infinite cylinder).
-	 * identify the ones intercepting the cylinder between
-	 * its end faces (0, 1, or 2 solutions). projection of vector
-	 * 'icpt' - 'c' onto 'a' must fullfill 0 < x < 'd'
-	 * pick the one closest to origin of ray and assign it to icpt
-	 */
-	const double s = sqrt(delta);
-	const double AA = 1.0 / (2.0 * A);
-	const double x1 = (-B + s) * AA;
-	const double x2 = (-B - s) * AA;
-	double xmin, xmax;
 
+    if ((intercept =
+	 test_cyl_intercept(x_small, ray->orig, ray->dir, c, a,
+			    l)) == NULL)
 	/*
-	 * determine the correct solution corresponding
-	 * to the smalles positive 'x' within the length
-	 * of the cylinder.
+	 * smaller solution not valid, try larger instead
 	 */
-	if (x1 > x2) {
-	    xmax = x1;
-	    xmin = x2;
-	} else {
-	    xmax = x2;
-	    xmin = x1;
-	}
+	intercept =
+	    test_cyl_intercept(x_large, ray->orig, ray->dir, c, a, l);
 
-	if ((intercept =
-	     test_cyl_intercept(xmin, ray->orig, ray->dir, c, a,
-				l)) == NULL)
-	    /*
-	     * xmin not valid, try xmax instead
-	     */
-	    intercept =
-		test_cyl_intercept(xmax, ray->orig, ray->dir, c, a, l);
-
-	/*
-	 * if valid intercept found, test if outside surface is hit
-	 * where 'ray->dir' dot "surface_normal" is negative
-	 */
-	if (intercept) {
-	    cyl_surf_normal(intercept, c, a, r, t3);
-	    if (cblas_ddot(3, ray->dir, 1, t3, 1) < 0.0)
-		*hits_outside = 1;
-	    else
-		*hits_outside = 0;
-	}
-	return intercept;
+    /*
+     * if valid intercept found, test if outside surface is hit
+     * where 'ray->dir' dot "surface_normal" is negative
+     */
+    if (intercept) {
+	cyl_surf_normal(intercept, c, a, r, t3);
+	if (cblas_ddot(3, ray->dir, 1, t3, 1) < 0.0)
+	    *hits_outside = 1;
+	else
+	    *hits_outside = 0;
     }
+    return intercept;
 }
 
 double *intercept_ellipsoid(const ray_t * ray, const double *M,
