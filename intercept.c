@@ -10,39 +10,33 @@
 
 #include <stdlib.h>
 #include <gsl/gsl_cblas.h>
+#include <gsl/gsl_poly.h>
 
 #include "intercept.h"
 
-static double *validate_intercepts(const ray_t * ray, const double t1,
-				   const double t2)
+static double *find_first_soln(const int n_solns, const double x_small,
+			       const double x_large, const ray_t * ray)
 {
-/*
- * smallest positive is possible:
- *   target is in front of rays origin (t>0)
- *   AND
- *   require minimum path length to detect
- *   self intersection because rays initially
- *   emitted by source do not set flag
- */
-    double t;
-    double *intercept = NULL;
+    /*
+     * first intercept corresponds to smallest positive solution.
+     * require minimum travels corresponding to GSL_SQRT_DBL_EPSILON
+     * to detect self intersections.
+     */
+    double *intercept;
+    double x;
 
-    t = GSL_MIN(t1, t2);
-    if (t > GSL_SQRT_DBL_EPSILON) {
+    if (n_solns == 0)
+	return NULL;
 
-	intercept = (double *) malloc(3 * sizeof(double));
-	a_plus_cb(intercept, ray->orig, t, ray->dir);
+    if (x_small > GSL_SQRT_DBL_EPSILON)
+	x = x_small;
+    else if (x_large > GSL_SQRT_DBL_EPSILON)
+	x = x_large;
+    else			/* both solutions are invalid */
+	return NULL;
 
-    } else {
-
-	t = GSL_MAX(t1, t2);
-	if (t > GSL_SQRT_DBL_EPSILON) {
-
-	    intercept = (double *) malloc(3 * sizeof(double));
-	    a_plus_cb(intercept, ray->orig, t, ray->dir);
-
-	}
-    }
+    intercept = (double *) malloc(3 * sizeof(double));
+    a_plus_cb(intercept, ray->orig, x, ray->dir);
 
     return intercept;
 }
@@ -415,48 +409,20 @@ double *intercept_sphere(const ray_t * ray, const double *center,
  *	A = D dot D := 1 (unit vector)
  *	B = 2 (O-C) dot D
  *	C = (O-C) dot (O-C) - r^2
- *
- * if discriminatnt "B^2 - 4AC" (i.e. B^2 - 4C) is negative:	miss
- * 						       else:	2 solns
- *								(may coincide)
- *
- * to aviod poor numerical precision if B is close to sqrt(discriminant) use
- *
- *	t1 = q / A (i.e. q)
- *      t2 = C / q
- *
- * with
- *
- *	q = (-B + sqrt(discriminant)) / 2	B < 0
- *	q = (-B - sqrt(discriminant)) / 2	else
- *
  */
     double OminusC[3];
     double B, C;
-    double discriminant;
+    double x_small, x_large;
+    int n_solns;
+    double *intercept;
 
     diff(OminusC, ray->orig, center);
 
     B = 2.0 * cblas_ddot(3, OminusC, 1, ray->dir, 1);
     C = cblas_ddot(3, OminusC, 1, OminusC, 1) - radius * radius;
 
-    discriminant = B * B - 4.0 * C;
+    n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
+    intercept = find_first_soln(n_solns, x_small, x_large, ray);
 
-    if (discriminant < 0.0)	/* does not intercept */
-	return NULL;
-    else if (fabs(discriminant) < GSL_DBL_EPSILON)	/* 1 intercept */
-	return validate_intercepts(ray, -B * 0.5, 0.0);
-    else {			/* 2 intercepts */
-	double q;
-
-	if (B < 0)
-	    q = (-B + sqrt(discriminant)) * 0.5;
-	else
-	    q = (-B - sqrt(discriminant)) * 0.5;
-
-	/*
-	 * validate intercepts (smallest positive)
-	 */
-	return validate_intercepts(ray, q, C / q);
-    }
+    return intercept;
 }
