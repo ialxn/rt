@@ -294,8 +294,10 @@ Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\
 
 \noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
 
+\noindent {\tt reflecting\_surface="SURFACE";}
+
 \vspace{0.25cm}
-Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the inside surface is reflecting while the outside surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
+Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. One surface is defined as reflecting ({\tt reflecting\_surface} can be {\tt inside} or {\tt outside}) while the other surface has implicit absorptivity of 1.0. The spectral reflectivity of the reflecting surface is given by the file {\tt reflectivity}.
 
 \subsubsection{Disk}
 

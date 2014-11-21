@@ -27,6 +27,7 @@ typedef struct ell_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     char reflectivity_model;	/* reflectivity model used for this target */
+    char reflecting_surface;
     void *refl_model_params;
     int dump_file;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -60,6 +61,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     init_refl_spectrum(S, &state->refl_spectrum);
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
+
+    state->reflecting_surface = init_refl_s(this_target);
 
     state->dump_file =
 	init_output(file_mode, TARGET_TYPE, this_target, state->center,

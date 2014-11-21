@@ -963,6 +963,7 @@ static void output_targets(const config_t * cfg)
 	    double O[3], X[3], Y[3], Z[3];
 	    double axes[3];
 	    double z_min, z_max;
+	    const char *S;
 
 	    read_vector(this_t, "center", O);
 	    read_vector_normalize(this_t, "x", X);
@@ -980,9 +981,15 @@ static void output_targets(const config_t * cfg)
 	     * draw ellipsoid:
 	     *   inside: (white, reflecting) scaled by 1-'DZ'
 	     *   outside (black, absorbing)
+	     *   or vice versa (colors) if reflecting surface is outside
 	     */
-	    off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0, 1.0,
-			  0.0, 0.0, 0.0, 1.0 - DZ);
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0,
+			      1.0, 0.0, 0.0, 0.0, 1.0 - DZ);
+	    else
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, 0.0, 0.0,
+			      0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
 
 	} else if (!strcmp(type, "disk")) {
 	    double O[3], X[3], Y[3], Z[3];
