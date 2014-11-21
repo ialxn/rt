@@ -65,6 +65,7 @@ static int find_first_soln_restricted(const int n_solns,
 
     return 1;
 }
+
 static double *find_first_soln(const int n_solns, const double x_small,
 			       const double x_large, const ray_t * ray)
 {
@@ -90,6 +91,65 @@ static double *find_first_soln(const int n_solns, const double x_small,
     a_plus_cb(intercept, ray->orig, x, ray->dir);
 
     return intercept;
+}
+
+static int solution_in_range(const double s, const double min,
+			     const double max, const double r0[3],
+			     const double dir[3])
+{
+/*
+ * solution is 'r0' + 's' x 'dir'
+ * we are only interested in z-component
+ */
+    const double z = r0[2] + s * dir[2];
+
+    if (z < min || z > max)
+	return 0;
+    else
+	return 1;
+}
+
+static int first_soln_restricted(const int n_solutions, const double x1,
+				 const double x2, const double z_min,
+				 const double z_max, const double *l_orig,
+				 const double *l_dir, double *l_intercept)
+{
+/*
+ * calculate first intercept (in local system) that fullfills the restriction
+ *      z_min <= z_component_of_solution <= z_max
+ * if none ist found return 0 (and 'l_intercept' is not modified) and 1
+ * with 'l_intercept' set otherwise
+ */
+    switch (n_solutions) {
+    case 0:			/* no solution */
+	return 0;
+
+    case 1:			/* x1 is possible solution */
+	if (x1 < GSL_DBL_EPSILON)
+	    return 0;		/* target not in front */
+
+	if (solution_in_range(x1, z_min, z_max, l_orig, l_dir))
+	    a_plus_cb(l_intercept, l_orig, x1, l_dir);
+	else
+	    return 0;		/* outside valid z-range */
+
+	break;
+
+    case 2:			/* x1 and x2 possible solutions */
+	if (x1 < GSL_DBL_EPSILON && x2 < GSL_DBL_EPSILON)
+	    return 0;		/* none valid */
+
+	if (solution_in_range(x1, z_min, z_max, l_orig, l_dir))
+	    a_plus_cb(l_intercept, l_orig, x1, l_dir);	/* smaller valid */
+	else if (solution_in_range(x2, z_min, z_max, l_orig, l_dir))
+	    a_plus_cb(l_intercept, l_orig, x2, l_dir);	/* larger valid */
+	else
+	    return 0;		/* none valid */
+
+	break;
+    }
+
+    return 1;
 }
 
 static double *test_cyl_intercept(const double x, const double *orig,
@@ -161,6 +221,22 @@ void ell_surf_normal(const double *point, const double *axes,
     }
     norm = sqrt(norm);
     cblas_dscal(3, 1.0 / norm, normal, 1);
+}
+
+void par_surf_normal(const double *point, const double foc2,
+		     double *const normal)
+{
+/*
+ * this normal {x/2a, y/2a, -1} is for paraboloid centered at (0,0,0) i.e.
+ * x^2/4a + y^2/4a -z = 0 and points outwards!
+ * foc2: 1/2a
+ * point, normal: local coordinate system
+ */
+    normal[0] = foc2 * point[0];
+    normal[1] = foc2 * point[1];
+    normal[2] = -1.0;
+
+    normalize(normal);
 }
 
 
@@ -298,6 +374,54 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
     /* convert to global coordinates, origin is 'state->center' */
     intercept = (double *) malloc(3 * sizeof(double));
     l2g(M, center, l_intercept, intercept);
+
+    return intercept;
+}
+
+extern double *intercept_paraboloid(const ray_t * ray, const double *M,
+				    const double vertex[3],
+				    const double foc2, const double foc4,
+				    const double z_min, const double z_max,
+				    int *hits_outside)
+{
+    double r_O[3], r_N[3];
+    double l_intercept[3];
+    double *intercept;
+    double N_paraboloid[3];
+    double A, B, C;
+    double x_small, x_large;
+    int n_solns;
+
+    /*
+     * transform 'ray' from global to local system
+     */
+    g2l(M, vertex, ray->orig, r_O);
+    g2l_rot(M, ray->dir, r_N);
+    /*
+     * calculate coefficients of quadratic equation
+     */
+    A = foc4 * (r_N[0] * r_N[0] + r_N[1] * r_N[1]);
+    B = foc2 * (r_N[0] * r_O[0] + r_N[1] * r_O[1]) - r_N[2];
+    C = foc4 * (r_O[0] * r_O[0] + r_O[1] * r_O[1]) - r_O[2];
+
+    n_solns = gsl_poly_solve_quadratic(A, B, C, &x_small, &x_large);
+    if (!find_first_soln_restricted
+	(n_solns, x_small, x_large, z_min, z_max, r_O, r_N, l_intercept))
+	return NULL;
+
+    /*
+     * valid intercept found, test if outside surface is hit
+     * where 'ray->dir' dot "surface_normal" is negative
+     */
+    par_surf_normal(l_intercept, foc2, N_paraboloid);
+    if (cblas_ddot(3, r_N, 1, N_paraboloid, 1) < 0.0)
+	*hits_outside = 1;
+    else
+	*hits_outside = 0;
+
+    /* convert to global coordinates, origin is 'state->vertex' */
+    intercept = (double *) malloc(3 * sizeof(double));
+    l2g(M, vertex, l_intercept, intercept);
 
     return intercept;
 }
