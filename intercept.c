@@ -65,6 +65,7 @@ static int find_first_soln_restricted(const int n_solns,
 
     return 1;
 }
+
 static double *find_first_soln(const int n_solns, const double x_small,
 			       const double x_large, const ray_t * ray)
 {
@@ -257,12 +258,14 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
 
 double *intercept_ellipsoid(const ray_t * ray, const double *M,
 			    const double center[3], const double axes[3],
-			    const double z_min, const double z_max)
+			    const double z_min, const double z_max,
+			    int *hits_outside)
 {
 
 
     int i;
     double r_O[3], r_N[3];	/* origin, direction of ray in local system */
+    double N_ellipsoid[3];
     double A = 0.0, B = 0.0, C = -1.0;
     double x_small, x_large;
     int n_solns;
@@ -294,6 +297,16 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
     if (!find_first_soln_restricted
 	(n_solns, x_small, x_large, z_min, z_max, r_O, r_N, l_intercept))
 	return NULL;
+
+    /*
+     * valid intercept found, test if outside surface is hit
+     * where 'ray->dir' dot "surface_normal" is negative
+     */
+    ell_surf_normal(l_intercept, axes, N_ellipsoid);
+    if (cblas_ddot(3, r_N, 1, N_ellipsoid, 1) < 0.0)
+	*hits_outside = 1;
+    else
+	*hits_outside = 0;
 
     /* convert to global coordinates, origin is 'state->center' */
     intercept = (double *) malloc(3 * sizeof(double));
