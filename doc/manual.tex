@@ -390,6 +390,33 @@ Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center o
 \vspace{0.25cm}
 Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorption {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local x axis, the local y axis is calculated from $y = a \times x$.
 
+\subsubsection{Paraboloid}
+
+\noindent {\tt type="paraboloid;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt vertex=[X.x, Y.y, Z.z];}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt z=[X.x, Y.y, Z.z];}
+
+\noindent {\tt focal\_length=F.f;}
+
+\noindent {\tt z\_min=I.i;}
+
+\noindent {\tt z\_max=A.a;}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+
+\noindent {\tt reflecting\_surface="SURFACE";}
+
+\vspace{0.25cm}
+Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system with origin at the vertex {\tt vertex} of the paraboloid. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The focal length $f$ is given as {\tt focal\_length}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the surface defined by {\tt reflecting\_surface}\footnote{INSIDE or OUTSIDE} is reflecting while the other surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
+
 
 \subsection{Reflectivity Models} \label{sec:refl_models}
 
