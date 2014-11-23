@@ -9,6 +9,7 @@
  */
 
 #include <stdlib.h>
+#include <string.h>
 #include <gsl/gsl_cblas.h>
 #include <gsl/gsl_poly.h>
 
@@ -162,6 +163,16 @@ void ell_surf_normal(const double *point, const double *axes,
     }
     norm = sqrt(norm);
     cblas_dscal(3, 1.0 / norm, normal, 1);
+}
+
+void sph_surf_normal(const double *point, double *normal)
+{
+/*
+ * surface normal of sphere at 'point' is 'point' in local system
+ * with origin at cetnter of sphere
+ */
+    memcpy(normal, point, 3 * sizeof(double));
+    normalize(normal);
 }
 
 
@@ -398,34 +409,49 @@ double *intercept_sphere(const ray_t * ray, const double *M,
  *	B = 2 (O-C) dot D
  *	C = (O-C) dot (O-C) - r^2
  */
-    double OminusC[3];
+    double *intercept;
     double B, C;
     double x_small, x_large;
     int n_solns;
-    double *intercept;
 
-    diff(OminusC, ray->orig, center);
+    if (M == NULL) {		/* called from 'virtual_target_solid_sphere */
+	double OminusC[3];
 
-    B = 2.0 * cblas_ddot(3, OminusC, 1, ray->dir, 1);
-    C = cblas_ddot(3, OminusC, 1, OminusC, 1) - radius * radius;
+	diff(OminusC, ray->orig, center);
 
-    n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
-    intercept = find_first_soln(n_solns, x_small, x_large, ray);
+	B = 2.0 * cblas_ddot(3, OminusC, 1, ray->dir, 1);
+	C = cblas_ddot(3, OminusC, 1, OminusC, 1) - radius * radius;
 
-    /*
-     * hits_inside is NULL when called from virtual_target_solid_sphere.
-     */
-    if (intercept && hits_inside) {
-	double N[3];
+	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
+	intercept = find_first_soln(n_solns, x_small, x_large, ray);
 
-	diff(N, intercept, center);
+    } else {
+	double r_O[3], r_N[3];	/* origin, direction of ray in local system */
+	double l_intercept[3];
+	double N_sphere[3];
 
-	if (cblas_ddot(3, ray->dir, 1, N, 1) < 0)
+	g2l(M, center, ray->orig, r_O);
+	g2l_rot(M, ray->dir, r_N);
+
+	B = 2.0 * cblas_ddot(3, r_O, 1, r_N, 1);
+	C = cblas_ddot(3, r_O, 1, r_O, 1) - radius * radius;
+
+	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
+	if (!find_first_soln_restricted
+	    (n_solns, x_small, x_large, z_min, z_max, r_O, r_N,
+	     l_intercept))
+	    return NULL;
+
+	sph_surf_normal(l_intercept, N_sphere);
+	if (cblas_ddot(3, r_N, 1, N_sphere, 1) < 0)
 	    *hits_outside = 1;
 	else
 	    *hits_outside = 0;
-    }
 
+	intercept = (double *) malloc(3 * sizeof(double));
+	l2g(M, center, l_intercept, intercept);
+
+    }
 
     return intercept;
 }

@@ -38,6 +38,9 @@ extern void cyl_surf_normal(double *const icpt, const double *C,
 			    double *const normal);
 void ell_surf_normal(const double *point, const double *axes,
 		     double *const normal);
+extern void sph_surf_normal(const double *point, double *normal);
+
+
 
 
 /*
