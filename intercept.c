@@ -65,6 +65,7 @@ static int find_first_soln_restricted(const int n_solns,
 
     return 1;
 }
+
 static double *find_first_soln(const int n_solns, const double x_small,
 			       const double x_large, const ray_t * ray)
 {
@@ -369,8 +370,10 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 
 }
 
-double *intercept_sphere(const ray_t * ray, const double *center,
-			 const double radius)
+double *intercept_sphere(const ray_t * ray, const double *M,
+			 const double *center, const double radius,
+			 const double z_min, const double z_max,
+			 int *hits_outside)
 {
 /*
  * from http://wiki.cgsociety.org/index.php/Ray_Sphere_Intersection
@@ -408,6 +411,21 @@ double *intercept_sphere(const ray_t * ray, const double *center,
 
     n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
     intercept = find_first_soln(n_solns, x_small, x_large, ray);
+
+    /*
+     * hits_inside is NULL when called from virtual_target_solid_sphere.
+     */
+    if (intercept && hits_inside) {
+	double N[3];
+
+	diff(N, intercept, center);
+
+	if (cblas_ddot(3, ray->dir, 1, N, 1) < 0)
+	    *hits_outside = 1;
+	else
+	    *hits_outside = 0;
+    }
+
 
     return intercept;
 }

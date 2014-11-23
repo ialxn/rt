@@ -52,7 +52,8 @@ static double *vtssp_get_intercept(void *vstate, ray_t * ray)
 	return NULL;
     }
 
-    return intercept_sphere(ray, state->center, state->radius);
+    return intercept_sphere(ray, NULL, state->center, state->radius, 0.0,
+			    0.0, NULL);
 }
 
 static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
