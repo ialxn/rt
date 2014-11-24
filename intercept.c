@@ -94,65 +94,6 @@ static double *find_first_soln(const int n_solns, const double x_small,
     return intercept;
 }
 
-static int solution_in_range(const double s, const double min,
-			     const double max, const double r0[3],
-			     const double dir[3])
-{
-/*
- * solution is 'r0' + 's' x 'dir'
- * we are only interested in z-component
- */
-    const double z = r0[2] + s * dir[2];
-
-    if (z < min || z > max)
-	return 0;
-    else
-	return 1;
-}
-
-static int first_soln_restricted(const int n_solutions, const double x1,
-				 const double x2, const double z_min,
-				 const double z_max, const double *l_orig,
-				 const double *l_dir, double *l_intercept)
-{
-/*
- * calculate first intercept (in local system) that fullfills the restriction
- *      z_min <= z_component_of_solution <= z_max
- * if none ist found return 0 (and 'l_intercept' is not modified) and 1
- * with 'l_intercept' set otherwise
- */
-    switch (n_solutions) {
-    case 0:			/* no solution */
-	return 0;
-
-    case 1:			/* x1 is possible solution */
-	if (x1 < GSL_DBL_EPSILON)
-	    return 0;		/* target not in front */
-
-	if (solution_in_range(x1, z_min, z_max, l_orig, l_dir))
-	    a_plus_cb(l_intercept, l_orig, x1, l_dir);
-	else
-	    return 0;		/* outside valid z-range */
-
-	break;
-
-    case 2:			/* x1 and x2 possible solutions */
-	if (x1 < GSL_DBL_EPSILON && x2 < GSL_DBL_EPSILON)
-	    return 0;		/* none valid */
-
-	if (solution_in_range(x1, z_min, z_max, l_orig, l_dir))
-	    a_plus_cb(l_intercept, l_orig, x1, l_dir);	/* smaller valid */
-	else if (solution_in_range(x2, z_min, z_max, l_orig, l_dir))
-	    a_plus_cb(l_intercept, l_orig, x2, l_dir);	/* larger valid */
-	else
-	    return 0;		/* none valid */
-
-	break;
-    }
-
-    return 1;
-}
-
 static double *test_cyl_intercept(const double x, const double *orig,
 				  const double *dir, const double *c,
 				  const double *a, const double l)
