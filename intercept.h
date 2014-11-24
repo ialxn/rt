@@ -53,7 +53,8 @@ extern double *intercept_cylinder(const ray_t * ray, const double *c,
 extern double *intercept_ellipsoid(const ray_t * ray, const double *M,
 				   const double center[3],
 				   const double axes[3],
-				   const double z_min, const double z_max);
+				   const double z_min, const double z_max,
+				   int *hits_outside);
 extern double *intercept_paraboloid(const ray_t * ray, const double *M,
 				    const double vertex[3],
 				    const double foc2, const double foc4,

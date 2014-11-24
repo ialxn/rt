@@ -27,6 +27,7 @@ typedef struct ell_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     char reflectivity_model;	/* reflectivity model used for this target */
+    char reflecting_surface;
     void *refl_model_params;
     int dump_file;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -61,6 +62,8 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
+    state->reflecting_surface = init_refl_s(this_target);
+
     state->dump_file =
 	init_output(file_mode, TARGET_TYPE, this_target, state->center,
 		    state->M);
@@ -82,10 +85,35 @@ static double *ell_get_intercept(void *vstate, ray_t * ray)
     ell_state_t *state = (ell_state_t *) vstate;
 
     double *intercept;
+    int hits_outside;
+
+    PTDT_t *data = pthread_getspecific(state->PTDT_key);
+
+    if (data->flag & LAST_WAS_HIT) {
+	/*
+	 * ray starts on this target's convex side, no hit posible
+	 */
+	data->flag &= ~LAST_WAS_HIT;
+	return NULL;
+    }
 
     intercept =
 	intercept_ellipsoid(ray, state->M, state->center, state->axes,
-			    state->z_min, state->z_max);
+			    state->z_min, state->z_max, &hits_outside);
+
+    if (!intercept)		/* ray does not hit target */
+	return NULL;
+
+    /*
+     * mark as absorbed if non-reflecting surface is hit.
+     * mark if convex (outside) surface is hit.
+     */
+    if ((state->reflecting_surface == INSIDE && hits_outside)
+	|| (state->reflecting_surface == OUTSIDE && !hits_outside))
+	data->flag |= ABSORBED;
+
+    if (hits_outside)
+	data->flag |= ICPT_ON_CONVEX_SIDE;
 
     return intercept;
 }
@@ -113,7 +141,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    store_xyz(state->dump_file, ray, hit, state->M, state->center,
 		      data, &state->mutex_writefd);
 
-	data->flag &= ~ABSORBED;	/* clear flag */
+	data->flag &= ~(LAST_WAS_HIT | ABSORBED | ICPT_ON_CONVEX_SIDE);	/* clear flags */
 
 	free(ray);
 	return NULL;
@@ -125,10 +153,17 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	g2l(state->M, state->center, hit, hit_local);	/* transform to local coordinates */
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g_rot(state->M, l_N, N);	/* normal vector global system */
-	cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
+
+	if (state->reflecting_surface == INSIDE)
+	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
 	reflect(ray, N, hit, state->reflectivity_model, r,
 		state->refl_model_params);
+
+	if (data->flag & ICPT_ON_CONVEX_SIDE) {
+	    data->flag |= LAST_WAS_HIT;	/* mark as hit */
+	    data->flag &= ~ICPT_ON_CONVEX_SIDE;
+	}
 
 	return ray;
     }
