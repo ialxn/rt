@@ -393,7 +393,7 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflecting_surface",
 				 i);
-	    }			/* end 'paraboloid' */
+	    } /* end 'paraboloid' */
 	    else if (!strcmp(type, "sphere")) {
 		/*
 		 * sphere:
@@ -407,8 +407,8 @@ int check_targets(config_t * cfg)
 		 *  - string 'reflecting_surface'
 		 */
 		status += check_array("targets", this_t, "origin", i);
-	status += check_float("targets", this_t, "radius", i);
-	status += check_array("targets", this_t, "z", i);
+		status += check_float("targets", this_t, "radius", i);
+		status += check_array("targets", this_t, "z", i);
 		status += check_array("targets", this_t, "x", i);
 		status += check_float("targets", this_t, "z_min", i);
 		status += check_float("targets", this_t, "z_min", i);
@@ -422,8 +422,8 @@ int check_targets(config_t * cfg)
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
 		status +=
-	    check_string("targets", this_t, "reflecting_surface",
-			 i);
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
 	    }			/* end 'sphere' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
@@ -624,9 +624,9 @@ void state_free(int fh, double *M, gsl_spline * s, char model, void *p)
 	BUF_IDX += sizeof(float); \
 } while(0);
 
-extern void store_xy(const int fd, ray_t * ray, const double *hit,
-		     const double *m, const double *point, PTDT_t * data,
-		     pthread_mutex_t * mutex_writefd)
+void store_xy(const int fd, ray_t * ray, const double *hit,
+	      const double *m, const double *point, PTDT_t * data,
+	      pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 
@@ -651,9 +651,9 @@ extern void store_xy(const int fd, ray_t * ray, const double *hit,
     WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
 
-extern void store_xyz(const int fd, ray_t * ray, const double *hit,
-		      const double *m, const double *point, PTDT_t * data,
-		      pthread_mutex_t * mutex_writefd)
+void store_xyz(const int fd, ray_t * ray, const double *hit,
+	       const double *m, const double *point, PTDT_t * data,
+	       pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 

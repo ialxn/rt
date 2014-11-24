@@ -137,7 +137,7 @@ void l2g(const double *mat, const double *origin, const double *l,
 
 }
 
-extern void g2l_rot(const double *mat, const double *g, double *l)
+void g2l_rot(const double *mat, const double *g, double *l)
 /*
  * global -> local: performs rotation part only
  *     l(x, y, z) = M (g(x, y, z))
@@ -149,7 +149,7 @@ extern void g2l_rot(const double *mat, const double *g, double *l)
 	l[i] = cblas_ddot(3, g, 1, &mat[3 * i], 1);
 }
 
-extern void l2g_rot(const double *mat, const double *l, double *g)
+void l2g_rot(const double *mat, const double *l, double *g)
 /*
  * local -> global: performs rotation part only
  */

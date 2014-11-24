@@ -196,9 +196,9 @@ void sph_surf_normal(const double *point, double *normal)
 /*
  * intercepts
  */
-extern double *intercept_cylinder(const ray_t * ray, const double *c,
-				  const double *a, const double r,
-				  const double l, int *hits_outside)
+double *intercept_cylinder(const ray_t * ray, const double *c,
+			   const double *a, const double r, const double l,
+			   int *hits_outside)
 {
 /*
  * returns first (closes to origin of ray) intercept (x,y,z) between
@@ -342,11 +342,10 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
     return intercept;
 }
 
-extern double *intercept_paraboloid(const ray_t * ray, const double *M,
-				    const double vertex[3],
-				    const double foc2, const double foc4,
-				    const double z_min, const double z_max,
-				    int *hits_outside)
+double *intercept_paraboloid(const ray_t * ray, const double *M,
+			     const double vertex[3], const double foc2,
+			     const double foc4, const double z_min,
+			     const double z_max, int *hits_outside)
 {
     double r_O[3], r_N[3];
     double l_intercept[3];
