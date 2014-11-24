@@ -40,6 +40,9 @@ extern void ell_surf_normal(const double *point, const double *axes,
 			    double *const normal);
 extern void par_surf_normal(const double *point, const double foc2,
 			    double *const normal);
+extern void sph_surf_normal(const double *point, double *normal);
+
+
 
 /*
  * functions to return intercepts of ray with target
@@ -59,7 +62,9 @@ extern double *intercept_paraboloid(const ray_t * ray, const double *M,
 extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
 			       const double *plane_point, int *hits_front);
-extern double *intercept_sphere(const ray_t * ray, const double *center,
-				const double radius);
+extern double *intercept_sphere(const ray_t * ray, const double *M,
+				const double *center, const double radius,
+				const double z_min, const double z_max,
+				int *hits_outside);
 
 #endif				/* __INTERCEPT_H__ */

@@ -1217,7 +1217,39 @@ static void output_targets(const config_t * cfg)
 	    else
 		off_paraboloid(name, vertex, Z, foc, z_min, z_max, 0.0,
 			       0.0, 0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
+	} else if (!strcmp(type, "sphere")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double axes[3];
+	    double radius;
+	    double z_min, z_max;
+	    const char *S;
 
+	    read_vector(this_t, "origin", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "z", Z);
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_float(this_t, "radius", &radius);
+
+	    axes[0] = radius;
+	    axes[1] = radius;
+	    axes[2] = radius;
+
+	    config_setting_lookup_float(this_t, "z_min", &z_min);
+	    config_setting_lookup_float(this_t, "z_max", &z_max);
+
+	    /*
+	     * draw sphere as ellipsoid with all axes=radius^2
+	     */
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0,
+			      1.0, 0.0, 0.0, 0.0, 1.0 - DZ);
+	    else
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, 0.0, 0.0,
+			      0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
 	}
     }				/* end all targets */
 }
