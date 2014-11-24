@@ -139,6 +139,10 @@ void reflect(ray_t * r, const double N[3], const double P[3],
 	}
 
     }
-    ++r->n_refl;
 
+    if (r->n_refl == UCHAR_MAX)
+	fprintf(stderr,
+		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
+
+    ++r->n_refl;
 }
