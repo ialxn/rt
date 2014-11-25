@@ -51,7 +51,7 @@ To compile and install \rt you need a C-compiler\footnote{\rt is only tested wit
 \setlength{\labelsep}{0.25cm}
 \setlength{\rightmargin}{0.5cm}}
 
-\item[{\tt [--append|-a]}] Append to output files. A new seed value for the random number generator is supplied by this parameter. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays and append to existing output files. Default mode is to truncate existing files.
+\item[{\tt [--append|-a]}] Append to output files. A new seed value for the random number generator is supplied with this parameter. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays and append to existing output files. Default mode is to truncate existing files.
 
 \item[{\tt [--Log|-L]}] Log the path of some rays in raw format (give number of rays to be used as parameter) for each source in file {\tt NNN.dat} with {\tt NNN} denoting the number (ID) of the source. Output format is as follows:
 \begin{verbatim}
@@ -66,11 +66,11 @@ Start and end of each leg of the path is on a single line. Individual rays are s
 \item[{\tt [--mode|-m]}] Select mode [012] for this run.
 \begin{itemize}
 \item[\tt -m0]{Check syntax of input [default].}
-\item[\tt -m1]{Output {\tt OFF} files useful to visualize the geometry\footnote{geomview}.}
+\item[\tt -m1]{Output {\tt OFF} files useful to visualize the geometry\footnote{geomview availabe at \url{http://geomview.org}}.}
 \item[\tt -m2]{Perform a ray tracing run.}
 \end{itemize}
 
-\item[{\tt [--threads|-t]}] {Set number of worker threads [1]. Typically, you want to set this parameter to the number of CPUs or cores available. ach worker thread uses its own rng seeded with {\tt seed}, {\tt seed}+1}, \ldots{}.
+\item[{\tt [--threads|-t]}] {Set number of worker threads [1]. Typically, you want to set this parameter to the number of CPUs or cores available. Each worker thread uses its own rng seeded with {\tt seed}, {\tt seed}+1}, \ldots{}.
 
 \item[{\tt [--help|-h]}] prints a help message.
 
@@ -79,8 +79,8 @@ Start and end of each leg of the path is on a single line. Individual rays are s
 \end{list}
 
 
-\section{Structure in input file}
-Input is given by a series of 'keyword'='value' pairs and parsed by {\tt libconfig}. Note, that each definition ends with ';', that keywords and strings\footnote{in double quotes.} are both case sensitive, and that float values \emph{must} contain a decimal point. {\tt libconfig} treats everything after the \# character until the end of the line as comment, is white space agnostic, and allows up to ten levels of included files (via the {\tt @include "filename"} directive. For details on the syntax used in the configuration files, please consult the documentation of {\tt libconfig}.
+\section{Structure of the input file}
+Input is given by a series of 'keyword'='value' pairs and parsed by {\tt libconfig}. Note, that each pair ends with ';', that keywords and strings\footnote{in double quotes.} are both case sensitive, and that float values \emph{must} contain a decimal point. {\tt libconfig} treats everything after the \# character until the end of the line as comment, is white space agnostic, and allows up to ten levels of included files (via the {\tt @include "filename"} directive. For details on the syntax used in the configuration files, please consult the documentation of {\tt libconfig}.
 The general structure of the input --- the order of the keyword being unimportant --- is as follows:
 
 \begin{verbatim}
@@ -108,17 +108,17 @@ All sources and all targets are identified by their {\tt type}. The common {\tt 
 
 \subsection{Global Parameters}
 \begin{itemize}
-\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\footnote{This is not true anymore if you use more than one worker thread. First, each worker uses its own rng and seed value. It produces an unique stream of pseudo random numbers. Second, the exact sequence with which blocks of output from the different worker are interleaved in the final output is non-deterministic. Third, the amount of work performed by an individual worker is non-deterministic.}\\
+\item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\footnote{This is not true anymore if you use more than one worker thread. First, each worker uses its own rng and seed value. Each produces a unique sequence of pseudo random numbers. Second, the exact sequence with which blocks of output from the different worker are interleaved in the final output is non-deterministic. Third, the amount of work performed by an individual worker is non-deterministic.}\\
 The value will be overridden by the {\tt -a} command line argument. Using this option, existing results can be improved by tracing additional rays.}
 \end{itemize}
 
 
 
-\subsection{Sources}
+\section{Sources}
 
-All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string) i.e.\ the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
+All sources define the keywords {\tt origin} (doubles), {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string) i.e.\ the origin of the source, the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a linear interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
 
-\subsubsection{Uniform Point Source}
+\subsection{Uniform Point Source}
 
 \noindent {\tt type="uniform point source";}
 
@@ -136,7 +136,7 @@ All sources define the keywords {\tt power} (double), {\tt n\_rays} (unsigned in
 Defines an uniform point source located at {\tt origin}. 
 
 
-\subsubsection{Spot Source}
+\subsection{Spot Source}
 
 \noindent {\tt type="spot source";}
 
@@ -157,7 +157,7 @@ Defines an uniform point source located at {\tt origin}.
 \vspace{0.25cm}
 Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} does not need to be normalized.
 
-\subsubsection{Sphere}
+\subsection{Sphere}
 
 \noindent {\tt type="sphere";}
 
@@ -174,9 +174,9 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 \noindent {\tt spectrum="FILE\_NAME";}
 
 \vspace{0.25cm}
-Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Ray start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
+Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
-\subsubsection{Solid Sphere}
+\subsection{Solid Sphere}
 
 \noindent {\tt type="solid\_sphere";}
 
@@ -198,8 +198,15 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 
 
-\subsection{Targets}
-All targets may use the optional keyword {\tt no\_output} ({\tt [true|false]}) that controls whether absorbed rays are logged for this target. The (implied) default is {\tt false} i.e.\ output is produced. All interacting\footnote{Targets that can absorb, refract, reflect, or scatter rays in contrast to {\it screens} that only register rays passing through them.} targets need the keywords {\tt reflectivity} (filename of reflectivity spectrum) and {\tt reflectivity\_model} (see Sec.~\ref{sec:refl_models}).
+\section{Targets}
+All targets may use the optional keyword {\tt no\_output} ({\tt [true|false]}) that controls whether absorbed rays are logged for this target. The (implied) default is {\tt false} i.e.\ output is produced. All interacting\footnote{Targets that can absorb, refract, reflect, or scatter rays in contrast to {\it screens} that only register rays passing through them.} targets need the keywords {\tt reflectivity} (filename of spectral reflectivity) and {\tt reflectivity\_model} (see Sec.~\ref{sec:refl_models}) defined.
+
+The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed\footnote{or registered rays for screens} ray) follow consisting of 4\footnote{5, for non-planar targets} single precicions floats and one unsigned character that represent x, y, z\footnote{missing for planar targets}, $\lambda$, power, $n_{\mathrm{refl}}$.
+
+
+\subsection{Screens}
+
+The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$.
 
 \subsubsection{One-Sided Plane Screen}
 
@@ -214,7 +221,7 @@ All targets may use the optional keyword {\tt no\_output} ({\tt [true|false]}) t
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
 \vspace{0.25cm}
-Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. The one-side plane screen registers all rays that intercept the plane anti-parallel to its normal vector.
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized and is used as local $z$ axis. {\tt x} defines the $x$ axis of the local coordinate system. The $y$ axis of the local, right-handed system follows from $y=z \times x$. The one-side plane screen registers all rays that intercept the plane anti-parallel to its normal vector.s
 
 
 \subsubsection{Two-Sided Plane Screen}
@@ -230,95 +237,13 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
 \vspace{0.25cm}
-Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized. {\tt x} defines the x axis of the local coordinate system. The y axis of the local, right-handed system follows from $y=z \times x$. In contrast the the one-side plane screen the two-side plane screen registers \emph{all} rays that intercept the plane independent of their direction.
+Defines a transparent and non-absorbing infinite plane. The plane is defined by a point {\tt point} and the direction of its surface normal {\tt normal} that does not need to be normalized and is used as local $z$ axis. {\tt x} defines the $x$ axis of the local coordinate system. The $y$ axis of the local, right-handed system follows from $y=z \times x$. In contrast the the one-side plane screen the two-side plane screen registers \emph{all} rays that intercept the plane independent of their direction.
 
 
-\subsubsection{Triangle}
+\subsection{Planar targets}
 
-\noindent {\tt type="triangle";}
+The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$ with $x$ and $y$ given in the local system i.e.\ $z$ is always zero and not logged.
 
-\noindent {\tt name="NAME";}
-
-\noindent {\tt P1=[X.x, Y.y, Z.z];}
-
-\noindent {\tt P2=[X.x, Y.y, Z.z];}
-
-\noindent {\tt P3=[X.x, Y.y, Z.z];}
-
-\noindent {\tt reflectivity="FILE\_NAME";}
-
-\noindent {\tt reflectivity\_model="MODEL";}\footnote{additional model specific parameters might be needed (see Sec.~\ref{sec:refl_models})\label{fn:mparams}}
-
-\vspace{0.25cm}
-Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local z axis.} defined in this way points away from the reflective surface with reflectivity spectrum given by the file {\tt reflectivity}\footnote{The spectrum will be represented by a cubic spline interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast}. The opposite surface is non-reflecting and absorbs all rays that hit it. The origin of the local, right handed coordinate system is located at {\tt P1} and {\tt P2} - {\tt P1} defines the local x axis. 
-
-
-\subsubsection{Rectangle}
-
-\noindent {\tt type="rectangle";}
-
-\noindent {\tt name="NAME";}
-
-\noindent {\tt P1=[X.x, Y.y, Z.z];}
-
-\noindent {\tt P2=[X.x, Y.y, Z.z];}
-
-\noindent {\tt P3=[X.x, Y.y, Z.z];}
-
-\noindent {\tt reflectivity="FILE\_NAME";}
-
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
-
-\vspace{0.25cm}
-Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=$ {\tt P2} - {\tt P1}, is parallel to the local x axis and $b=$ {\tt P3} - {\tt P1} is parallel to the local y axis. The local origin is at the center of the rectangle. The local z axis follows from the right handedness of the local system. The surface from which the z-axis points away is reflecting while the opposite surface absorbs all rays that hit it. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
-
-\subsubsection{Ellipsoid}
-
-\noindent {\tt type="ellipsoid;"}
-
-\noindent {\tt name="NAME";}
-
-\noindent {\tt center=[X.x, Y.y, Z.z];}
-
-\noindent {\tt x=[X.x, Y.y, Z.z];}
-
-\noindent {\tt z=[X.x, Y.y, Z.z];}
-
-\noindent {\tt axes=[A.a, B.b, C.c];}
-
-\noindent {\tt z\_min=I.i;}
-
-\noindent {\tt z\_max=A.a;}
-
-\noindent {\tt reflectivity="FILE\_NAME";}
-
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
-
-\noindent {\tt reflecting\_surface="SURFACE";}
-
-\vspace{0.25cm}
-Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. One surface is defined as reflecting ({\tt reflecting\_surface} can be {\tt inside} or {\tt outside}) while the other surface has implicit absorptivity of 1.0. The spectral reflectivity of the reflecting surface is given by the file {\tt reflectivity}.
-
-\subsubsection{Disk}
-
-\noindent {\tt type="disk;"}
-
-\noindent {\tt name="NAME";}
-
-\noindent {\tt P=[X.x, Y.y, Z.z];}
-
-\noindent {\tt N=[X.x, Y.y, Z.z];}
-
-\noindent {\tt r=R.r;}
-
-\noindent {\tt x=[X.x, Y.y, Z.z];}
-
-\noindent {\tt reflectivity="FILE\_NAME";}
-
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
-
-\vspace{0.25cm}
-Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the disk has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
 
 \subsubsection{Annulus}
 
@@ -338,34 +263,69 @@ Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal ve
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \vspace{0.25cm}
-Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r}. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector point away from the reflecting surface. The backside of the annulus has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt N} the z axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local y axis is calculated from $y = N \times x$.
+Defines a reflecting annulus of radius {\tt R} with a hole of radius {\tt r} at its center. The annulus is centered at {\tt P}, its orientation defined by its normal vector {\tt N}. The normal vector points away from the reflecting surface characterized by its reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The backside of the annulus has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis and {\tt N} the $z$ axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local $y$ axis is calculated from $y = N \times x$.
 
-\subsubsection{Cylinder}
+\subsubsection{Disk}
 
-\noindent {\tt type="cylinder;"}
+\noindent {\tt type="disk;"}
 
-\noindent {\tt C=[X.x, Y.y, Z.z];}
+\noindent {\tt name="NAME";}
 
-\noindent {\tt a=[X.x, Y.y, Z.z];}
+\noindent {\tt P=[X.x, Y.y, Z.z];}
+
+\noindent {\tt N=[X.x, Y.y, Z.z];}
 
 \noindent {\tt r=R.r;}
-
-\noindent {\tt l=L.l;}
 
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
-
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \vspace{0.25cm}
-Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center of the first face is at {\tt C}. The orientation of the cylinder is define by its axis vector {\tt a}\footnote{not necessarily normalized} pointing towards its second face. One surface is defined as reflecting ({\tt reflecting\_surface} can be {\tt inside} or {\tt outside}) while the other surface has implicit absorptivity of 1.0. The spectral reflectivity of the reflecting surface is defined in the file 'reflectivity'. {\tt x} defines the x axis and {\tt a} the z axis of the local coordinate system of the cylinder. The local y axis is calculated from $y = N \times x$.
+Defines a reflecting disk of radius {\tt r} with center at {\tt P} and normal vector {\tt N}. The normal vector serves as local z axis and point away from the reflecting surface. The backside of the disk has implicit absorptivity of 1.0. The spectral reflectivity of the front surface is defined in the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model} is applied. {\tt x} defines the x axis and {\tt N} the $z$ axis of the local coordinate system of the disk. If {\tt x} is not perpendicular to {\tt N} its perpendicular component (after normalization is used. The local $y$ axis is calculated from $y = N \times x$.
 
+\subsubsection{Rectangle}
+
+\noindent {\tt type="rectangle";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt P1=[X.x, Y.y, Z.z];}
+
+\noindent {\tt P2=[X.x, Y.y, Z.z];}
+
+\noindent {\tt P3=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\vspace{0.25cm}
+Defines a rectangular reflecting surface of dimension $a \times b$. {\tt P1}, {\tt P2}, and {\tt P3}, the three vertices define the two perpendicular sides. $a=$ {\tt P2} - {\tt P1}, is parallel to the local $x$ axis and $b=$ {\tt P3} - {\tt P1} is parallel to the local y axis. The local origin is at the center of the rectangle. The local $z$ axis follows from the right handedness of the local system. The surface from which the $z$ axis points away is reflecting characterized by its reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model} while the other surface absorbs all rays that impinge on it.
+
+\subsubsection{Triangle}
+
+\noindent {\tt type="triangle";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt P1=[X.x, Y.y, Z.z];}
+
+\noindent {\tt P2=[X.x, Y.y, Z.z];}
+
+\noindent {\tt P3=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\vspace{0.25cm}
+Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define the three vertices of the triangle. The surface normal of the triangle points towards the observer if {\tt P1}, {\tt P2}, and {\tt P3} are defined anti-clockwise. The surface normal\footnote{local $z$ axis.} defined in this way points away from the reflective surface characterized by its reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface is non-reflecting and absorbs all rays that impinge on it. The origin of the local, right handed coordinate system is located at {\tt P1} and {\tt P2} - {\tt P1} defines the local $x$ axis. 
 
 \subsubsection{Window}
 
@@ -387,11 +347,65 @@ Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center o
 
 \noindent {\tt absorptivity="FILE\_NAME";}
 
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \vspace{0.25cm}
-Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorption {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local x axis, the local y axis is calculated from $y = a \times x$.
+Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorptivity {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local $x$ axis, the local $y$ axis is calculated from $y = a \times x$.
 
+
+
+\subsection{Non-planar targets}
+
+The binary part of the output for screens consists of five single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, power,  $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{can be {\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
+
+\subsubsection{Cylinder}
+
+\noindent {\tt type="cylinder;"}
+
+\noindent {\tt C=[X.x, Y.y, Z.z];}
+
+\noindent {\tt a=[X.x, Y.y, Z.z];}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt l=L.l;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\noindent {\tt reflecting\_surface="SURFACE";}
+
+\vspace{0.25cm}
+Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center of the first face is at {\tt C}. The orientation of the cylinder is define by its axis vector {\tt a}\footnote{not necessarily normalized} pointing towards its second face. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis and {\tt a} the $z$ axis of the local coordinate system of the cylinder. The local $y$ axis is calculated from $y = N \times x$.
+
+\subsubsection{Ellipsoid}
+
+\noindent {\tt type="ellipsoid;"}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt center=[X.x, Y.y, Z.z];}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt z=[X.x, Y.y, Z.z];}
+
+\noindent {\tt axes=[A.a, B.b, C.c];}
+
+\noindent {\tt z\_min=I.i;}
+
+\noindent {\tt z\_max=A.a;}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\noindent {\tt reflecting\_surface="SURFACE";}
+
+\vspace{0.25cm}
+Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
 
 \subsubsection{Paraboloid}
 
@@ -413,13 +427,12 @@ Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \noindent {\tt reflecting\_surface="SURFACE";}
 
 \vspace{0.25cm}
-Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system with origin at the vertex {\tt vertex} of the paraboloid. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The focal length $f$ is given as {\tt focal\_length}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. Only the surface defined by {\tt reflecting\_surface}\footnote{INSIDE or OUTSIDE} is reflecting while the other surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
-
+Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system with origin at the vertex {\tt vertex} of the paraboloid. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The focal length $f$ is given as {\tt focal\_length}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
 
 \subsubsection{Sphere}
 
@@ -441,26 +454,28 @@ Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system 
 
 \noindent {\tt reflectivity="FILE\_NAME";}
 
-\noindent {\tt reflectivity\_model="MODEL";}\footref{fn:mparams}
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \noindent {\tt reflecting\_surface="SURFACE";}
 
 \vspace{0.25cm}
-Defines an sphere\footnote{${x^2}+{y^2}+{z^2}={r^2}$} with radius {\tt radius} centered at {\tt origin}. {\tt x} and {\tt z} are the directions of the local x and z axes, respectively. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$ allowing to define spherical mirrors. Only the surface marked in {\tt reflecting\_surface}\footnote{{\tt INSIDE} or {\tt OUTSIDE}} is reflecting while the other surface absorbs all radiation. The reflectivity spectrum of the target is given by the file {\tt reflectivity}.
+Defines an sphere\footnote{${x^2}+{y^2}+{z^2}={r^2}$} with radius {\tt radius} centered at {\tt origin}. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$ allowing to define spherical mirrors. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
 
 
 
-\subsection{Reflectivity Models} \label{sec:refl_models}
+\section{Reflectivity Models} \label{sec:refl_models}
 
-\subsubsection{Specular Reflection}
+Additional, model specific parameters might be defined by the different models.
+
+\subsection{Specular Reflection}
 
 \noindent {\tt reflectivity\_model="specular";} defines a perfectly specularly reflecting surface.
 
-\subsubsection{Diffuse Reflection}
+\subsection{Diffuse Reflection}
 
 \noindent {\tt reflectivity\_model="lambertian";} defines a perfectly diffusly\footnote{Lambertian} reflecting surface.
 
-\subsubsection{Microfacetted Surface}
+\subsection{Microfacetted Surface}
 
 \noindent {\tt reflectivity\_model="microfacet\_gaussian";} defines a surface consisting of randomly oriented micro facets. The normal vectors of the individual micro facets are gaussian (with width {\tt microfacet\_gaussian\_sigma} as degree) distributed around the macroscopic surface normal.
 
@@ -472,7 +487,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 
 \subsection{{\tt spectrum}}
 
-{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a one- or two-sided plane screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. The spectrum is reported as power per wavelength interval.
+{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a non-absorbing screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. The spectrum is reported as power per wavelength interval.
 
 {\bf Syntax:} {\tt spectrum} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -514,7 +529,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt get\_flux}}
-{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ power $\lambda$ for planar targets or $x$ $y$ $z$ power $\lambda$ otherwise.
+{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ power $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ power $\lambda$ $n_{\mathrm{refl}}$ otherwise.
 
 {\bf Syntax:} {\tt get\_flux} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
