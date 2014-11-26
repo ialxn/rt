@@ -480,15 +480,15 @@ static void write_target_header(const int fd, const char *name,
 int init_output(const int file_mode, const char *target_type,
 		config_setting_t * this_target, double point[], double M[])
 {
-    const char *name;
     int i;
     int fh = -1;
 
-    config_setting_lookup_string(this_target, "name", &name);
     if (config_setting_lookup_bool(this_target, "no_output", &i) ==
 	CONFIG_FALSE || i == 0) {
+	const char *name;
 	char f_name[256];
 
+	config_setting_lookup_string(this_target, "name", &name);
 	snprintf(f_name, 256, "%s.dat", name);
 	fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
 		  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
