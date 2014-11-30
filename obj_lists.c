@@ -72,6 +72,7 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 {
 
     int i;
+    int n_targets_deleted = 0;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     *n_targets = config_setting_length(targets);
@@ -139,8 +140,12 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    new_entry = (target_list_t *) malloc(sizeof(target_list_t));
 	    new_entry->t = new_target;
 	    list_add_tail(&new_entry->list, &t_list->list);
+	} else {
+	    ++n_targets_deleted;
+	    fprintf(stderr, "target %s deleted\n", name);
 	}
     }
+    *n_targets -= n_targets_deleted;
 }
 
 
