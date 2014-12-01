@@ -330,6 +330,8 @@ static void help(void)
     fprintf(stdout,
 	    "       --append, -a      append to output files. new seed must be given.\n");
     fprintf(stdout,
+	    "       --keep_closed, -k keep output files closed. [keep open].\n");
+    fprintf(stdout,
 	    "       --Log, -L         log path of first n rays per source [0].\n");
     fprintf(stdout, "                         Raw format used.\n");
     fprintf(stdout,
@@ -396,6 +398,7 @@ int main(int argc, char **argv)
     int mode = CHECK_CONFIG;
     int seed;			/* seed for rng */
     int file_mode = O_TRUNC;	/* default file mode for output per target */
+    int keep_closed = 0;	/* keep per target output files open */
 
     struct run_simulation_args *rs_args;	/* arguments for worker threads */
     pthread_t *tids;		/* vector with thread ids */
@@ -408,6 +411,7 @@ int main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 	    {"append", required_argument, 0, 'a'},
+	    {"keep_closed", no_argument, 0, 'k'},
 	    {"Log", required_argument, 0, 'L'},
 	    {"log", required_argument, 0, 'l'},
 	    {"mode", required_argument, 0, 'm'},
@@ -417,7 +421,7 @@ int main(int argc, char **argv)
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:L:l:m:t:Vh", long_options,
+	c = getopt_long(argc, argv, "a:kL:l:m:t:Vh", long_options,
 			&option_index);
 
 	if (c == -1)
@@ -428,6 +432,10 @@ int main(int argc, char **argv)
 	case 'a':
 	    file_mode = O_APPEND;
 	    seed = atoi(optarg);
+	    break;
+
+	case 'k':
+	    keep_closed = 1;
 	    break;
 
 	case 'L':
