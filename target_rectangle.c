@@ -33,8 +33,8 @@ typedef struct sq_state_t {
 } sq_state_t;
 
 
-static void sq_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode)
+static int sq_init_state(void *vstate, config_setting_t * this_target,
+			 const int file_mode)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
@@ -71,18 +71,26 @@ static void sq_init_state(void *vstate, config_setting_t * this_target,
 
     cross_product(state->M, &state->M[3], &state->M[6]);
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file,
+	 state->point, state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->point,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void sq_free_state(void *vstate)

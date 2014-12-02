@@ -36,8 +36,8 @@ typedef struct par_state_t {
 } par_state_t;
 
 
-static void par_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_mode)
+static int par_init_state(void *vstate, config_setting_t * this_target,
+			  const int file_mode)
 {
     par_state_t *state = (par_state_t *) vstate;
 
@@ -56,20 +56,28 @@ static void par_init_state(void *vstate, config_setting_t * this_target,
     if (state->z_max < state->z_min)	/* safety */
 	SWAP(state->z_max, state->z_min);
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file,
+	 state->vertex, state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
     state->reflecting_surface = init_refl_s(this_target);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->vertex,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void par_free_state(void *vstate)

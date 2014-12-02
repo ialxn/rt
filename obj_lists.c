@@ -135,10 +135,11 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    continue;
 	}
 
-	new_entry = (target_list_t *) malloc(sizeof(target_list_t));
-	new_entry->t = new_target;
-	list_add_tail(&new_entry->list, &t_list->list);
-
+	if (new_target) {	/* target_alloc did not fail */
+	    new_entry = (target_list_t *) malloc(sizeof(target_list_t));
+	    new_entry->t = new_target;
+	    list_add_tail(&new_entry->list, &t_list->list);
+	}
     }
 }
 

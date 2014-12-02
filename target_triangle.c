@@ -33,8 +33,8 @@ typedef struct tr_state_t {
 } tr_state_t;
 
 
-static void tr_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode)
+static int tr_init_state(void *vstate, config_setting_t * this_target,
+			 const int file_mode)
 {
     tr_state_t *state = (tr_state_t *) vstate;
 
@@ -72,18 +72,26 @@ static void tr_init_state(void *vstate, config_setting_t * this_target,
     /* y = state->M[3-5] = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file, state->P1,
+	 state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->P1,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void tr_free_state(void *vstate)

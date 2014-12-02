@@ -34,8 +34,8 @@ typedef struct cyl_state_t {
 } cyl_state_t;
 
 
-static void cyl_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_mode)
+static int cyl_init_state(void *vstate, config_setting_t * this_target,
+			  const int file_mode)
 {
     cyl_state_t *state = (cyl_state_t *) vstate;
 
@@ -48,20 +48,28 @@ static void cyl_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "l", &state->l);
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file, state->C,
+	 state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
     state->reflecting_surface = init_refl_s(this_target);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->C,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void cyl_free_state(void *vstate)

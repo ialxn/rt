@@ -108,8 +108,8 @@ static int snell(ray_t * ray, const double *normal, const double n1,
     return 0;
 }
 
-static void window_init_state(void *vstate, config_setting_t * this_target,
-			      const int file_mode)
+static int window_init_state(void *vstate, config_setting_t * this_target,
+			     const int file_mode)
 {
     window_state_t *state = (window_state_t *) vstate;
 
@@ -119,26 +119,40 @@ static void window_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "a");
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file, state->C,
+	 state->M))
+	state->abs_spectrum = NULL;
+    state->dispersion = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize absorptivity spectrum */
     config_setting_lookup_string(this_target, "absorptivity", &S);
-    init_refl_spectrum(S, &state->abs_spectrum);
+    if (init_refl_spectrum(S, &state->abs_spectrum)) {
+	state->abs_spectrum = NULL;
+	state->dispersion = NULL;
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
 
     /* initialize dispersion curve */
     config_setting_lookup_string(this_target, "idx_refraction", &S);
-    init_refl_spectrum(S, &state->dispersion);
-
+    if (init_refl_spectrum(S, &state->dispersion)) {
+	state->dispersion = NULL;
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "d", &state->d);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->C,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void window_free_state(void *vstate)

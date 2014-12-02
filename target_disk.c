@@ -31,8 +31,8 @@ typedef struct disk_state_t {
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } disk_state_t;
 
-static void disk_init_state(void *vstate, config_setting_t * this_target,
-			    const int file_mode)
+static int disk_init_state(void *vstate, config_setting_t * this_target,
+			   const int file_mode)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
@@ -43,21 +43,29 @@ static void disk_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "N");
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file,
+	 state->point, state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->point,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void disk_free_state(void *vstate)

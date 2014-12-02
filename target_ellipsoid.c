@@ -35,8 +35,8 @@ typedef struct ell_state_t {
 } ell_state_t;
 
 
-static void ell_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_mode)
+static int ell_init_state(void *vstate, config_setting_t * this_target,
+			  const int file_mode)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
@@ -56,20 +56,28 @@ static void ell_init_state(void *vstate, config_setting_t * this_target,
     if (state->z_max < state->z_min)	/* safety */
 	SWAP(state->z_max, state->z_min);
 
+    if (init_output
+	(file_mode, TARGET_TYPE, this_target, &state->dump_file,
+	 state->center, state->M))
+	state->refl_spectrum = NULL;
+    state->reflectivity_model = MODEL_NONE;
+    return ERR;
+
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    init_refl_spectrum(S, &state->refl_spectrum);
+    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
     state->reflecting_surface = init_refl_s(this_target);
 
-    state->dump_file =
-	init_output(file_mode, TARGET_TYPE, this_target, state->center,
-		    state->M);
-
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
 static void ell_free_state(void *vstate)

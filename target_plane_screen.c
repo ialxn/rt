@@ -30,8 +30,8 @@ typedef struct ps_state_t {
 } ps_state_t;
 
 
-static void ps_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode)
+static int ps_init_state(void *vstate, config_setting_t * this_target,
+			 const int file_mode)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -39,35 +39,40 @@ static void ps_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "normal");
 
-    if (state->one_sided)
-	state->dump_file =
-	    init_output(file_mode, TARGET_TYPE_B, this_target,
-			state->point, state->M);
-    else
-	state->dump_file =
-	    init_output(file_mode, TARGET_TYPE_A, this_target,
-			state->point, state->M);
+    if (state->one_sided) {
+	if (init_output
+	    (file_mode, TARGET_TYPE_A, this_target, &state->dump_file,
+	     state->point, state->M))
+	    return ERR;
+    } else {
+	if (init_output
+	    (file_mode, TARGET_TYPE_B, this_target, &state->dump_file,
+	     state->point, state->M))
+	    return ERR;
+    }
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
+
+    return NO_ERR;
 }
 
-static void ps1_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_name)
+static int ps1_init_state(void *vstate, config_setting_t * this_target,
+			  const int file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 1;
-    ps_init_state(vstate, this_target, file_name);
+    return ps_init_state(vstate, this_target, file_name);
 }
 
-static void ps2_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_name)
+static int ps2_init_state(void *vstate, config_setting_t * this_target,
+			  const int file_name)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 0;
-    ps_init_state(vstate, this_target, file_name);
+    return ps_init_state(vstate, this_target, file_name);
 }
 
 static void ps_free_state(void *vstate)

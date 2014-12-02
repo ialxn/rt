@@ -36,7 +36,11 @@ target_t *target_alloc(const target_type_t * type,
 
     T->type = type;
 
-    (T->type->init_state) (T->state, this_t, file_mode);	/* initialize data structures */
+    /* initialize data structures */
+    if ((T->type->init_state) (T->state, this_t, file_mode) == ERR) {
+	target_free(T);
+	return NULL;
+    }
 
     return T;
 }
@@ -493,11 +497,13 @@ static void write_target_header(const int fd, const char *name,
 }
 
 int init_output(const int file_mode, const char *target_type,
-		config_setting_t * this_target, double point[], double M[])
+		config_setting_t * this_target, int *dump_file,
+		double point[], double M[])
 {
     const char *name;
     int i;
-    int fh = -1;
+
+    *dump_file = -1;
 
     config_setting_lookup_string(this_target, "name", &name);
     if (config_setting_lookup_bool(this_target, "no_output", &i) ==
@@ -505,16 +511,20 @@ int init_output(const int file_mode, const char *target_type,
 	char f_name[256];
 
 	snprintf(f_name, 256, "%s.dat", name);
-	fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
-		  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
-
-	/* write header to dump file */
-	if (file_mode == O_TRUNC)
-	    write_target_header(fh, name, target_type, point, M);
-
+	if ((*dump_file = open(f_name, O_CREAT | O_WRONLY | file_mode,
+			       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) <
+	    0) {
+	    fprintf(stderr,
+		    "Error %s (errno=%d) opening output for target %s\n",
+		    strerror(errno), errno, name);
+	    return ERR;
+	} else {		/* write header to dump file (only if new file) */
+	    if (file_mode == O_TRUNC)
+		write_target_header(*dump_file, name, target_type, point,
+				    M);
+	}
     }
-
-    return fh;
+    return NO_ERR;
 }
 
 void init_refl_model(const config_setting_t * s, char *model,

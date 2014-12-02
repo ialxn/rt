@@ -48,7 +48,7 @@ typedef struct target_type_t {
     const char *type;		/* type of target */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
-    void (*init_state) (void *state, config_setting_t * this_t, const int file_mode);	/* initialize
+    int (*init_state) (void *state, config_setting_t * this_t, const int file_mode);	/* initialize
 											   internal data
 											   from
 											   configuration */
@@ -99,8 +99,8 @@ extern void free_PTDT(void *p);
  */
 extern int check_targets(config_t * cfg);
 extern int init_output(const int file_mode, const char *target_type,
-		       config_setting_t * this_target, double point[],
-		       double M[]);
+		       config_setting_t * this_target, int *dump_file,
+		       double point[], double M[]);
 extern int init_refl_spectrum(const char *f_name,
 			      gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,
