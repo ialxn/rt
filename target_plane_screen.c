@@ -25,6 +25,7 @@ typedef struct ps_state_t {
     char one_sided;		/* flag [one-sided|two-sided] */
     double *M;			/* transform matrix local -> global coordinates */
     union fh_t output;		/* output file handle or name */
+    int out_flag;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } ps_state_t;
@@ -39,15 +40,16 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "normal");
 
+    state->out_flag = keep_closed;
     if (state->one_sided) {
 	if (init_output
 	    (TARGET_TYPE_A, this_target, file_mode, &state->output,
-	     state->point, state->M) == ERR)
+	     &state->out_flag, state->point, state->M) == ERR)
 	    return ERR;
     } else {
 	if (init_output
 	    (TARGET_TYPE_B, this_target, file_mode, &state->output,
-	     state->point, state->M) == ERR)
+	     &state->out_flag, state->point, state->M) == ERR)
 	    return ERR;
     }
 
@@ -79,7 +81,8 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    state_free(state->output.fh, state->M, NULL, MODEL_NONE, NULL);
+    state_free(state->output, state->out_flag, state->M, NULL, MODEL_NONE,
+	       NULL);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * ray)
@@ -122,9 +125,9 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
     (void) r;			/* avoid warning : unused parameter 'r' */
 
-    if (state->output.fh != -1)
-	store_xy(state->output.fh, ray, hit, state->M, state->point,
-		 data, &state->mutex_writefd);
+    if (state->out_flag & OUTPUT_REQUIRED)
+	store_xy(state->output, state->out_flag, ray, hit, state->M,
+		 state->point, data, &state->mutex_writefd);
 
     data->flag &= ~LAST_WAS_HIT;	/* clear flag */
 
@@ -142,7 +145,7 @@ static void ps_flush_PTDT_outbuf(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    per_thread_flush(state->output.fh, state->PTDT_key,
+    per_thread_flush(state->output, state->out_flag, state->PTDT_key,
 		     &state->mutex_writefd);
 }
 

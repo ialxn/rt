@@ -499,23 +499,22 @@ static void write_target_header(const int fd, const char *name,
 }
 
 int init_output(const char *target_type, config_setting_t * this_target,
-		const int file_mode, union fh_t *output, double point[],
-		double M[])
+		const int file_mode, union fh_t *output, int *out_flag,
+		double point[], double M[])
 {
     const char *name;
     int i;
-
-    output->fh = -1;
 
     config_setting_lookup_string(this_target, "name", &name);
     if (config_setting_lookup_bool(this_target, "no_output", &i) ==
 	CONFIG_FALSE || i == 0) {
 	char f_name[256];
 
+	*out_flag |= OUTPUT_REQUIRED;
 	snprintf(f_name, 256, "%s.dat", name);
-	if ((output->fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
-			       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) <
-	    0) {
+	if ((output->fh =
+	     open(f_name, O_CREAT | O_WRONLY | file_mode,
+		  S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) < 0) {
 	    fprintf(stderr,
 		    "Error %s (errno=%d) opening output for target %s\n",
 		    strerror(errno), errno, name);
@@ -525,7 +524,14 @@ int init_output(const char *target_type, config_setting_t * this_target,
 		write_target_header(output->fh, name, target_type, point,
 				    M);
 	}
+
+	if (*out_flag & KEEP_CLOSED) {
+	    close(output->fh);
+	    output->fname = strdup(f_name);
+	}
+
     }
+
     return NO_ERR;
 }
 
@@ -597,16 +603,26 @@ void per_thread_init(pthread_key_t key, size_t n)
     pthread_setspecific(key, data);
 }
 
-void per_thread_flush(int fh, pthread_key_t key, pthread_mutex_t * mutex)
+void per_thread_flush(union fh_t output, const int out_flag,
+		      pthread_key_t key, pthread_mutex_t * mutex)
 {
     PTDT_t *data = pthread_getspecific(key);
 
-    if (data->i != 0)		/* write rest of buffer to file. */
-	if (fh != -1) {
+    if (data->i && (out_flag & OUTPUT_REQUIRED)) {	/* write rest of buffer to file. */
+	if (out_flag & KEEP_CLOSED) {
+	    int fd;
+
 	    pthread_mutex_lock(mutex);
-	    write(fh, data->buf, sizeof(char) * data->i);
+	    fd = open(output.fname, O_APPEND | O_WRONLY);
+	    write(fd, data->buf, sizeof(char) * data->i);
+	    close(fd);
+	    pthread_mutex_unlock(mutex);
+	} else {
+	    pthread_mutex_lock(mutex);
+	    write(output.fh, data->buf, sizeof(char) * data->i);
 	    pthread_mutex_unlock(mutex);
 	}
+    }
 }
 
 static void free_refl_model(const char model, void *refl_model_params)
@@ -626,10 +642,15 @@ static void free_refl_model(const char model, void *refl_model_params)
 
 }
 
-void state_free(int fh, double *M, gsl_spline * s, char model, void *p)
+void state_free(union fh_t output, const int out_flag, double *M,
+		gsl_spline * s, char model, void *p)
 {
-    if (fh != -1)
-	close(fh);
+    if (out_flag & OUTPUT_REQUIRED) {
+	if (out_flag & KEEP_CLOSED)
+	    free(output.fname);
+	else
+	    close(output.fh);
+    }
 
     free(M);
 
@@ -651,9 +672,9 @@ void state_free(int fh, double *M, gsl_spline * s, char model, void *p)
 	BUF_IDX += sizeof(float); \
 } while(0);
 
-void store_xy(const int fd, ray_t * ray, const double *hit,
-	      const double *m, const double *point, PTDT_t * data,
-	      pthread_mutex_t * mutex_writefd)
+void store_xy(union fh_t output, const int out_flag, ray_t * ray,
+	      const double *hit, const double *m, const double *point,
+	      PTDT_t * data, pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 
@@ -664,9 +685,19 @@ void store_xy(const int fd, ray_t * ray, const double *hit,
 	/*
 	 * buffer full, write to disk
 	 */
-	pthread_mutex_lock(mutex_writefd);
-	write(fd, data->buf, sizeof(char) * data->i);
-	pthread_mutex_unlock(mutex_writefd);
+	if (out_flag & KEEP_CLOSED) {
+	    int fd;
+
+	    pthread_mutex_lock(mutex_writefd);
+	    fd = open(output.fname, O_APPEND | O_WRONLY);
+	    write(fd, data->buf, sizeof(char) * data->i);
+	    close(fd);
+	    pthread_mutex_unlock(mutex_writefd);
+	} else {
+	    pthread_mutex_lock(mutex_writefd);
+	    write(output.fh, data->buf, sizeof(char) * data->i);
+	    pthread_mutex_unlock(mutex_writefd);
+	}
 
 	data->i = 0;
     }
@@ -678,9 +709,9 @@ void store_xy(const int fd, ray_t * ray, const double *hit,
     WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
 
-void store_xyz(const int fd, ray_t * ray, const double *hit,
-	       const double *m, const double *point, PTDT_t * data,
-	       pthread_mutex_t * mutex_writefd)
+void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
+	       const double *hit, const double *m, const double *point,
+	       PTDT_t * data, pthread_mutex_t * mutex_writefd)
 {
     double hit_local[3];
 
@@ -691,9 +722,19 @@ void store_xyz(const int fd, ray_t * ray, const double *hit,
 	/*
 	 * buffer full, write to disk
 	 */
-	pthread_mutex_lock(mutex_writefd);
-	write(fd, data->buf, sizeof(char) * data->i);
-	pthread_mutex_unlock(mutex_writefd);
+	if (out_flag & KEEP_CLOSED) {
+	    int fd;
+
+	    pthread_mutex_lock(mutex_writefd);
+	    fd = open(output.fname, O_APPEND | O_WRONLY);
+	    write(fd, data->buf, sizeof(char) * data->i);
+	    close(fd);
+	    pthread_mutex_unlock(mutex_writefd);
+	} else {
+	    pthread_mutex_lock(mutex_writefd);
+	    write(output.fh, data->buf, sizeof(char) * data->i);
+	    pthread_mutex_unlock(mutex_writefd);
+	}
 
 	data->i = 0;
     }

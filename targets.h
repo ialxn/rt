@@ -33,6 +33,9 @@
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
 #define ICPT_ON_CONVEX_SIDE	(1<<2)	/* ray intercepted by convex side */
 
+#define KEEP_CLOSED	(1<<0)	/* open/close output when flushing buffer */
+#define OUTPUT_REQUIRED	(1<<1)	/* no_output was set */
+
 #define INSIDE 0
 #define OUTSIDE 1
 
@@ -104,7 +107,8 @@ extern void free_PTDT(void *p);
 extern int check_targets(config_t * cfg);
 extern int init_output(const char *target_type,
 		       config_setting_t * this_target, const int file_mode,
-		       union fh_t *output, double point[], double M[]);
+		       union fh_t *output, int *out_flag, double point[],
+		       double M[]);
 extern int init_refl_spectrum(const char *f_name,
 			      gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,
@@ -113,15 +117,17 @@ extern char init_refl_s(config_setting_t * this_target);
 extern double *init_M(config_setting_t * this_target, const char *x,
 		      const char *z);
 extern void per_thread_init(pthread_key_t key, size_t n);
-extern void per_thread_flush(int fh, pthread_key_t key,
-			     pthread_mutex_t * mutex);
-extern void state_free(int fh, double *M, gsl_spline * s, char model,
-		       void *p);
-extern void store_xy(const int fd, ray_t * ray, const double *hit,
-		     const double *m, const double *point, PTDT_t * data,
+extern void per_thread_flush(union fh_t output, const int out_flag,
+			     pthread_key_t key, pthread_mutex_t * mutex);
+extern void state_free(union fh_t output, const int out_flag, double *M,
+		       gsl_spline * s, char model, void *p);
+extern void store_xy(union fh_t output, const int out_flag, ray_t * ray,
+		     const double *hit, const double *m,
+		     const double *point, PTDT_t * data,
 		     pthread_mutex_t * mutex_writefd);
-extern void store_xyz(const int fd, ray_t * ray, const double *hit,
-		      const double *m, const double *point, PTDT_t * data,
+extern void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
+		      const double *hit, const double *m,
+		      const double *point, PTDT_t * data,
 		      pthread_mutex_t * mutex_writefd);
 
 #endif				/* __TARGETS_H__ */

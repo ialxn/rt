@@ -28,6 +28,7 @@ typedef struct sq_state_t {
     char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
+    int out_flag;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } sq_state_t;
@@ -71,9 +72,10 @@ static int sq_init_state(void *vstate, config_setting_t * this_target,
 
     cross_product(state->M, &state->M[3], &state->M[6]);
 
+    state->out_flag = keep_closed;
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
-	 state->point, state->M) == ERR) {
+	 &state->out_flag, state->point, state->M) == ERR) {
 	state->refl_spectrum = NULL;
 	state->reflectivity_model = MODEL_NONE;
 	return ERR;
@@ -98,8 +100,9 @@ static void sq_free_state(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    state_free(state->output.fh, state->M, state->refl_spectrum,
-	       state->reflectivity_model, state->refl_model_params);
+    state_free(state->output, state->out_flag, state->M,
+	       state->refl_spectrum, state->reflectivity_model,
+	       state->refl_model_params);
 }
 
 static double *sq_get_intercept(void *vstate, ray_t * ray)
@@ -163,9 +166,9 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	if (state->output.fh != -1)
-	    store_xy(state->output.fh, ray, hit, state->M, state->point,
-		     data, &state->mutex_writefd);
+	if (state->out_flag & OUTPUT_REQUIRED)
+	    store_xy(state->output, state->out_flag, ray, hit, state->M,
+		     state->point, data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
 
@@ -192,7 +195,7 @@ static void sq_flush_PTDT_outbuf(void *vstate)
 {
     sq_state_t *state = (sq_state_t *) vstate;
 
-    per_thread_flush(state->output.fh, state->PTDT_key,
+    per_thread_flush(state->output, state->out_flag, state->PTDT_key,
 		     &state->mutex_writefd);
 }
 
