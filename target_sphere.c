@@ -51,11 +51,12 @@ static int sph_init_state(void *vstate, config_setting_t * this_target,
 	SWAP(state->z_max, state->z_min);
 
     if (init_output
-	(file_mode, TARGET_TYPE, this_target, &state->dump_file,
-	 state->origin, state->M))
+	(TARGET_TYPE, this_target, file_mode, &state->dump_file,
+	 state->origin, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-    state->reflectivity_model = MODEL_NONE;
-    return ERR;
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);

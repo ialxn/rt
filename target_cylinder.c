@@ -49,11 +49,12 @@ static int cyl_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "l", &state->l);
 
     if (init_output
-	(file_mode, TARGET_TYPE, this_target, &state->dump_file, state->C,
-	 state->M))
+	(TARGET_TYPE, this_target, file_mode, &state->dump_file,
+	 state->C, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-    state->reflectivity_model = MODEL_NONE;
-    return ERR;
+	state->reflectivity_model = MODEL_NONE;
+	return ERR;
+    }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);

@@ -41,13 +41,13 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 
     if (state->one_sided) {
 	if (init_output
-	    (file_mode, TARGET_TYPE_A, this_target, &state->dump_file,
-	     state->point, state->M))
+	    (TARGET_TYPE_A, this_target, file_mode, &state->dump_file,
+	     state->point, state->M) == ERR)
 	    return ERR;
     } else {
 	if (init_output
-	    (file_mode, TARGET_TYPE_B, this_target, &state->dump_file,
-	     state->point, state->M))
+	    (TARGET_TYPE_B, this_target, file_mode, &state->dump_file,
+	     state->point, state->M) == ERR)
 	    return ERR;
     }
 

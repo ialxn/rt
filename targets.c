@@ -498,9 +498,9 @@ static void write_target_header(const int fd, const char *name,
     write(fd, string, strlen(string));
 }
 
-int init_output(const int file_mode, const char *target_type,
-		config_setting_t * this_target, int *dump_file,
-		double point[], double M[])
+int init_output(const char *target_type, config_setting_t * this_target,
+		const int file_mode, int *dump_file, double point[],
+		double M[])
 {
     const char *name;
     int i;
