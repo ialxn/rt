@@ -499,13 +499,13 @@ static void write_target_header(const int fd, const char *name,
 }
 
 int init_output(const char *target_type, config_setting_t * this_target,
-		const int file_mode, int *dump_file, double point[],
+		const int file_mode, union fh_t *output, double point[],
 		double M[])
 {
     const char *name;
     int i;
 
-    *dump_file = -1;
+    output->fh = -1;
 
     config_setting_lookup_string(this_target, "name", &name);
     if (config_setting_lookup_bool(this_target, "no_output", &i) ==
@@ -513,7 +513,7 @@ int init_output(const char *target_type, config_setting_t * this_target,
 	char f_name[256];
 
 	snprintf(f_name, 256, "%s.dat", name);
-	if ((*dump_file = open(f_name, O_CREAT | O_WRONLY | file_mode,
+	if ((output->fh = open(f_name, O_CREAT | O_WRONLY | file_mode,
 			       S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) <
 	    0) {
 	    fprintf(stderr,
@@ -522,7 +522,7 @@ int init_output(const char *target_type, config_setting_t * this_target,
 	    return ERR;
 	} else {		/* write header to dump file (only if new file) */
 	    if (file_mode == O_TRUNC)
-		write_target_header(*dump_file, name, target_type, point,
+		write_target_header(output->fh, name, target_type, point,
 				    M);
 	}
     }

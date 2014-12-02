@@ -38,6 +38,11 @@
 
 #define BUF_SIZE 4096
 
+union fh_t {
+    int fh;			/* file handle (output kept open) */
+    char *fname;		/* file name (output kept close) */
+} fh_t;
+
 typedef struct PTDT_t {		/* per thread data of every target */
     char *buf;			/* output buffer */
     size_t i;			/* current position within output buffer */
@@ -99,7 +104,7 @@ extern void free_PTDT(void *p);
 extern int check_targets(config_t * cfg);
 extern int init_output(const char *target_type,
 		       config_setting_t * this_target, const int file_mode,
-		       int *dump_file, double point[], double M[]);
+		       union fh_t *output, double point[], double M[]);
 extern int init_refl_spectrum(const char *f_name,
 			      gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,

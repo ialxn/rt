@@ -26,7 +26,7 @@ typedef struct disk_state_t {
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     char reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
-    int dump_file;
+    union fh_t output;		/* output file handle or name */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } disk_state_t;
@@ -44,7 +44,7 @@ static int disk_init_state(void *vstate, config_setting_t * this_target,
     state->M = init_M(this_target, "x", "N");
 
     if (init_output
-	(TARGET_TYPE, this_target, file_mode, &state->dump_file,
+	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 state->point, state->M) == ERR) {
 	state->refl_spectrum = NULL;
 	state->reflectivity_model = MODEL_NONE;
@@ -73,7 +73,7 @@ static void disk_free_state(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
-    state_free(state->dump_file, state->M, state->refl_spectrum,
+    state_free(state->output.fh, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 
@@ -145,8 +145,8 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	if (state->dump_file != -1)
-	    store_xy(state->dump_file, ray, hit, state->M, state->point,
+	if (state->output.fh != -1)
+	    store_xy(state->output.fh, ray, hit, state->M, state->point,
 		     data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED);	/* clear flags */
@@ -174,7 +174,7 @@ static void disk_flush_PTDT_outbuf(void *vstate)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
-    per_thread_flush(state->dump_file, state->PTDT_key,
+    per_thread_flush(state->output.fh, state->PTDT_key,
 		     &state->mutex_writefd);
 }
 

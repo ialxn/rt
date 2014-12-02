@@ -28,7 +28,7 @@ typedef struct cyl_state_t {
     char reflectivity_model;	/* reflectivity model used for this target */
     char reflecting_surface;
     void *refl_model_params;
-    int dump_file;
+    union fh_t output;		/* output file handle or name */
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } cyl_state_t;
@@ -49,7 +49,7 @@ static int cyl_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "l", &state->l);
 
     if (init_output
-	(TARGET_TYPE, this_target, file_mode, &state->dump_file,
+	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 state->C, state->M) == ERR) {
 	state->refl_spectrum = NULL;
 	state->reflectivity_model = MODEL_NONE;
@@ -77,7 +77,7 @@ static void cyl_free_state(void *vstate)
 {
     cyl_state_t *state = (cyl_state_t *) vstate;
 
-    state_free(state->dump_file, state->M, state->refl_spectrum,
+    state_free(state->output.fh, state->M, state->refl_spectrum,
 	       state->reflectivity_model, state->refl_model_params);
 }
 
@@ -137,8 +137,8 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * then we check if ray is absorbed because the reflectivity of
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
-	if (state->dump_file != -1)
-	    store_xyz(state->dump_file, ray, hit, state->M, state->C,
+	if (state->output.fh != -1)
+	    store_xyz(state->output.fh, ray, hit, state->M, state->C,
 		      data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED | ICPT_ON_CONVEX_SIDE);	/* clear flags */
@@ -185,7 +185,7 @@ static void cyl_flush_PTDT_outbuf(void *vstate)
 {
     cyl_state_t *state = (cyl_state_t *) vstate;
 
-    per_thread_flush(state->dump_file, state->PTDT_key,
+    per_thread_flush(state->output.fh, state->PTDT_key,
 		     &state->mutex_writefd);
 }
 
