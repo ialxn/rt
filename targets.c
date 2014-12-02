@@ -8,6 +8,7 @@
  *
  */
 
+#include <errno.h>
 #include <string.h>
 #include <stdlib.h>
 #include <gsl/gsl_cblas.h>
@@ -431,15 +432,27 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
+int init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 {
     FILE *refl_data;
     double *lambda;
     double *refl;
     size_t n_lambda;
 
-    refl_data = fopen(f_name, "r");
-    read_data(refl_data, &lambda, &refl, &n_lambda);
+    if ((refl_data = fopen(f_name, "r")) == NULL) {
+	fprintf(stderr, "Error %s (errno=%d) opening refl_spectrum %s\n",
+		strerror(errno), errno, f_name);
+	*refl_spectrum = NULL;
+	return ERR;
+    }
+
+    if (read_data(refl_data, &lambda, &refl, &n_lambda) == ERR) {
+	fprintf(stderr, "Error while reading refl_data (%d items read)\n",
+		n_lambda);
+	fclose(refl_data);
+	*refl_spectrum = NULL;
+	return ERR;
+    }
     fclose(refl_data);
 
     *refl_spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
@@ -448,6 +461,8 @@ void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 
     free(lambda);
     free(refl);
+
+    return NO_ERR;
 }
 
 static void write_target_header(const int fd, const char *name,
