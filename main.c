@@ -520,7 +520,8 @@ int main(int argc, char **argv)
 
 	source_list = init_sources(&cfg, &n_sources);
 	fprintf(stdout, "    %d sources initialized\n", n_sources);
-	target_list = init_targets(&cfg, &n_targets, file_mode);
+	target_list =
+	    init_targets(&cfg, &n_targets, file_mode, keep_closed);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
 	if (file_mode == O_TRUNC) {	/* use seed from cfg, otherwise from command line */

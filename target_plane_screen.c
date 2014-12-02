@@ -31,7 +31,7 @@ typedef struct ps_state_t {
 
 
 static int ps_init_state(void *vstate, config_setting_t * this_target,
-			 const int file_mode)
+			 const int file_mode, const int keep_closed)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -58,21 +58,21 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 }
 
 static int ps1_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_name)
+			  const int file_name, const int keep_closed)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 1;
-    return ps_init_state(vstate, this_target, file_name);
+    return ps_init_state(vstate, this_target, file_name, keep_closed);
 }
 
 static int ps2_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_name)
+			  const int file_name, const int keep_closed)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 0;
-    return ps_init_state(vstate, this_target, file_name);
+    return ps_init_state(vstate, this_target, file_name, keep_closed);
 }
 
 static void ps_free_state(void *vstate)

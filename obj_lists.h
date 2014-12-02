@@ -30,7 +30,8 @@ typedef struct target_list_t {
 
 extern source_list_t *init_sources(config_t * cfg, int *n_sources);
 extern target_list_t *init_targets(config_t * cfg, int *n_targets,
-				   const int file_mode);
+				   const int file_mode,
+				   const int keep_closed);
 
 extern void source_list_free(source_list_t * s);
 extern void target_list_free(target_list_t * t);

@@ -35,7 +35,7 @@ typedef struct cyl_state_t {
 
 
 static int cyl_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode)
+			  const int file_mode, const int keep_closed)
 {
     cyl_state_t *state = (cyl_state_t *) vstate;
 

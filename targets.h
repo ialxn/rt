@@ -48,10 +48,9 @@ typedef struct target_type_t {
     const char *type;		/* type of target */
     size_t size;		/* internally used to allocate the state (individual,
 				   type specific data) of the target. */
-    int (*init_state) (void *state, config_setting_t * this_t, const int file_mode);	/* initialize
-											   internal data
-											   from
-											   configuration */
+    int (*init_state) (void *state, config_setting_t * this_t,
+		       const int file_mode, const int keep_closed);
+    /* initialize internal data from configuration */
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * ray);	/* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * ray, double *hit,
@@ -84,7 +83,7 @@ const target_type_t *target_sphere;
  */
 extern target_t *target_alloc(const target_type_t * type,
 			      config_setting_t * this_t,
-			      const int file_mode);
+			      const int file_mode, const int keep_closed);
 extern void target_free(target_t * T);
 extern double *icpt(const target_t * T, ray_t * ray);
 extern ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,

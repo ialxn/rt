@@ -36,7 +36,7 @@ typedef struct ell_state_t {
 
 
 static int ell_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode)
+			  const int file_mode, const int keep_closed)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 

@@ -17,7 +17,8 @@
 #include "targets.h"
 
 target_t *target_alloc(const target_type_t * type,
-		       config_setting_t * this_t, const int file_mode)
+		       config_setting_t * this_t, const int file_mode,
+		       const int keep_closed)
 {
     target_t *T;
 
@@ -37,7 +38,8 @@ target_t *target_alloc(const target_type_t * type,
     T->type = type;
 
     /* initialize data structures */
-    if ((T->type->init_state) (T->state, this_t, file_mode) == ERR) {
+    if ((T->type->init_state) (T->state, this_t, file_mode,
+			       keep_closed) == ERR) {
 	target_free(T);
 	return NULL;
     }

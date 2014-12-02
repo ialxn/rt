@@ -109,7 +109,7 @@ static int snell(ray_t * ray, const double *normal, const double n1,
 }
 
 static int window_init_state(void *vstate, config_setting_t * this_target,
-			     const int file_mode)
+			     const int file_mode, const int keep_closed)
 {
     window_state_t *state = (window_state_t *) vstate;
 

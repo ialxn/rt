@@ -32,7 +32,7 @@ typedef struct disk_state_t {
 } disk_state_t;
 
 static int disk_init_state(void *vstate, config_setting_t * this_target,
-			   const int file_mode)
+			   const int file_mode, const int keep_closed)
 {
     disk_state_t *state = (disk_state_t *) vstate;
 
