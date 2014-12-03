@@ -53,6 +53,8 @@ To compile and install \rt you need a C-compiler\footnote{\rt is only tested wit
 
 \item[{\tt [--append|-a]}] Append to output files. A new seed value for the random number generator is supplied with this parameter. This overrides the keyword {\tt seed} in the input file. Use this option to improve existing results by tracing additional rays and append to existing output files. Default mode is to truncate existing files.
 
+\item[{\tt [--keep\_closed|-k]}] For each target one output file is produced. Unless this option is given all these files are kept open. For very large system you might thus run out of file descriptors\footnote{Typically 1024 file descriptor can be used per process. Query with {\tt ulimit -n}}. If this option is given, all per target output files are kept closed and only opened when buffers are written to them.
+
 \item[{\tt [--Log|-L]}] Log the path of some rays in raw format (give number of rays to be used as parameter) for each source in file {\tt NNN.dat} with {\tt NNN} denoting the number (ID) of the source. Output format is as follows:
 \begin{verbatim}
 x_start y_start z_start x_end y_end z_end
