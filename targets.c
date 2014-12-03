@@ -603,26 +603,33 @@ void per_thread_init(pthread_key_t key, size_t n)
     pthread_setspecific(key, data);
 }
 
+static void write_buffer(union fh_t output, const int out_flag,
+			 PTDT_t * data, pthread_mutex_t * mutex)
+{
+    if (out_flag & KEEP_CLOSED) {
+	int fd;
+
+	pthread_mutex_lock(mutex);
+	fd = open(output.fname, O_APPEND | O_WRONLY);
+	write(fd, data->buf, sizeof(char) * data->i);
+	close(fd);
+	pthread_mutex_unlock(mutex);
+    } else {
+	pthread_mutex_lock(mutex);
+	write(output.fh, data->buf, sizeof(char) * data->i);
+	pthread_mutex_unlock(mutex);
+    }
+    data->i = 0;
+
+}
+
 void per_thread_flush(union fh_t output, const int out_flag,
 		      pthread_key_t key, pthread_mutex_t * mutex)
 {
     PTDT_t *data = pthread_getspecific(key);
 
-    if (data->i && (out_flag & OUTPUT_REQUIRED)) {	/* write rest of buffer to file. */
-	if (out_flag & KEEP_CLOSED) {
-	    int fd;
-
-	    pthread_mutex_lock(mutex);
-	    fd = open(output.fname, O_APPEND | O_WRONLY);
-	    write(fd, data->buf, sizeof(char) * data->i);
-	    close(fd);
-	    pthread_mutex_unlock(mutex);
-	} else {
-	    pthread_mutex_lock(mutex);
-	    write(output.fh, data->buf, sizeof(char) * data->i);
-	    pthread_mutex_unlock(mutex);
-	}
-    }
+    if (data->i && (out_flag & OUTPUT_REQUIRED))	/* write rest of buffer to file. */
+	write_buffer(output, out_flag, data, mutex);
 }
 
 static void free_refl_model(const char model, void *refl_model_params)
@@ -681,26 +688,8 @@ void store_xy(union fh_t output, const int out_flag, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char))) {
-	/*
-	 * buffer full, write to disk
-	 */
-	if (out_flag & KEEP_CLOSED) {
-	    int fd;
-
-	    pthread_mutex_lock(mutex_writefd);
-	    fd = open(output.fname, O_APPEND | O_WRONLY);
-	    write(fd, data->buf, sizeof(char) * data->i);
-	    close(fd);
-	    pthread_mutex_unlock(mutex_writefd);
-	} else {
-	    pthread_mutex_lock(mutex_writefd);
-	    write(output.fh, data->buf, sizeof(char) * data->i);
-	    pthread_mutex_unlock(mutex_writefd);
-	}
-
-	data->i = 0;
-    }
+    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char)))
+	write_buffer(output, out_flag, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
@@ -718,26 +707,8 @@ void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (5 * sizeof(float) + sizeof(unsigned char))) {
-	/*
-	 * buffer full, write to disk
-	 */
-	if (out_flag & KEEP_CLOSED) {
-	    int fd;
-
-	    pthread_mutex_lock(mutex_writefd);
-	    fd = open(output.fname, O_APPEND | O_WRONLY);
-	    write(fd, data->buf, sizeof(char) * data->i);
-	    close(fd);
-	    pthread_mutex_unlock(mutex_writefd);
-	} else {
-	    pthread_mutex_lock(mutex_writefd);
-	    write(output.fh, data->buf, sizeof(char) * data->i);
-	    pthread_mutex_unlock(mutex_writefd);
-	}
-
-	data->i = 0;
-    }
+    if (data->i == BUF_SIZE * (5 * sizeof(float) + sizeof(unsigned char)))
+	write_buffer(output, out_flag, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
