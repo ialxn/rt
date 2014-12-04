@@ -186,7 +186,7 @@ static double *calc_CDF(const double *I, const double *lambda,
     return CDF;
 }
 
-void init_spectrum(const char *f_name, gsl_spline ** spectrum)
+void init_source_spectrum(const char *f_name, gsl_spline ** spectrum)
 {
     FILE *sp_data;
     double *lambda;
