@@ -121,11 +121,11 @@ static void window_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize absorptivity spectrum */
     config_setting_lookup_string(this_target, "absorptivity", &S);
-    init_refl_spectrum(S, &state->abs_spectrum);
+    init_spectrum(S, &state->abs_spectrum);
 
     /* initialize dispersion curve */
     config_setting_lookup_string(this_target, "idx_refraction", &S);
-    init_refl_spectrum(S, &state->dispersion);
+    init_spectrum(S, &state->dispersion);
 
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);

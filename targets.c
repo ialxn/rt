@@ -431,7 +431,7 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-void init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
+void init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 {
     FILE *refl_data;
     double *lambda;
