@@ -62,14 +62,14 @@ static int sph_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+    if (init_spectrum(S, &state->refl_spectrum)) {
 	state->reflectivity_model = MODEL_NONE;
 	return ERR;
     }
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
-    state->reflecting_surface = init_refl_s(this_target);
+    state->reflecting_surface = init_reflecting_surface(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);

@@ -51,7 +51,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
 
     /* initialize source spectrum */
     config_setting_lookup_string(this_s, "spectrum", &S);
-    init_spectrum(S, &state->spectrum);
+    init_source_spectrum(S, &state->spectrum);
 
     pthread_key_create(&state->rays_remain_key, free);
 }

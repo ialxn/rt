@@ -102,25 +102,25 @@ static double *test_cyl_intercept(const double x, const double *orig,
  * check if intercept is between two faces
  * based on file LinePosition3d.m from same source.
  *
- * projection of vector 'icpt' - 'c' onto 'a' must fullfill 0 < x < 'd'
+ * projection of vector 'intercept' - 'c' onto 'a' must fullfill 0 < x < 'd'
  * if we exclude faces
  */
-    double *icpt = NULL;
+    double *intercept = NULL;
 
     if (x > GSL_DBL_EPSILON) {	/* cylider in front */
 	double t1, t3[3];
 
-	icpt = (double *) malloc(3 * sizeof(double));
-	a_plus_cb(icpt, orig, x, dir);
-	diff(t3, icpt, c);
+	intercept = (double *) malloc(3 * sizeof(double));
+	a_plus_cb(intercept, orig, x, dir);
+	diff(t3, intercept, c);
 	t1 = cblas_ddot(3, t3, 1, a, 1);
 
 	if (t1 < 0.0 || t1 > l) {	/* out of bounds */
-	    free(icpt);
-	    icpt = NULL;
+	    free(intercept);
+	    intercept = NULL;
 	}
     }
-    return icpt;
+    return intercept;
 }
 
 
@@ -128,7 +128,7 @@ static double *test_cyl_intercept(const double x, const double *orig,
 /*
  * surface normals
  */
-void cyl_surf_normal(double *const icpt, const double *C,
+void cyl_surf_normal(double *const intercept, const double *C,
 		     const double *a, const double r, double *const normal)
 {
 /*
@@ -137,7 +137,7 @@ void cyl_surf_normal(double *const icpt, const double *C,
     double IC[3];
     double t;
 
-    diff(IC, icpt, C);
+    diff(IC, intercept, C);
     t = cblas_ddot(3, IC, 1, a, 1);
     a_plus_cb(normal, IC, -t, a);
 

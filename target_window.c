@@ -132,7 +132,7 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize absorptivity spectrum */
     config_setting_lookup_string(this_target, "absorptivity", &S);
-    if (init_refl_spectrum(S, &state->abs_spectrum)) {
+    if (init_spectrum(S, &state->abs_spectrum)) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
 	state->reflectivity_model = MODEL_NONE;
@@ -141,11 +141,12 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize dispersion curve */
     config_setting_lookup_string(this_target, "idx_refraction", &S);
-    if (init_refl_spectrum(S, &state->dispersion)) {
+    if (init_spectrum(S, &state->dispersion)) {
 	state->dispersion = NULL;
 	state->reflectivity_model = MODEL_NONE;
 	return ERR;
     }
+
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
@@ -173,17 +174,16 @@ static double *intercept_face(const ray_t * in_ray,
 			      const double *center)
 {
     double *intercept;
-    double icpt[3];
+    double I[3];
     int dummy_i;
 
     if ((intercept =
 	 intercept_plane(in_ray, &state->M[6], center,
 			 &dummy_i)) != NULL) {
 
-	g2l(state->M, center, intercept, icpt);
+	g2l(state->M, center, intercept, I);
 
-	if ((icpt[0] * icpt[0] + icpt[1] * icpt[1]) >
-	    (state->r * state->r)) {
+	if ((I[0] * I[0] + I[1] * I[1]) > (state->r * state->r)) {
 	    /* hit not within boundaries */
 	    free(intercept);
 	    intercept = NULL;	/* mark as not valid */

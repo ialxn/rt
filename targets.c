@@ -438,7 +438,7 @@ int check_targets(config_t * cfg)
     return status;
 }
 
-int init_refl_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
+int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 {
     FILE *refl_data;
     double *lambda;
@@ -502,15 +502,16 @@ int init_output(const char *target_type, config_setting_t * this_target,
 		const int file_mode, union fh_t *output, int *out_flag,
 		double point[], double M[])
 {
-    const char *name;
     int i;
 
-    config_setting_lookup_string(this_target, "name", &name);
     if (config_setting_lookup_bool(this_target, "no_output", &i) ==
 	CONFIG_FALSE || i == 0) {
+	const char *name;
 	char f_name[256];
 
 	*out_flag |= OUTPUT_REQUIRED;
+
+	config_setting_lookup_string(this_target, "name", &name);
 	snprintf(f_name, 256, "%s.dat", name);
 	if ((output->fh =
 	     open(f_name, O_CREAT | O_WRONLY | file_mode,
@@ -559,7 +560,7 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
-char init_refl_s(config_setting_t * this_target)
+char init_reflecting_surface(config_setting_t * this_target)
 {
     const char *S;
 

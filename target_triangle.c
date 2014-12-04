@@ -84,7 +84,7 @@ static int tr_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_refl_spectrum(S, &state->refl_spectrum)) {
+    if (init_spectrum(S, &state->refl_spectrum)) {
 	state->reflectivity_model = MODEL_NONE;
 	return ERR;
     }
