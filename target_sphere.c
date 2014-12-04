@@ -56,7 +56,7 @@ static void sph_init_state(void *vstate, config_setting_t * this_target,
     init_refl_model(this_target, &state->reflectivity_model,
 		    &state->refl_model_params);
 
-    state->reflecting_surface = init_refl_s(this_target);
+    state->reflecting_surface = init_reflecting_surface(this_target);
 
     state->dump_file =
 	init_output(file_mode, TARGET_TYPE, this_target, state->origin,

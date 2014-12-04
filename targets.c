@@ -526,7 +526,7 @@ void init_refl_model(const config_setting_t * s, char *model,
 
 }
 
-char init_refl_s(config_setting_t * this_target)
+char init_reflecting_surface(config_setting_t * this_target)
 {
     const char *S;
 
