@@ -259,16 +259,16 @@ static void *run_simulation(void *args)
 		     *        the "while (ray) {}" loop and a new
 		     *        ray will be emitted by the current source.
 		     */
-		    if (n_log) {	/* log ray path enabled */
-			if (log_OFF)
-			    write_ray(log_file, ray->orig, closest_icpt, 0,
-				      0, 0);
-			else
-			    fprintf(log_file, "%e\t%e\t%e\t%e\t%e\t%e\n",
-				    ray->orig[0], ray->orig[1],
-				    ray->orig[2], closest_icpt[0],
-				    closest_icpt[1], closest_icpt[2]);
-		    }
+#define LOG_RAY(FLAG,FILE,O,P,R,G,B) do { \
+if(FLAG) \
+    write_ray(FILE,O,P,R,G,B); \
+else \
+    fprintf(FILE,"%e\t%e\t%e\t%e\t%e\t%e\n",O[0],O[1],O[2],P[0],P[1],P[2]); \
+} while(0);
+		    if (n_log)	/* log ray path enabled */
+			LOG_RAY(log_OFF, log_file, ray->orig, closest_icpt,
+				0, 0, 0);
+
 		    ray = out_ray(closest_target, ray, closest_icpt, r);
 		    free(closest_icpt);
 		    closest_icpt = NULL;
@@ -287,12 +287,8 @@ static void *run_simulation(void *args)
 			/*
 			 * this is a ray to infinity. mark red.
 			 */
-			if (log_OFF)
-			    write_ray(log_file, ray->orig, end, 1, 0, 0);
-			else
-			    fprintf(log_file, "%e\t%e\t%e\t%e\t%e\t%e\n",
-				    ray->orig[0], ray->orig[1],
-				    ray->orig[2], end[0], end[1], end[2]);
+			LOG_RAY(log_OFF, log_file, ray->orig, end, 1, 0,
+				0);
 		    }
 
 		    retval->n_lost++;
