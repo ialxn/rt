@@ -61,7 +61,7 @@ x_start y_start z_start x_end y_end z_end
 \end{verbatim}
 Start and end of each leg of the path is on a single line. Individual rays are separated by an empty line.  
 
-\item[{\tt [--log|-l]}] Log the path of some rays in OFF format (give number of rays to be used as parameter) for each source in file {\tt NNN.OFF} with {\tt NNN} denoting the number (ID) of the source.
+\item[{\tt [--log|-l]}] Log the path of some rays in OFF format (give number of rays to be used as parameter) for each source in file {\tt NNN.OFF} with {\tt NNN} denoting the number (ID) of the source. Rays that continue to infinity after their last intercept are made 1.0 length unit long and painted red.
 
 \item[{\tt [--mode|-m]}] Select mode [012] for this run.
 \begin{itemize}
