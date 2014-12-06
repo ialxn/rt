@@ -288,7 +288,7 @@ static void *run_simulation(void *args)
 			 * this is a ray to infinity. mark red.
 			 */
 			if (log_OFF)
-			    write_ray(log_file, ray->orig, end, 0, 0, 0);
+			    write_ray(log_file, ray->orig, end, 1, 0, 0);
 			else
 			    fprintf(log_file, "%e\t%e\t%e\t%e\t%e\t%e\n",
 				    ray->orig[0], ray->orig[1],
