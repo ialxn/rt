@@ -532,7 +532,7 @@ char init_reflecting_surface(config_setting_t * this_target)
 
     config_setting_lookup_string(this_target, "reflecting_surface", &S);
     if (!strcmp(S, "inside"))
-	return INSIDE;
+	return 0;
     else
 	return OUTSIDE;
 }

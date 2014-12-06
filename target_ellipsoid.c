@@ -108,7 +108,7 @@ static double *ell_get_intercept(void *vstate, ray_t * ray)
      * mark as absorbed if non-reflecting surface is hit.
      * mark if convex (outside) surface is hit.
      */
-    if ((state->reflecting_surface == INSIDE && hits_outside)
+    if ((state->reflecting_surface != OUTSIDE && hits_outside)
 	|| (state->reflecting_surface == OUTSIDE && !hits_outside))
 	data->flag |= ABSORBED;
 
@@ -154,7 +154,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	ell_surf_normal(hit_local, state->axes, l_N);	/* normal vector local system */
 	l2g_rot(state->M, l_N, N);	/* normal vector global system */
 
-	if (state->reflecting_surface == INSIDE)
+	if (state->reflecting_surface != OUTSIDE)
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
 	reflect(ray, N, hit, state->reflectivity_model, r,
