@@ -30,7 +30,7 @@ typedef struct ell_state_t {
     char reflecting_surface;
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
-    int out_flag;
+    int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
     pthread_mutex_t mutex_writefd;	/* protect write(2) */
 } ell_state_t;
@@ -57,10 +57,10 @@ static int ell_init_state(void *vstate, config_setting_t * this_target,
     if (state->z_max < state->z_min)	/* safety */
 	SWAP(state->z_max, state->z_min);
 
-    state->out_flag = keep_closed;
+    state->flags = keep_closed;
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
-	 &state->out_flag, state->center, state->M) == ERR) {
+	 &state->flags, state->center, state->M) == ERR) {
 	state->refl_spectrum = NULL;
 	state->reflectivity_model = MODEL_NONE;
 	return ERR;
@@ -87,7 +87,7 @@ static void ell_free_state(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    state_free(state->output, state->out_flag, state->M,
+    state_free(state->output, state->flags, state->M,
 	       state->refl_spectrum, state->reflectivity_model,
 	       state->refl_model_params);
 }
@@ -149,8 +149,8 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * the mirror surface is less than 1.0 (absorptivity > 0.0).
 	 */
 
-	if (state->out_flag & OUTPUT_REQUIRED)
-	    store_xyz(state->output, state->out_flag, ray, hit, state->M,
+	if (state->flags & OUTPUT_REQUIRED)
+	    store_xyz(state->output, state->flags, ray, hit, state->M,
 		      state->center, data, &state->mutex_writefd);
 
 	data->flag &= ~(LAST_WAS_HIT | ABSORBED | ICPT_ON_CONVEX_SIDE);	/* clear flags */
@@ -191,7 +191,7 @@ static void ell_flush_PTDT_outbuf(void *vstate)
 {
     ell_state_t *state = (ell_state_t *) vstate;
 
-    per_thread_flush(state->output, state->out_flag, state->PTDT_key,
+    per_thread_flush(state->output, state->flags, state->PTDT_key,
 		     &state->mutex_writefd);
 }
 

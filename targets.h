@@ -28,13 +28,20 @@
 #include "math_utils.h"
 #include "reflect.h"
 
-
+/*
+ * per thread flags
+ */
 #define LAST_WAS_HIT (1<<0)	/* target was hit by last ray */
 #define ABSORBED     (1<<1)	/* ray was absorbed on target */
 #define ICPT_ON_CONVEX_SIDE	(1<<2)	/* ray intercepted by convex side */
 
-#define KEEP_CLOSED	(1<<0)	/* open/close output when flushing buffer */
-#define OUTPUT_REQUIRED	(1<<1)	/* no_output was set */
+/*
+ * per target flags
+ * bit 0-15: select reflectivity model (defined in reflect.h)
+ * bit 16-31: general purpose flags
+ */
+#define KEEP_CLOSED	(1<<16)	/* open/close output when flushing buffer */
+#define OUTPUT_REQUIRED	(1<<17)	/* no_output was set */
 
 #define INSIDE 0
 #define OUTSIDE 1

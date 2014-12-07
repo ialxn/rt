@@ -499,7 +499,7 @@ static void write_target_header(const int fd, const char *name,
 }
 
 int init_output(const char *target_type, config_setting_t * this_target,
-		const int file_mode, union fh_t *output, int *out_flag,
+		const int file_mode, union fh_t *output, int *flags,
 		double point[], double M[])
 {
     int i;
@@ -509,7 +509,7 @@ int init_output(const char *target_type, config_setting_t * this_target,
 	const char *name;
 	char f_name[256];
 
-	*out_flag |= OUTPUT_REQUIRED;
+	*flags |= OUTPUT_REQUIRED;
 
 	config_setting_lookup_string(this_target, "name", &name);
 	snprintf(f_name, 256, "%s.dat", name);
@@ -526,7 +526,7 @@ int init_output(const char *target_type, config_setting_t * this_target,
 				    M);
 	}
 
-	if (*out_flag & KEEP_CLOSED) {
+	if (*flags & KEEP_CLOSED) {
 	    close(output->fh);
 	    output->fname = strdup(f_name);
 	}
@@ -604,10 +604,10 @@ void per_thread_init(pthread_key_t key, size_t n)
     pthread_setspecific(key, data);
 }
 
-static void write_buffer(union fh_t output, const int out_flag,
+static void write_buffer(union fh_t output, const int flags,
 			 PTDT_t * data, pthread_mutex_t * mutex)
 {
-    if (out_flag & KEEP_CLOSED) {
+    if (flags & KEEP_CLOSED) {
 	int fd;
 
 	pthread_mutex_lock(mutex);
@@ -624,13 +624,13 @@ static void write_buffer(union fh_t output, const int out_flag,
 
 }
 
-void per_thread_flush(union fh_t output, const int out_flag,
+void per_thread_flush(union fh_t output, const int flags,
 		      pthread_key_t key, pthread_mutex_t * mutex)
 {
     PTDT_t *data = pthread_getspecific(key);
 
-    if (data->i && (out_flag & OUTPUT_REQUIRED))	/* write rest of buffer to file. */
-	write_buffer(output, out_flag, data, mutex);
+    if (data->i && (flags & OUTPUT_REQUIRED))	/* write rest of buffer to file. */
+	write_buffer(output, flags, data, mutex);
 }
 
 static void free_refl_model(const char model, void *refl_model_params)
@@ -650,11 +650,11 @@ static void free_refl_model(const char model, void *refl_model_params)
 
 }
 
-void state_free(union fh_t output, const int out_flag, double *M,
+void state_free(union fh_t output, const int flags, double *M,
 		gsl_spline * s, char model, void *p)
 {
-    if (out_flag & OUTPUT_REQUIRED) {
-	if (out_flag & KEEP_CLOSED)
+    if (flags & OUTPUT_REQUIRED) {
+	if (flags & KEEP_CLOSED)
 	    free(output.fname);
 	else
 	    close(output.fh);
@@ -680,7 +680,7 @@ void state_free(union fh_t output, const int out_flag, double *M,
 	BUF_IDX += sizeof(float); \
 } while(0);
 
-void store_xy(union fh_t output, const int out_flag, ray_t * ray,
+void store_xy(union fh_t output, const int flags, ray_t * ray,
 	      const double *hit, const double *m, const double *point,
 	      PTDT_t * data, pthread_mutex_t * mutex_writefd)
 {
@@ -690,7 +690,7 @@ void store_xy(union fh_t output, const int out_flag, ray_t * ray,
     g2l(m, point, hit, hit_local);
 
     if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char)))
-	write_buffer(output, out_flag, data, mutex_writefd);
+	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
@@ -699,7 +699,7 @@ void store_xy(union fh_t output, const int out_flag, ray_t * ray,
     WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
 
-void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
+void store_xyz(union fh_t output, const int flags, ray_t * ray,
 	       const double *hit, const double *m, const double *point,
 	       PTDT_t * data, pthread_mutex_t * mutex_writefd)
 {
@@ -709,7 +709,7 @@ void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
     g2l(m, point, hit, hit_local);
 
     if (data->i == BUF_SIZE * (5 * sizeof(float) + sizeof(unsigned char)))
-	write_buffer(output, out_flag, data, mutex_writefd);
+	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
