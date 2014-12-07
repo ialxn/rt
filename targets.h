@@ -102,7 +102,7 @@ extern int init_output(const int file_mode, const char *target_type,
 		       config_setting_t * this_target, double point[],
 		       double M[]);
 extern void init_spectrum(const char *f_name, gsl_spline ** refl_spectrum);
-extern void init_refl_model(const struct config_setting_t *s, char *model,
+extern void init_refl_model(const struct config_setting_t *s, int *model,
 			    void **refl_model_params);
 extern char init_reflecting_surface(config_setting_t * this_target);
 extern double *init_M(config_setting_t * this_target, const char *x,
@@ -110,7 +110,7 @@ extern double *init_M(config_setting_t * this_target, const char *x,
 extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(int fh, pthread_key_t key,
 			     pthread_mutex_t * mutex);
-extern void state_free(int fh, double *M, gsl_spline * s, char model,
+extern void state_free(int fh, double *M, gsl_spline * s, int model,
 		       void *p);
 extern void store_xy(const int fd, ray_t * ray, const double *hit,
 		     const double *m, const double *point, PTDT_t * data,

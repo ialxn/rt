@@ -27,8 +27,8 @@ typedef struct par_state_t {
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    char reflectivity_model;	/* reflectivity model used for this target */
     char reflecting_surface;
+    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     int dump_file;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */

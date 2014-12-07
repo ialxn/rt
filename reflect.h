@@ -25,7 +25,7 @@
 
 
 extern void reflect(ray_t * r, const double N[3], const double P[3],
-		    const char model, const gsl_rng * rng,
+		    const int model, const gsl_rng * rng,
 		    void *model_params);
 
 #endif				/* __REFLECT_H__ */
