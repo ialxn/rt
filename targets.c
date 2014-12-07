@@ -507,15 +507,16 @@ void init_refl_model(const config_setting_t * s, int *model,
 {
     const char *S;
 
+    *model &= ~0xFFFF;	/* clear bit 0-15) */
     config_setting_lookup_string(s, "reflectivity_model", &S);
     if (!strcmp(S, "specular"))
-	*model = SPECULAR;
+	*model |= SPECULAR;
     else if (!strcmp(S, "lambertian"))
-	*model = LAMBERTIAN;
+	*model |= LAMBERTIAN;
     else if (!strcmp(S, "microfacet_gaussian")) {
 	double *number;
 
-	*model = MICROFACET_GAUSSIAN;
+	*model |= MICROFACET_GAUSSIAN;
 	number = (double *) malloc(sizeof(double));
 
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
@@ -588,7 +589,7 @@ static void free_refl_model(const int model, void *refl_model_params)
  */
 {
 
-    switch (model) {
+    switch (model & 0xFFFF) {
 
     case MICROFACET_GAUSSIAN:
 	{
@@ -609,7 +610,7 @@ void state_free(int fh, double *M, gsl_spline * s, int model, void *p)
     if (s)
 	gsl_spline_free(s);
 
-    if (model)
+    if (model & 0xFFFF)
 	free_refl_model(model, p);
 }
 

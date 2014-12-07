@@ -17,11 +17,12 @@
 
 /*
  * reflectivity models
+ * use bits 1-15 of an int
  */
 #define MODEL_NONE		0
-#define SPECULAR		1
-#define LAMBERTIAN		2
-#define MICROFACET_GAUSSIAN	3
+#define SPECULAR		(1<<0)
+#define LAMBERTIAN		(1<<1)
+#define MICROFACET_GAUSSIAN	(1<<2)
 
 
 extern void reflect(ray_t * r, const double N[3], const double P[3],

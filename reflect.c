@@ -120,7 +120,7 @@ void reflect(ray_t * r, const double N[3], const double P[3],
 	     const int model, const gsl_rng * rng, void *model_params)
 {
 
-    switch (model) {
+    switch (model &0xFFFF) {
 
     case SPECULAR:
 	reflect_specular(r, N, P);
