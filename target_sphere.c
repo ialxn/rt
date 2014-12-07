@@ -24,7 +24,7 @@ typedef struct sph_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     char reflectivity_model;	/* reflectivity model used for this target */
-    char reflecting_surface;
+    int reflecting_surface;
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;
@@ -117,8 +117,8 @@ static double *sph_get_intercept(void *vstate, ray_t * ray)
      * mark as absorbed if non-reflecting surface is hit.
      * mark if convex (outside) surface is hit.
      */
-    if ((state->reflecting_surface == INSIDE && hits_outside)
-	|| (state->reflecting_surface == OUTSIDE && !hits_outside))
+    if ((!(state->reflecting_surface & OUTSIDE) && hits_outside)
+	|| (state->reflecting_surface & OUTSIDE && !hits_outside))
 	data->flag |= ABSORBED;
 
     if (hits_outside)
@@ -163,7 +163,7 @@ static ray_t *sph_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	sph_surf_normal(hit_local, l_N);	/* normal vector local system */
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
-	if (state->reflecting_surface == INSIDE)
+	if (!(state->reflecting_surface & OUTSIDE))
 	    a_times_const(N, N, -1.0);
 
 	reflect(ray, N, hit, state->reflectivity_model, r,

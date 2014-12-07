@@ -42,9 +42,7 @@
  */
 #define KEEP_CLOSED	(1<<16)	/* open/close output when flushing buffer */
 #define OUTPUT_REQUIRED	(1<<17)	/* no_output was set */
-
-#define INSIDE 0
-#define OUTSIDE 1
+#define OUTSIDE		(1<<18)	/* mark reflecting surface of non-planar targets */
 
 #define BUF_SIZE 4096
 
@@ -119,7 +117,7 @@ extern int init_output(const char *target_type,
 extern int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, char *model,
 			    void **refl_model_params);
-extern char init_reflecting_surface(config_setting_t * this_target);
+extern int init_reflecting_surface(config_setting_t * this_target);
 extern double *init_M(config_setting_t * this_target, const char *x,
 		      const char *z);
 extern void per_thread_init(pthread_key_t key, size_t n);
