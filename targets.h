@@ -115,7 +115,7 @@ extern int init_output(const char *target_type,
 		       union fh_t *output, int *out_flag, double point[],
 		       double M[]);
 extern int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum);
-extern void init_refl_model(const struct config_setting_t *s, char *model,
+extern void init_refl_model(const struct config_setting_t *s, int *model,
 			    void **refl_model_params);
 extern int init_reflecting_surface(config_setting_t * this_target);
 extern double *init_M(config_setting_t * this_target, const char *x,
@@ -124,10 +124,11 @@ extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(union fh_t output, const int out_flag,
 			     pthread_key_t key, pthread_mutex_t * mutex);
 extern void state_free(union fh_t output, const int out_flag, double *M,
-		       gsl_spline * s, char model, void *p);
+		       gsl_spline * s, int model, void *p);
 extern void store_xy(union fh_t output, const int out_flag, ray_t * ray,
 		     const double *hit, const double *m,
 		     const double *point, PTDT_t * data,
+
 		     pthread_mutex_t * mutex_writefd);
 extern void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
 		      const double *hit, const double *m,

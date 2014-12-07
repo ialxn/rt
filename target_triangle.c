@@ -25,7 +25,7 @@ typedef struct tr_state_t {
     double E3[3];		/* edge 'P3' - 'P1' */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    char reflectivity_model;	/* reflectivity model used for this target */
+    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;

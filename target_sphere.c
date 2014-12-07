@@ -23,8 +23,8 @@ typedef struct sph_state_t {
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    char reflectivity_model;	/* reflectivity model used for this target */
     int reflecting_surface;
+    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;

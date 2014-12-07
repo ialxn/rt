@@ -26,7 +26,7 @@ typedef struct window_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
     gsl_spline *dispersion;	/* for interpolated dispersion curve */
-    char reflectivity_model;	/* reflectivity model used for this target */
+    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;

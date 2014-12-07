@@ -536,20 +536,21 @@ int init_output(const char *target_type, config_setting_t * this_target,
     return NO_ERR;
 }
 
-void init_refl_model(const config_setting_t * s, char *model,
+void init_refl_model(const config_setting_t * s, int *model,
 		     void **refl_model_params)
 {
     const char *S;
 
+    *model &= ~0xFFFF;	/* clear bit 0-15) */
     config_setting_lookup_string(s, "reflectivity_model", &S);
     if (!strcmp(S, "specular"))
-	*model = (char) SPECULAR;
+	*model |= SPECULAR;
     else if (!strcmp(S, "lambertian"))
-	*model = (char) LAMBERTIAN;
+	*model |= LAMBERTIAN;
     else if (!strcmp(S, "microfacet_gaussian")) {
 	double *number;
 
-	*model = (char) MICROFACET_GAUSSIAN;
+	*model |= MICROFACET_GAUSSIAN;
 	number = (double *) malloc(sizeof(double));
 
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
@@ -633,13 +634,13 @@ void per_thread_flush(union fh_t output, const int flags,
 	write_buffer(output, flags, data, mutex);
 }
 
-static void free_refl_model(const char model, void *refl_model_params)
+static void free_refl_model(const int model, void *refl_model_params)
 /*
  * free's model specific parameters
  */
 {
 
-    switch (model) {
+    switch (model & 0xFFFF) {
 
     case MICROFACET_GAUSSIAN:
 	{
@@ -651,7 +652,7 @@ static void free_refl_model(const char model, void *refl_model_params)
 }
 
 void state_free(union fh_t output, const int flags, double *M,
-		gsl_spline * s, char model, void *p)
+		gsl_spline * s, int model, void *p)
 {
     if (flags & OUTPUT_REQUIRED) {
 	if (flags & KEEP_CLOSED)
@@ -665,7 +666,7 @@ void state_free(union fh_t output, const int flags, double *M,
     if (s)
 	gsl_spline_free(s);
 
-    if (model)
+    if (model & 0xFFFF)
 	free_refl_model(model, p);
 }
 
