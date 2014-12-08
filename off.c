@@ -937,7 +937,7 @@ static void off_cylinder(const char *name, const double *origin,
     for (i = 0; i < 11; i++)
 	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
 		i + 13, i + 12, i, R, G, B);
-    fprintf(outf, "5 11 0 12 23 %f %f %f 1.0\n", R, G, B);
+    fprintf(outf, "5 11 0 12 23 11 %f %f %f 1.0\n", R, G, B);
 
     /*
      * print cylinder INSIDE wall
@@ -945,7 +945,7 @@ static void off_cylinder(const char *name, const double *origin,
     for (i = 12; i < 23; i++)
 	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
 		i + 13, i + 12, i, r, g, b);
-    fprintf(outf, "5 35 24 36 47 %f %f %f 1.0\n", r, g, b);
+    fprintf(outf, "5 35 24 36 47 35 %f %f %f 1.0\n", r, g, b);
 
     fclose(outf);
 }
