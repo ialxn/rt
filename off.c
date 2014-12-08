@@ -202,7 +202,7 @@ static void off_sphere(const char *name, double *O, const double radius,
     fclose(outf);
 }
 
-static void off_cone(const char *name, double *origin, double *dir,
+static void off_spot(const char *name, double *origin, double *dir,
 		     const double l, const double r, const double g,
 		     const double b)
 {
@@ -1313,7 +1313,7 @@ static void output_sources(const config_t * cfg)
 	     * at origin 'O'
 	     * in direction 'dir'
 	     */
-	    off_cone(name, O, dir, 1.2, 1.0, 1.0, 0.0);
+	    off_spot(name, O, dir, 1.2, 1.0, 1.0, 0.0);
 	}
 	/* end 'spot source' */
     }				/* end all sources */
