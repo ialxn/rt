@@ -163,7 +163,7 @@ static ray_t *sph_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	l2g(state->M, O, l_N, N);	/* normal vector global system */
 
 	if (!(state->flags & OUTSIDE))
-	    a_times_const(N, N, -1.0);
+	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
 	reflect(ray, N, hit, state->flags, r, state->refl_model_params);
 
