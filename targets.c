@@ -431,7 +431,39 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_string("targets", this_t, "reflecting_surface",
 				 i);
-	    }			/* end 'sphere' */
+	    } /* end 'sphere' */
+	    else if (!strcmp(type, "cone")) {
+		/*
+		 * sphere:
+		 *  - array 'origin' (base point of cone) [x,y,z] / double
+		 *  - 'R' (radius of base disk of cone) double
+		 *  - 'r' (radius of top disk of cone, can be zero) double
+		 *  - 'h' (height of cone) double
+		 *  - array 'axis' (symmetry axis, local z-axis) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'reflectivity' (file name of reflection spectrum)
+		 *  - string 'reflectivity_model'
+		 *  - string 'reflecting_surface'
+		 */
+		status += check_array("targets", this_t, "origin", i);
+		status += check_float("targets", this_t, "R", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_float("targets", this_t, "h", i);
+		status += check_array("targets", this_t, "axis", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+		status +=
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
+	    }			/* end 'cone' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
