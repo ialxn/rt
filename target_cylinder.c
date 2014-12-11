@@ -25,8 +25,6 @@ typedef struct cyl_state_t {
     double l;			/* length of cylinder */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    int reflecting_surface;
-    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;
@@ -49,25 +47,27 @@ static int cyl_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "l", &state->l);
 
-    state->flags = keep_closed;
+    state->flags = 0;
+    if (keep_closed)
+	state->flags |= KEEP_CLOSED;
+
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 &state->flags, state->C, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     if (init_spectrum(S, &state->refl_spectrum)) {
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->reflectivity_model,
-		    &state->refl_model_params);
+    init_refl_model(this_target, &state->flags, &state->refl_model_params);
 
-    state->reflecting_surface = init_reflecting_surface(this_target);
+    state->flags |= init_reflecting_surface(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -80,8 +80,7 @@ static void cyl_free_state(void *vstate)
     cyl_state_t *state = (cyl_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->reflectivity_model,
-	       state->refl_model_params);
+	       state->refl_spectrum, state->refl_model_params);
 }
 
 static double *cyl_get_intercept(void *vstate, ray_t * ray)
@@ -112,8 +111,8 @@ static double *cyl_get_intercept(void *vstate, ray_t * ray)
      * mark as absorbed if non-reflecting surface is hit.
      * mark if convex (outside) surface is hit.
      */
-    if ((!(state->reflecting_surface & OUTSIDE) && hits_outside)
-	|| (state->reflecting_surface & OUTSIDE && !hits_outside))
+    if ((!(state->flags & OUTSIDE) && hits_outside)
+	|| (state->flags & OUTSIDE && !hits_outside))
 	data->flag |= ABSORBED;
 
     if (hits_outside)
@@ -163,11 +162,10 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	cyl_surf_normal(hit_local, state->C, &state->M[6], state->r, l_N);
 	l2g_rot(state->M, l_N, N);
 
-	if (!(state->reflecting_surface & OUTSIDE))
+	if (!(state->flags & OUTSIDE))
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
-	reflect(ray, N, hit, state->reflectivity_model, r,
-		state->refl_model_params);
+	reflect(ray, N, hit, state->flags, r, state->refl_model_params);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */

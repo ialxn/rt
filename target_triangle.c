@@ -73,23 +73,25 @@ static int tr_init_state(void *vstate, config_setting_t * this_target,
     /* y = state->M[3-5] = z cross x */
     cross_product(&state->M[6], state->M, &state->M[3]);
 
-    state->flags = keep_closed;
+    state->flags = 0;
+    if (keep_closed)
+	state->flags |= KEEP_CLOSED;
+
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 &state->flags, state->P1, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     if (init_spectrum(S, &state->refl_spectrum)) {
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->reflectivity_model,
-		    &state->refl_model_params);
+    init_refl_model(this_target, &state->flags, &state->refl_model_params);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -102,8 +104,7 @@ static void tr_free_state(void *vstate)
     tr_state_t *state = (tr_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->reflectivity_model,
-	       state->refl_model_params);
+	       state->refl_spectrum, state->refl_model_params);
 }
 
 static double *tr_get_intercept(void *vstate, ray_t * ray)
@@ -193,7 +194,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, &state->M[6], hit, state->reflectivity_model, r,
+	reflect(ray, &state->M[6], hit, state->flags, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */

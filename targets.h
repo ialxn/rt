@@ -124,11 +124,10 @@ extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(union fh_t output, const int out_flag,
 			     pthread_key_t key, pthread_mutex_t * mutex);
 extern void state_free(union fh_t output, const int out_flag, double *M,
-		       gsl_spline * s, int model, void *p);
+		       gsl_spline * s, void *p);
 extern void store_xy(union fh_t output, const int out_flag, ray_t * ray,
 		     const double *hit, const double *m,
 		     const double *point, PTDT_t * data,
-
 		     pthread_mutex_t * mutex_writefd);
 extern void store_xyz(union fh_t output, const int out_flag, ray_t * ray,
 		      const double *hit, const double *m,

@@ -25,7 +25,6 @@ typedef struct ann_state_t {
     double r2;			/* inner radius^2 of annulus */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;
@@ -46,23 +45,25 @@ static int ann_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "N");
 
-    state->flags = keep_closed;
+    state->flags = 0;
+    if (keep_closed)
+	state->flags |= KEEP_CLOSED;
+
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 &state->flags, state->point, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
     if (init_spectrum(S, &state->refl_spectrum)) {
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->reflectivity_model,
-		    &state->refl_model_params);
+    init_refl_model(this_target, &state->flags, &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "R", &t);
     state->R2 = t * t;
@@ -80,8 +81,7 @@ static void ann_free_state(void *vstate)
     ann_state_t *state = (ann_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->reflectivity_model,
-	       state->refl_model_params);
+	       state->refl_spectrum, state->refl_model_params);
 }
 
 static double *ann_get_intercept(void *vstate, ray_t * ray)
@@ -163,7 +163,7 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, &state->M[6], hit, state->reflectivity_model, r,
+	reflect(ray, &state->M[6], hit, state->flags, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */

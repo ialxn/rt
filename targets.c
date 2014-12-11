@@ -541,7 +541,7 @@ void init_refl_model(const config_setting_t * s, int *model,
 {
     const char *S;
 
-    *model &= ~0xFFFF;	/* clear bit 0-15) */
+    *model &= ~0xFFFF;		/* clear bit 0-15) */
     config_setting_lookup_string(s, "reflectivity_model", &S);
     if (!strcmp(S, "specular"))
 	*model |= SPECULAR;
@@ -652,7 +652,7 @@ static void free_refl_model(const int model, void *refl_model_params)
 }
 
 void state_free(union fh_t output, const int flags, double *M,
-		gsl_spline * s, int model, void *p)
+		gsl_spline * s, void *p)
 {
     if (flags & OUTPUT_REQUIRED) {
 	if (flags & KEEP_CLOSED)
@@ -666,8 +666,8 @@ void state_free(union fh_t output, const int flags, double *M,
     if (s)
 	gsl_spline_free(s);
 
-    if (model & 0xFFFF)
-	free_refl_model(model, p);
+    if (flags & 0xFFFF)
+	free_refl_model(flags, p);
 }
 
 #define WRITE_UCHAR(VAR,BUF_PTR,BUF_IDX) do { \

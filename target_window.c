@@ -26,7 +26,6 @@ typedef struct window_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
     gsl_spline *dispersion;	/* for interpolated dispersion curve */
-    int reflectivity_model;	/* reflectivity model used for this target */
     void *refl_model_params;
     union fh_t output;		/* output file handle or name */
     int flags;
@@ -120,13 +119,16 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "a");
 
-    state->flags = keep_closed;
+    state->flags = 0;
+    if (keep_closed)
+	state->flags |= KEEP_CLOSED;
+
     if (init_output
 	(TARGET_TYPE, this_target, file_mode, &state->output,
 	 &state->flags, state->C, state->M) == ERR) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
@@ -135,7 +137,7 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     if (init_spectrum(S, &state->abs_spectrum)) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
@@ -143,12 +145,11 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "idx_refraction", &S);
     if (init_spectrum(S, &state->dispersion)) {
 	state->dispersion = NULL;
-	state->reflectivity_model = MODEL_NONE;
+	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
-    init_refl_model(this_target, &state->reflectivity_model,
-		    &state->refl_model_params);
+    init_refl_model(this_target, &state->flags, &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "d", &state->d);
@@ -164,7 +165,7 @@ static void window_free_state(void *vstate)
     window_state_t *state = (window_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M, NULL,
-	       state->reflectivity_model, state->refl_model_params);
+	       state->refl_model_params);
     gsl_spline_free(state->abs_spectrum);
     gsl_spline_free(state->dispersion);
 }
@@ -298,7 +299,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * anti.parallel if face2 is hit ('state->dir points from face1 to
 	 * face2). does not seem to matter for 'reflect()'.
 	 */
-	reflect(ray, normal, hit, state->reflectivity_model, r,
+	reflect(ray, normal, hit, state->flags, r,
 		state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;
@@ -423,8 +424,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 		 * face2). does not seem to matter for 'reflect()'.
 		 */
 		reflect(ray, normal_other_face, intercept,
-			state->reflectivity_model, r,
-			state->refl_model_params);
+			state->flags, r, state->refl_model_params);
 
 		origin_is_face1++;
 		free(intercept);

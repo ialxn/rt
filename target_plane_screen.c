@@ -40,7 +40,10 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "normal");
 
-    state->flags = keep_closed;
+    state->flags = 0;
+    if (keep_closed)
+	state->flags |= KEEP_CLOSED;
+
     if (state->one_sided) {
 	if (init_output
 	    (TARGET_TYPE_A, this_target, file_mode, &state->output,
@@ -81,8 +84,7 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    state_free(state->output, state->flags, state->M, NULL, MODEL_NONE,
-	       NULL);
+    state_free(state->output, state->flags, state->M, NULL, NULL);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * ray)
