@@ -140,6 +140,10 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    new_target =
 		target_alloc(target_sphere, this_target, file_mode,
 			     keep_closed);
+	else if (!strcmp(type, "cone"))
+	    new_target =
+		target_alloc(target_cone, this_target, file_mode,
+			     keep_closed);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",

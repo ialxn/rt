@@ -128,6 +128,21 @@ static double *test_cyl_intercept(const double x, const double *orig,
 /*
  * surface normals
  */
+void cone_surf_normal(double *const intercept, const double tan2_a,
+		      const double H, double *const normal)
+{
+/*
+ * Eq. of cone:         x^2 + y^z - (z-H)^2 tan^2(a)
+ *      apex at H in +z direction, opening angle at apex = 2a
+ * derivative is        (2x, 2y, -2*(z-H)*tan^2(a))
+ */
+    normal[0] = intercept[0];
+    normal[1] = intercept[1];
+    normal[2] = -(intercept[2] - H) * tan2_a;
+
+    normalize(normal);
+}
+
 void cyl_surf_normal(double *const intercept, const double *C,
 		     const double *a, const double r, double *const normal)
 {
@@ -196,6 +211,54 @@ void sph_surf_normal(const double *point, double *normal)
 /*
  * intercepts
  */
+double *intercept_cone(const ray_t * ray, const double *M,
+		       const double origin[3], const double tan2_a,
+		       const double H, const double z_max,
+		       int *hits_outside)
+{
+    double r_O[3], r_N[3];
+    double l_intercept[3];
+    double *intercept;
+    double N_cone[3];
+    double A, B, C, tmp;
+    double x_small, x_large;
+    int n_solns;
+
+    /*
+     * transform 'ray' from global to local system
+     */
+    g2l(M, origin, ray->orig, r_O);
+    g2l_rot(M, ray->dir, r_N);
+    /*
+     * calculate coefficients of quadratic equation
+     */
+    tmp = r_O[2] - H;
+    A = r_N[0] * r_N[0] + r_N[1] * r_N[1] - tan2_a * r_N[2] * r_N[2];
+    B = 2 * (r_N[0] * r_O[0] + r_N[1] * r_O[1] - tan2_a * r_N[2] * tmp);
+    C = r_O[0] * r_O[0] + r_O[1] * r_O[1] - tan2_a * tmp * tmp;
+
+    n_solns = gsl_poly_solve_quadratic(A, B, C, &x_small, &x_large);
+    if (!find_first_soln_restricted
+	(n_solns, x_small, x_large, 0.0, z_max, r_O, r_N, l_intercept))
+	return NULL;
+
+    /*
+     * valid intercept found, test if outside surface is hit
+     * where 'ray->dir' dot "surface_normal" is negative
+     */
+    cone_surf_normal(l_intercept, tan2_a, H, N_cone);
+    if (cblas_ddot(3, r_N, 1, N_cone, 1) < 0.0)
+	*hits_outside = 1;
+    else
+	*hits_outside = 0;
+
+    /* convert to global coordinates, origin is 'state->origin' */
+    intercept = (double *) malloc(3 * sizeof(double));
+    l2g(M, origin, l_intercept, intercept);
+
+    return intercept;
+}
+
 double *intercept_cylinder(const ray_t * ray, const double *c,
 			   const double *a, const double r, const double l,
 			   int *hits_outside)

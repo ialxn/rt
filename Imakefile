@@ -28,6 +28,7 @@ SRCS= main.c \
       target_cylinder.c \
       target_paraboloid.c \
       target_sphere.c \
+      target_cone.c \
       virtual_target_solid_sphere.c \
       off.c \
       math_utils.c \
@@ -53,6 +54,7 @@ OBJ= main.o \
      target_window.o \
      target_paraboloid.o \
      target_sphere.o \
+     target_cone.o \
      virtual_target_solid_sphere.o \
      off.o \
      math_utils.o \

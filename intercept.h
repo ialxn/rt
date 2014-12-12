@@ -33,6 +33,8 @@
 /*
  * surface normals of non-planar targets (pointing away from convex side
  */
+extern void cone_surf_normal(double *const intercept, const double tan2_a,
+			     const double H, double *const normal);
 extern void cyl_surf_normal(double *const icpt, const double *C,
 			    const double *a, const double r,
 			    double *const normal);
@@ -47,6 +49,10 @@ extern void sph_surf_normal(const double *point, double *normal);
 /*
  * functions to return intercepts of ray with target
  */
+double *intercept_cone(const ray_t * ray, const double *M,
+		       const double origin[3], const double tan2_a,
+		       const double H, const double z_max,
+		       int *hits_outside);
 extern double *intercept_cylinder(const ray_t * ray, const double *c,
 				  const double *a, const double r,
 				  const double l, int *hits_outside);
