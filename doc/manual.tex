@@ -360,6 +360,31 @@ Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The
 
 The binary part of the output for screens consists of five single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, power,  $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{can be {\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
 
+\subsubsection{Cone}
+
+\noindent {\tt type="cone";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt axis=[X.x, Y.y, Z.z];}
+
+\noindent {\tt R=R.r;}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt h=H.h;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\noindent {\tt reflecting\_surface="SURFACE";}
+
+\vspace{0.25cm}
+Defines a reflecting cone of radius {\tt R} at its base and radius {\tt r} at height {\tt h}. The center of the base is at {\tt origin}. The orientation of the cone is define by its symmetry axis {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$.
+
 \subsubsection{Cylinder}
 
 \noindent {\tt type="cylinder";}
@@ -375,6 +400,7 @@ The binary part of the output for screens consists of five single precision floa
 \noindent {\tt x=[X.x, Y.y, Z.z];}
 
 \noindent {\tt reflectivity="FILE\_NAME";}
+
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \noindent {\tt reflecting\_surface="SURFACE";}

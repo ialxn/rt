@@ -91,6 +91,7 @@ const target_type_t *target_cylinder;
 const target_type_t *target_window;
 const target_type_t *target_paraboloid;
 const target_type_t *target_sphere;
+const target_type_t *target_cone;
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */

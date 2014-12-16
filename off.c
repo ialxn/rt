@@ -202,7 +202,7 @@ static void off_sphere(const char *name, double *O, const double radius,
     fclose(outf);
 }
 
-static void off_cone(const char *name, double *origin, double *dir,
+static void off_spot(const char *name, double *origin, double *dir,
 		     const double l, const double r, const double g,
 		     const double b)
 {
@@ -848,6 +848,109 @@ static void off_window(const char *name, const double *origin,
     fclose(outf);
 }
 
+static void off_cone(const char *name, const double *origin,
+		     const double *dir, const double h, double Radius,
+		     double radius, const double r, const double g,
+		     const double b, const double R, const double G,
+		     const double B)
+{
+/*
+ * writes 'OFF' file to 'name.off' for cone with radius of base disk 'Radius',
+ * radius of top disk 'radius', heigth (between the two disks) 'h'. Direction
+ * of symmetry axis 'dir'. 'r', 'g', 'b' define inside wall while 'R', 'G', 'B'
+ * define its outside wall
+ */
+    double P[3], g_P[3];
+    double alpha, beta;
+    int i;
+
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "48 24 0\n");
+
+    /*
+     * determine alpha, beta for transformation from local to global system.
+     * discard 'P'
+     */
+    g2l_off_rot(dir, P, &alpha, &beta);
+
+    /*
+     * OUTSIDE: vertices at base
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = Radius * sa;
+	P[1] = Radius * ca;
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * OUTSIDE: vertices at top (+ 'h')
+     */
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = radius * sa;
+	P[1] = radius * ca;
+	P[2] = h;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * INSIDE: vertices at base
+     */
+    Radius *= (1 - DZ);
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = Radius * sa;
+	P[1] = Radius * ca;
+	P[2] = 0.0;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+
+    /*
+     * INSIDE: vertices at second face (+ 'L')
+     */
+    radius *= (1 - DZ);
+    for (i = 0; i < 12; i++) {
+	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = radius * sa;
+	P[1] = radius * ca;
+	P[2] = h;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+    /*
+     * print cone OUTSIDE wall
+     */
+    for (i = 0; i < 11; i++)
+	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
+		i + 13, i + 12, i, R, G, B);
+    fprintf(outf, "5 11 0 12 23 11 %f %f %f 1.0\n", R, G, B);
+
+    /*
+     * print cone INSIDE wall
+     */
+    for (i = 12; i < 23; i++)
+	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
+		i + 13, i + 12, i, r, g, b);
+    fprintf(outf, "5 35 24 36 47 35 %f %f %f 1.0\n", r, g, b);
+
+    fclose(outf);
+}
+
 static void off_cylinder(const char *name, const double *origin,
 			 const double *dir, const double L,
 			 const double radius, const double r,
@@ -1257,6 +1360,30 @@ static void output_targets(const config_t * cfg)
 	    else
 		off_ellipsoid(name, O, Z, axes, z_min, z_max, 0.0, 0.0,
 			      0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
+	} else if (!strcmp(type, "cone")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double R, r;
+	    double h;
+	    const char *S;
+
+	    read_vector(this_t, "origin", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "axis", Z);
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_float(this_t, "R", &R);
+	    config_setting_lookup_float(this_t, "r", &r);
+	    config_setting_lookup_float(this_t, "h", &h);
+
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_cone(name, O, Z, h, R, r, 1.0, 1.0, 1.0, 0.0, 0.0,
+			 0.0);
+	    else
+		off_cone(name, O, Z, h, R, r, 0.0, 0.0, 0.0, 1.0, 1.0,
+			 1.0);
 	}
     }				/* end all targets */
 }
@@ -1313,7 +1440,7 @@ static void output_sources(const config_t * cfg)
 	     * at origin 'O'
 	     * in direction 'dir'
 	     */
-	    off_cone(name, O, dir, 1.2, 1.0, 1.0, 0.0);
+	    off_spot(name, O, dir, 1.2, 1.0, 1.0, 0.0);
 	}
 	/* end 'spot source' */
     }				/* end all sources */
