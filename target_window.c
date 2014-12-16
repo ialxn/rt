@@ -228,7 +228,7 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
 	f_icpt = intercept_face(ray, state, center_face2);
     }
 
-    if (f_icpt)			/* intecept found with face, nneed to check wall */
+    if (f_icpt)			/* intecept found with face, no need to check wall */
 	return f_icpt;
 
     w_icpt =
@@ -313,9 +313,9 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
     memcpy(ray->orig, hit, 3 * sizeof(double));
 
     /*
-     * calculate new direction after ray has entered window. we need not
-     * check for total internal reflection as we pass from less dense
-     * medium into the denser one.
+     * calculate new direction after ray has entered window. we do not
+     * need to check for total internal reflection as we pass from less
+     * dense medium into the denser one.
      * Note: 'ray' cannot originate from inside the window.
      */
     snell(ray, normal, 1.0, n_in);
@@ -332,7 +332,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * of the ray as follows:
 	 *     - 'origin_is_face1' % 2 == 1 YES
 	 *     - 'origin_is_face2' % 2 == 0 NO
-	 * after every reflection at any ofthe two faces 'origin_is_face1++'
+	 * after every reflection at any of the two faces. 'origin_is_face1++'
 	 * switches origin from one face to the other. here we just initialize
 	 * the flag properly.
 	 *

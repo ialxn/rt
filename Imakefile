@@ -1,7 +1,7 @@
 GIT_VERSION := $(shell git describe --tag --abbrev=6 --dirty --always)
 GIT_VERSION_INFO := $(shell git log -1 --date=short --format=\"\(%ad\)\ released\ by\ \<%an\>\ %ae\")
 
-#CCOPTIONS= -g -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
+#CCOPTIONS= -g -Wno-unused-result -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
 CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
 #CCOPTIONS= -pg -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
 
@@ -9,55 +9,55 @@ CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstric
 
 
 SRCS= main.c \
-      io_utils.c \
-      intercept.c \
-      obj_lists.c \
       sources.c \
-      targets.c \
-      source_uniform_point_source.c \
-      source_spot.c \
-      source_sphere.c \
       source_solid_sphere.c \
+      source_sphere.c \
+      source_spot.c \
+      source_uniform_point_source.c \
+      targets.c \
+      target_annulus.c \
+      target_cone.c \
+      target_cylinder.c \
+      target_disk.c \
+      target_ellipsoid.c \
+      target_paraboloid.c \
       target_plane_screen.c \
       target_rectangle.c \
-      target_triangle.c \
-      target_ellipsoid.c \
-      target_annulus.c \
-      target_window.c \
-      target_disk.c \
-      target_cylinder.c \
-      target_paraboloid.c \
       target_sphere.c \
-      target_cone.c \
+      target_triangle.c \
+      target_window.c \
       virtual_target_solid_sphere.c \
-      off.c \
+      intercept.c \
+      io_utils.c \
       math_utils.c \
+      obj_lists.c \
+      off.c \
       reflect.c
 
 OBJ= main.o \
-     io_utils.o \
-     intercept.o \
-     obj_lists.o \
      sources.o \
-     targets.o \
-     source_uniform_point_source.o \
-     source_spot.o \
-     source_sphere.o \
      source_solid_sphere.o \
+     source_sphere.o \
+     source_spot.o \
+     source_uniform_point_source.o \
+     targets.o \
+     target_annulus.o \
+     target_cone.o \
+     target_cylinder.o \
+     target_disk.o \
+     target_ellipsoid.o \
+     target_paraboloid.o \
      target_plane_screen.o \
      target_rectangle.o \
-     target_triangle.o \
-     target_ellipsoid.o \
-     target_annulus.o \
-     target_disk.o \
-     target_cylinder.o \
-     target_window.o \
-     target_paraboloid.o \
      target_sphere.o \
-     target_cone.o \
+     target_triangle.o \
+     target_window.o \
      virtual_target_solid_sphere.o \
-     off.o \
+     intercept.o \
+     io_utils.o \
      math_utils.o \
+     obj_lists.o \
+     off.o \
      reflect.o
 
 SRC_SPECTRUM= spectrum.c \
