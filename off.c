@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
 #include <string.h>
@@ -1509,12 +1510,12 @@ void l2g_off(const double *P, const double *L, double *G,
  */
 {
     int i;
-    const double ca = cos(-alpha);
-    const double cb = cos(-beta);
-    const double sa = sin(-alpha);
-    const double sb = sin(-beta);
+    double sa, ca, sb, cb;
+    double x;
 
-    const double x = L[0] * ca - L[2] * sa;
+    sincos(-alpha, &sa, &ca);
+    sincos(-beta, &sb, &cb);
+    x = L[0] * ca - L[2] * sa;
 
     G[0] = x * cb - L[1] * sb;
     G[1] = -x * sb - L[1] * cb;
@@ -1564,12 +1565,12 @@ void l2g_off_rot(const double *L, double *G, const double alpha,
  * return alpha, beta, and resulting vector in G
  */
 {
-    const double ca = cos(-alpha);
-    const double cb = cos(-beta);
-    const double sa = sin(-alpha);
-    const double sb = sin(-beta);
+    double sa, ca, sb, cb;
+    double x;
 
-    const double x = L[0] * ca - L[2] * sa;
+    sincos(-alpha, &sa, &ca);
+    sincos(-beta, &sb, &cb);
+    x = L[0] * ca - L[2] * sa;
 
     G[0] = x * cb - L[1] * sb;
     G[1] = -x * sb - L[1] * cb;
