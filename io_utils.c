@@ -363,7 +363,25 @@ int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
     fgets(line, LINE_LEN, f_in);
 
     /* check file type and set indices of columns to be read */
-    if (strstr(line, "(one-sided plane screen)")) {
+    if (strstr(line, "(annulus)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(cone)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
+    } else if (strstr(line, "(cylinder)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
+    } else if (strstr(line, "(disk)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(ellipsoid)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
+    } else if (strstr(line, "(paraboloid)")) {
+	*idx_lambda = 4;
+	*idx_power = 3;
+    } else if (strstr(line, "(one-sided plane screen)")) {
 	*idx_lambda = 3;
 	*idx_power = 2;
     } else if (strstr(line, "(two-sided plane screen)")) {
@@ -372,33 +390,15 @@ int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power)
     } else if (strstr(line, "(rectangle)")) {
 	*idx_lambda = 3;
 	*idx_power = 2;
-    } else if (strstr(line, "(triangle)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strstr(line, "(ellipsoid)")) {
-	*idx_lambda = 4;
-	*idx_power = 3;
-    } else if (strstr(line, "(annulus)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strstr(line, "(disk)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strstr(line, "(cylinder)")) {
-	*idx_lambda = 4;
-	*idx_power = 3;
-    } else if (strstr(line, "(window)")) {
-	*idx_lambda = 3;
-	*idx_power = 2;
-    } else if (strstr(line, "(paraboloid)")) {
-	*idx_lambda = 4;
-	*idx_power = 3;
     } else if (strstr(line, "(sphere)")) {
 	*idx_lambda = 4;
 	*idx_power = 3;
-    } else if (strstr(line, "(cone)")) {
-	*idx_lambda = 4;
-	*idx_power = 3;
+    } else if (strstr(line, "(triangle)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
+    } else if (strstr(line, "(window)")) {
+	*idx_lambda = 3;
+	*idx_power = 2;
     } else {
 	fprintf(stderr, "Unknown target type (%s) found\n", line);
 	status = ERR;

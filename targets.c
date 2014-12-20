@@ -16,6 +16,10 @@
 #include "io_utils.h"
 #include "targets.h"
 
+
+/*
+ * public functions to access / manipulate targets
+ */
 target_t *target_alloc(const target_type_t * type,
 		       config_setting_t * this_t, const int file_mode,
 		       const int keep_closed)
@@ -87,6 +91,10 @@ void free_PTDT(void *p)
 }
 
 
+
+/*
+ * utility functions
+ */
 int check_targets(config_t * cfg)
 {
     int status = NO_ERR;
@@ -114,37 +122,18 @@ int check_targets(config_t * cfg)
 	     * keywords common to all targets
 	     * 'name':  identifier / string
 	     * 'type':  type of target / string
-	     *          - "one-sided plane_screen": non-absorbing counter plane
-	     *                                      only rays intersecting anti-parallel
-	     *                                      to plane's normal vector are counted
-	     *          - "two-sided plane_screen": non-absorbing counter plane
-	     *                                      rays intersecting from both sides
-	     *                                      are counted
-	     *          - "rectangle":              reflection on front surface
-	     *                                      defined by direction of surface
-	     *                                      normal. total absorption on rear
-	     *                                      surface.
-	     *          - "triangle":               reflection on front surface
-	     *                                      defined by direction of surface
-	     *                                      normal. total absorption on rear
-	     *                                      surface.
-	     *          - "ellipsoid"             : ellipsoid. reflection on
-	     *                                      inside surface, total absorption
-	     *                                      on outside surface.
-	     *          - "disk":                   reflection on front surface
-	     *                                      defined by direction of surface
-	     *                                      normal. total absorption on rear
-	     *                                      surface.
-	     *          - "annulus":                reflection on front surface
-	     *                                      defined by direction of surface
-	     *                                      normal. total absorption on rear
-	     *                                      surface.
-	     *          - "window":                 round window. reflectivity defined
-	     *                                      by index of refraction. total
-	     *                                      absorbtion on cylinder walls
-	     *                                      (inside and outside). absorption
-	     *                                      inside governed by absorption
-	     *                                      spectrum.
+	     *          - "annulus"
+	     *          - "cone"
+	     *          - "cylinder"
+	     *          - "disk"
+	     *          - "ellipsoid"
+	     *          - "paraboloid"
+	     *          - "one-sided plane_screen"
+	     *          - "two-sided plane_screen"
+	     *          - "rectangle"
+	     *          - "sphere"
+	     *          - "triangle"
+	     *          - "window"
 	     */
 	    status += check_string("targets", this_t, "name", i);
 
@@ -155,144 +144,16 @@ int check_targets(config_t * cfg)
 
 	    /* check target specific settings */
 
-	    if (!strcmp(type, "one-sided plane screen")) {
-		/*
-		 * one-sided plane screen:
-		 *  - array 'point' (point on plane) [x,y,z] / double
-		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
-		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
-		 */
-		status += check_array("targets", this_t, "point", i);
-		status += check_array("targets", this_t, "normal", i);
-		status += check_array("targets", this_t, "x", i);
-
-	    } /* end 'one-sided plane_screen' */
-	    else if (!strcmp(type, "two-sided plane screen")) {
-		/*
-		 * two-sided plane screen:
-		 *  - array 'point' (point on plane) [x,y,z] / double
-		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
-		 *  - array 'x' (direction of local x-axis of plane) [x,y,z] / double
-		 */
-		status += check_array("targets", this_t, "point", i);
-		status += check_array("targets", this_t, "normal", i);
-		status += check_array("targets", this_t, "x", i);
-
-	    } /* end 'two-sided plane_screen' */
-	    else if (!strcmp(type, "rectangle")) {
-		/*
-		 * rectangle
-		 *  - array 'P1' (corner point of rectangle) [x,y,z] / double
-		 *  - array 'P2' (corner point of rectangle) [x,y,z] / double
-		 *               direction of local x-axis of plane: 'P2'-'P1'
-		 *  - array 'P3' (corner point of rectangle) [x,y,z] / double
-		 *               direction of local y-axis of plane: 'P2'-'P1'
-		 *
-		 * NOTE: normal of plane is defined by 'X' cross 'Y'. only rays
-		 *       anti-parallel to normal are reflected. ray impinging
-		 *       parallel to rectangle hit its back side and are absorbed
-		 */
-		status += check_array("targets", this_t, "P1", i);
-		status += check_array("targets", this_t, "P2", i);
-		status += check_array("targets", this_t, "P3", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity", i);
-		status += check_file("targets", this_t, "reflectivity", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
-		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
-
-	    } /* end 'rectangle' */
-	    else if (!strcmp(type, "triangle")) {
-		/*
-		 * triangle
-		 *  - array 'P1' (corner point of triangle) [x,y,z] / double
-		 *  - array 'P2' (corner point of triangle) [x,y,z] / double
-		 *  - array 'P3' (corner point of triangle) [x,y,z] / double
-		 *
-		 * NOTE: normal of triangle is defined by ('P2'-'P1') cross ('P3'-'P1').
-		 *       only rays anti-parallel to normal are reflected. ray impinging
-		 *       parallel to the triangle hit its back side and are absorbed
-		 */
-		status += check_array("targets", this_t, "P1", i);
-		status += check_array("targets", this_t, "P2", i);
-		status += check_array("targets", this_t, "P3", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity", i);
-		status += check_file("targets", this_t, "reflectivity", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
-		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
-
-	    } /* end 'triangle' */
-	    else if (!strcmp(type, "ellipsoid")) {
-		/*
-		 * ellipsoid:
-		 *  - array 'center' (center of ellipsoid) [x,y,z] / double
-		 *  - array 'x-axis' (direction of local x-axis) [x,y,z] / double
-		 *  - array 'z-axis' (direction of local z-axis) [x,y,z] / double
-		 *  - array 'axes' (half axes of ellipsoid) [a,b,c] / double
-		 *  - 'z-min', 'z-max' (ellipsoid only valid for 'z-min' <= z <= 'z-max' / doubles
-		 */
-		status += check_array("targets", this_t, "center", i);
-		status += check_array("targets", this_t, "x", i);
-		status += check_array("targets", this_t, "z", i);
-		status += check_array("targets", this_t, "axes", i);
-		status += check_float("targets", this_t, "z_min", i);
-		status += check_float("targets", this_t, "z_min", i);
-		status +=
-		    check_string("targets", this_t, "reflecting_surface",
-				 i);
-		status +=
-		    check_string("targets", this_t, "reflectivity", i);
-		status += check_file("targets", this_t, "reflectivity", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
-		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
-
-	    } /* end 'ellipsoid' */
-	    else if (!strcmp(type, "disk")) {
-		/*
-		 * disk:
-		 *  - array 'P' (center of disk) [x,y,z] / double
-		 *  - array 'N' (direction of local x-axis) [x,y,z] / double
-		 *  - 'r' (radius of disk) double
-		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - string 'reflectivity' (file name of reflectivity spectrum)
-		 */
-		status += check_array("targets", this_t, "P", i);
-		status += check_array("targets", this_t, "N", i);
-		status += check_float("targets", this_t, "r", i);
-		status += check_array("targets", this_t, "x", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity", i);
-		status += check_file("targets", this_t, "reflectivity", i);
-		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
-		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
-
-	    } /* end 'disk' */
-	    else if (!strcmp(type, "annulus")) {
+	    if (!strcmp(type, "annulus")) {
 		/*
 		 * annulus:
 		 *  - array 'P' (center of annulus) [x,y,z] / double
-		 *  - array 'N' (direction of local x-axis) [x,y,z] / double
+		 *  - array 'N' (direction of local z-axis) [x,y,z] / double
 		 *  - 'R' (outer radius of annulus) double
 		 *  - 'r' (inner radius of annulus) double
 		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
 		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
 		status += check_array("targets", this_t, "P", i);
 		status += check_array("targets", this_t, "N", i);
@@ -308,18 +169,49 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
-
 	    } /* end 'annulus' */
+	    else if (!strcmp(type, "cone")) {
+		/*
+		 * sphere:
+		 *  - array 'origin' (base point of cone) [x,y,z] / double
+		 *  - 'R' (radius of base disk of cone) double
+		 *  - 'r' (radius of top disk of cone, can be zero) double
+		 *  - 'h' (height of cone) double
+		 *  - array 'axis' (cone axis, local z-axis) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'reflectivity' (file name of reflection spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 *  - string 'reflecting_surface' ["inside"|"outside"]
+		 */
+		status += check_array("targets", this_t, "origin", i);
+		status += check_float("targets", this_t, "R", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_float("targets", this_t, "h", i);
+		status += check_array("targets", this_t, "axis", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+		status +=
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
+	    } /* end 'cone' */
 	    else if (!strcmp(type, "cylinder")) {
 		/*
 		 * cylinder:
-		 * C: center point of one end face
+		 * C: center point of first end face
 		 *  - array 'C' (center of first end face) [x,y,z] / double
 		 *  - array 'a' (cylinder axis / local z-axis) [x,y,z] / double
 		 *  - 'r' (radius of cylinder) double
 		 *  - 'l' (length of cylinder) double
 		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - string 'reflecting_surface' (reflecting surface ["inside"|"outside"])
+		 *  - string 'reflecting_surface' ["inside"|"outside"]
 		 *  - string 'reflectivity' (file name of reflectivity spectrum)
 		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
@@ -340,35 +232,63 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
-
 	    } /* end 'cylinder' */
-	    else if (!strcmp(type, "window")) {
+	    else if (!strcmp(type, "disk")) {
 		/*
-		 * window:
-		 *  - array 'C' (center of front surface) [x,y,z] / double
-		 *  - array 'a' (direction of cylinder axis) [x,y,z] / double
-		 *  - 'd' (thickness of window) double
-		 *  - 'r' (radius of window) double
+		 * disk:
+		 *  - array 'P' (center of disk) [x,y,z] / double
+		 *  - array 'N' (direction of local z-axis) [x,y,z] / double
+		 *  - 'r' (radius of disk) double
 		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - string 'absorptivity' (file name of absorption spectrum)
-		 *  - string 'idx_refraction' (file name of dispersion curve)
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
-		status += check_array("targets", this_t, "C", i);
-		status += check_array("targets", this_t, "a", i);
-		status += check_float("targets", this_t, "d", i);
+		status += check_array("targets", this_t, "P", i);
+		status += check_array("targets", this_t, "N", i);
 		status += check_float("targets", this_t, "r", i);
 		status += check_array("targets", this_t, "x", i);
 		status +=
-		    check_string("targets", this_t, "absorptivity", i);
-		status += check_file("targets", this_t, "absorptivity", i);
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "idx_refraction", i);
-		status +=
-		    check_file("targets", this_t, "idx_refraction", i);
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
-	    } /* end 'window' */
+	    } /* end 'disk' */
+	    else if (!strcmp(type, "ellipsoid")) {
+		/*
+		 * ellipsoid:
+		 *  - array 'center' (center of ellipsoid) [x,y,z] / double
+		 *  - array 'x-axis' (direction of local x-axis) [x,y,z] / double
+		 *  - array 'z-axis' (direction of local z-axis) [x,y,z] / double
+		 *  - array 'axes' (half axes of ellipsoid) [a,b,c] / double
+		 *  - 'z-min', 'z-max' (ellipsoid only valid for
+		 *                      'z-min' <= z <= 'z-max') / doubles
+		 *  - string 'reflecting_surface' ["inside"|"outside"]
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("targets", this_t, "center", i);
+		status += check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "z", i);
+		status += check_array("targets", this_t, "axes", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status += check_float("targets", this_t, "z_min", i);
+		status +=
+		    check_string("targets", this_t, "reflecting_surface",
+				 i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+	    } /* end 'ellipsoid' */
 	    else if (!strcmp(type, "paraboloid")) {
 		/*
 		 * paraboloid:
@@ -376,10 +296,11 @@ int check_targets(config_t * cfg)
 		 *  - 'focal_length' (focal length of paraboloid) double
 		 *  - array 'z' (direction of local z-axis) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - 'z-min', 'z-max' (paraboloid only valid for 'z-min' <= z <= 'z-max' / doubles
-		 *  - string 'reflectivity' (file name of reflection spectrum)
-		 *  - string 'reflectivity_model'
-		 *  - string 'reflecting_surface'
+		 *  - 'z-min', 'z-max' (paraboloid only valid for
+		 *                      'z-min' <= z <= 'z-max') / doubles
+		 *  - string 'reflecting_surface' ["inside"|"outside"]
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
 		status += check_array("targets", this_t, "vertex", i);
 		status +=
@@ -401,6 +322,54 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflecting_surface",
 				 i);
 	    } /* end 'paraboloid' */
+	    else if (!strcmp(type, "one-sided plane screen")) {
+		/*
+		 * one-sided plane screen:
+		 *  - array 'point' (point on plane) [x,y,z] / double
+		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 */
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
+	    } /* end 'one-sided plane_screen' */
+	    else if (!strcmp(type, "two-sided plane screen")) {
+		/*
+		 * two-sided plane screen:
+		 *  - array 'point' (point on plane) [x,y,z] / double
+		 *  - array 'normal' (normal vector of plane) [x,y,z] / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 */
+		status += check_array("targets", this_t, "point", i);
+		status += check_array("targets", this_t, "normal", i);
+		status += check_array("targets", this_t, "x", i);
+	    } /* end 'two-sided plane_screen' */
+	    else if (!strcmp(type, "rectangle")) {
+		/*
+		 * rectangle
+		 *  - array 'P1' (corner point of rectangle) [x,y,z] / double
+		 *  - array 'P2' (corner point of rectangle) [x,y,z] / double
+		 *               direction of local x-axis of plane: 'P2'-'P1'
+		 *  - array 'P3' (corner point of rectangle) [x,y,z] / double
+		 *               direction of local y-axis of plane: 'P2'-'P1'
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 *
+		 * NOTE: normal of triangle is defined by 'X' cross 'Y'.
+		 */
+		status += check_array("targets", this_t, "P1", i);
+		status += check_array("targets", this_t, "P2", i);
+		status += check_array("targets", this_t, "P3", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+	    } /* end 'rectangle' */
 	    else if (!strcmp(type, "sphere")) {
 		/*
 		 * sphere:
@@ -408,10 +377,11 @@ int check_targets(config_t * cfg)
 		 *  - 'radius' (radius of sphere) double
 		 *  - array 'z' (direction of local z-axis) [x,y,z] / double
 		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - 'z-min', 'z-max' (ellipsoid only valid for 'z-min' <= z <= 'z-max' / doubles
-		 *  - string 'reflectivity' (file name of reflection spectrum)
-		 *  - string 'reflectivity_model'
-		 *  - string 'reflecting_surface'
+		 *  - 'z-min', 'z-max' (sphere only valid for
+		 *                      'z-min' <= z <= 'z-max' / doubles
+		 *  - string 'reflecting_surface' ["inside"|"outside"]
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
 		status += check_array("targets", this_t, "origin", i);
 		status += check_float("targets", this_t, "radius", i);
@@ -432,25 +402,21 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflecting_surface",
 				 i);
 	    } /* end 'sphere' */
-	    else if (!strcmp(type, "cone")) {
+	    else if (!strcmp(type, "triangle")) {
 		/*
-		 * sphere:
-		 *  - array 'origin' (base point of cone) [x,y,z] / double
-		 *  - 'R' (radius of base disk of cone) double
-		 *  - 'r' (radius of top disk of cone, can be zero) double
-		 *  - 'h' (height of cone) double
-		 *  - array 'axis' (symmetry axis, local z-axis) [x,y,z] / double
-		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
-		 *  - string 'reflectivity' (file name of reflection spectrum)
-		 *  - string 'reflectivity_model'
-		 *  - string 'reflecting_surface'
+		 * triangle
+		 *  - array 'P1' (corner point of triangle) [x,y,z] / double
+		 *  - array 'P2' (corner point of triangle) [x,y,z] / double
+		 *  - array 'P3' (corner point of triangle) [x,y,z] / double
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 *
+		 * NOTE: normal of triangle is defined by
+		 *              ('P2'-'P1') cross ('P3'-'P1').
 		 */
-		status += check_array("targets", this_t, "origin", i);
-		status += check_float("targets", this_t, "R", i);
-		status += check_float("targets", this_t, "r", i);
-		status += check_float("targets", this_t, "h", i);
-		status += check_array("targets", this_t, "axis", i);
-		status += check_array("targets", this_t, "x", i);
+		status += check_array("targets", this_t, "P1", i);
+		status += check_array("targets", this_t, "P2", i);
+		status += check_array("targets", this_t, "P3", i);
 		status +=
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
@@ -460,47 +426,39 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
+	    } /* end 'triangle' */
+	    else if (!strcmp(type, "window")) {
+		/*
+		 * window:
+		 *  - array 'C' (center of front surface) [x,y,z] / double
+		 *  - array 'a' (direction of cylinder axis) [x,y,z] / double
+		 *  - 'd' (thickness of window) double
+		 *  - 'r' (radius of window) double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'absorptivity' (file name of absorption spectrum)
+		 *  - string 'idx_refraction' (file name of dispersion curve)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("targets", this_t, "C", i);
+		status += check_array("targets", this_t, "a", i);
+		status += check_float("targets", this_t, "d", i);
+		status += check_float("targets", this_t, "r", i);
+		status += check_array("targets", this_t, "x", i);
 		status +=
-		    check_string("targets", this_t, "reflecting_surface",
-				 i);
-	    }			/* end 'cone' */
+		    check_string("targets", this_t, "absorptivity", i);
+		status += check_file("targets", this_t, "absorptivity", i);
+		status +=
+		    check_string("targets", this_t, "idx_refraction", i);
+		status +=
+		    check_file("targets", this_t, "idx_refraction", i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
 
     return status;
-}
-
-int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
-{
-    FILE *refl_data;
-    double *lambda;
-    double *refl;
-    size_t n_lambda;
-
-    if ((refl_data = fopen(f_name, "r")) == NULL) {
-	fprintf(stderr, "Error %s (errno=%d) opening refl_spectrum %s\n",
-		strerror(errno), errno, f_name);
-	*refl_spectrum = NULL;
-	return ERR;
-    }
-
-    if (read_data(refl_data, &lambda, &refl, &n_lambda) == ERR) {
-	fprintf(stderr, "Error while reading refl_data (%d items read)\n",
-		n_lambda);
-	fclose(refl_data);
-	*refl_spectrum = NULL;
-	return ERR;
-    }
-    fclose(refl_data);
-
-    *refl_spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
-
-    gsl_spline_init(*refl_spectrum, lambda, refl, n_lambda);
-
-    free(lambda);
-    free(refl);
-
-    return NO_ERR;
 }
 
 static void write_target_header(const int fd, const char *name,
@@ -564,6 +522,39 @@ int init_output(const char *target_type, config_setting_t * this_target,
 	}
 
     }
+
+    return NO_ERR;
+}
+
+int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
+{
+    FILE *refl_data;
+    double *lambda;
+    double *refl;
+    size_t n_lambda;
+
+    if ((refl_data = fopen(f_name, "r")) == NULL) {
+	fprintf(stderr, "Error %s (errno=%d) opening refl_spectrum %s\n",
+		strerror(errno), errno, f_name);
+	*refl_spectrum = NULL;
+	return ERR;
+    }
+
+    if (read_data(refl_data, &lambda, &refl, &n_lambda) == ERR) {
+	fprintf(stderr, "Error while reading refl_data (%d items read)\n",
+		n_lambda);
+	fclose(refl_data);
+	*refl_spectrum = NULL;
+	return ERR;
+    }
+    fclose(refl_data);
+
+    *refl_spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
+
+    gsl_spline_init(*refl_spectrum, lambda, refl, n_lambda);
+
+    free(lambda);
+    free(refl);
 
     return NO_ERR;
 }
