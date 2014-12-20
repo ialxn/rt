@@ -42,15 +42,15 @@ source_list_t *init_sources(config_t * cfg, int *n_sources)
 	 * argument in the call to 'source_alloc()'. 
 	 */
 	config_setting_lookup_string(this_source, "type", &type);
-	if (!strcmp(type, "uniform point source"))
-	    new_source =
-		source_alloc(source_uniform_point_source, this_source);
+	if (!strcmp(type, "solid sphere"))
+	    new_source = source_alloc(source_solid_sphere, this_source);
 	else if (!strcmp(type, "sphere"))
 	    new_source = source_alloc(source_sphere, this_source);
 	else if (!strcmp(type, "spot source"))
 	    new_source = source_alloc(source_spot, this_source);
-	else if (!strcmp(type, "solid sphere"))
-	    new_source = source_alloc(source_solid_sphere, this_source);
+	else if (!strcmp(type, "uniform point source"))
+	    new_source =
+		source_alloc(source_uniform_point_source, this_source);
 	else {
 	    fprintf(stderr,
 		    "Unknown source type (%s) found. Ignoring source %s\n",
@@ -96,7 +96,31 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	 * argument in the call to 'target_alloc()'. 
 	 */
 	config_setting_lookup_string(this_target, "type", &type);
-	if (!strcmp(type, "one-sided plane screen"))
+	if (!strcmp(type, "annulus"))
+	    new_target =
+		target_alloc(target_annulus, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "cone"))
+	    new_target =
+		target_alloc(target_cone, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "cylinder"))
+	    new_target =
+		target_alloc(target_cylinder, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "disk"))
+	    new_target =
+		target_alloc(target_disk, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "ellipsoid"))
+	    new_target =
+		target_alloc(target_ellipsoid, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "paraboloid"))
+	    new_target =
+		target_alloc(target_paraboloid, this_target, file_mode,
+			     keep_closed);
+	else if (!strcmp(type, "one-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_one_sided, this_target,
 			     file_mode, keep_closed);
@@ -108,37 +132,17 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    new_target =
 		target_alloc(target_rectangle, this_target, file_mode,
 			     keep_closed);
+	else if (!strcmp(type, "sphere"))
+	    new_target =
+		target_alloc(target_sphere, this_target, file_mode,
+			     keep_closed);
 	else if (!strcmp(type, "triangle"))
 	    new_target =
 		target_alloc(target_triangle, this_target, file_mode,
 			     keep_closed);
-	else if (!strcmp(type, "ellipsoid"))
-	    new_target =
-		target_alloc(target_ellipsoid, this_target, file_mode,
-			     keep_closed);
-	else if (!strcmp(type, "annulus"))
-	    new_target =
-		target_alloc(target_annulus, this_target, file_mode,
-			     keep_closed);
-	else if (!strcmp(type, "disk"))
-	    new_target =
-		target_alloc(target_disk, this_target, file_mode,
-			     keep_closed);
-	else if (!strcmp(type, "cylinder"))
-	    new_target =
-		target_alloc(target_cylinder, this_target, file_mode,
-			     keep_closed);
 	else if (!strcmp(type, "window"))
 	    new_target =
 		target_alloc(target_window, this_target, file_mode,
-			     keep_closed);
-	else if (!strcmp(type, "paraboloid"))
-	    new_target =
-		target_alloc(target_paraboloid, this_target, file_mode,
-			     keep_closed);
-	else if (!strcmp(type, "sphere"))
-	    new_target =
-		target_alloc(target_sphere, this_target, file_mode,
 			     keep_closed);
 	else {
 	    fprintf(stderr,
@@ -147,11 +151,11 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    continue;
 	}
 
-	if (new_target) {	/* target_alloc did not fail */
+	if (new_target) {
 	    new_entry = (target_list_t *) malloc(sizeof(target_list_t));
 	    new_entry->t = new_target;
 	    list_add_tail(&new_entry->list, &t_list->list);
-	} else {
+	} else {		/* target_alloc did fail */
 	    ++n_targets_deleted;
 	    fprintf(stderr, "target %s deleted\n", name);
 	}

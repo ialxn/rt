@@ -41,7 +41,7 @@
  * bit 16-31: general purpose flags
  */
 #define KEEP_CLOSED	(1<<16)	/* open/close output when flushing buffer */
-#define OUTPUT_REQUIRED	(1<<17)	/* no_output was set */
+#define OUTPUT_REQUIRED	(1<<17)	/* 'no_output' was set */
 #define OUTSIDE		(1<<18)	/* mark reflecting surface of non-planar targets */
 
 #define BUF_SIZE 4096
@@ -59,13 +59,15 @@ typedef struct PTDT_t {		/* per thread data of every target */
 
 typedef struct target_type_t {
     const char *type;		/* type of target */
-    size_t size;		/* internally used to allocate the state (individual,
-				   type specific data) of the target. */
+    size_t size;		/* internally used to allocate the state
+				   (individual, type specific data) of
+				   the target. */
     int (*init_state) (void *state, config_setting_t * this_t,
 		       const int file_mode, const int keep_closed);
     /* initialize internal data from configuration */
     void (*free_state) (void *state);	/* free */
-    double *(*get_intercept) (void *state, ray_t * ray);	/* point of intersection */
+    double *(*get_intercept) (void *state, ray_t * ray);
+    /* point of intersection */
     ray_t *(*get_out_ray) (void *state, ray_t * ray, double *hit,
 			   const gsl_rng * r);
     void (*init_PTDT) (void *state);	/* allocate per thread buffer */
@@ -80,17 +82,19 @@ typedef struct target_t {
 /*
  * list of all defined targets found in individual files (target_*.c)
  */
+const target_type_t *target_annulus;
+const target_type_t *target_cone;
+const target_type_t *target_cylinder;
+const target_type_t *target_disk;
+const target_type_t *target_ellipsoid;
+const target_type_t *target_paraboloid;
 const target_type_t *target_plane_screen_one_sided;
 const target_type_t *target_plane_screen_two_sided;
 const target_type_t *target_rectangle;
-const target_type_t *target_triangle;
-const target_type_t *target_ellipsoid;
-const target_type_t *target_annulus;
-const target_type_t *target_disk;
-const target_type_t *target_cylinder;
-const target_type_t *target_window;
-const target_type_t *target_paraboloid;
 const target_type_t *target_sphere;
+const target_type_t *target_triangle;
+const target_type_t *target_window;
+
 /*
  *  public functions to access/manipulate the targets (found in targets.c)
  */

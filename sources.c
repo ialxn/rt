@@ -13,6 +13,11 @@
 #include "io_utils.h"
 #include "sources.h"
 
+
+
+/*
+ * public functions to access / manipulate sources
+ */
 source_t *source_alloc(const source_type_t * T, config_setting_t * this_s)
 {
     source_t *S;
@@ -75,6 +80,10 @@ void init_rays_remain(const source_t * S)
 }
 
 
+
+/*
+ * utility functions
+ */
 int check_sources(config_t * cfg)
 {
     int status = NO_ERR;
@@ -118,14 +127,15 @@ int check_sources(config_t * cfg)
 		continue;
 
 	    /* check source specific settings */
-	    if (!strcmp(type, "uniform point source")) {
+	    if (!strcmp(type, "solid_sphere")) {
 		/*
-		 * uniform point source:
+		 * solid sphere:
 		 *  - array 'origin' [x,y,z] / double
+		 *  - 'radius' / double
 		 */
 		status += check_array("sources", this_s, "origin", i);
-
-	    } /* end 'uniform point source' */
+		status += check_float("sources", this_s, "radius", i);
+	    } /* end 'solid_sphere' */
 	    else if (!strcmp(type, "sphere")) {
 		/*
 		 * sphere:
@@ -134,7 +144,6 @@ int check_sources(config_t * cfg)
 		 */
 		status += check_array("sources", this_s, "origin", i);
 		status += check_float("sources", this_s, "radius", i);
-
 	    } /* end 'sphere' */
 	    else if (!strcmp(type, "spot source")) {
 		/*
@@ -146,18 +155,14 @@ int check_sources(config_t * cfg)
 		status += check_array("sources", this_s, "origin", i);
 		status += check_array("sources", this_s, "direction", i);
 		status += check_float("sources", this_s, "theta", i);
-
-	    } /* end 'uniform point source' */
-	    else if (!strcmp(type, "solid_sphere")) {
+	    } /* end 'spot' */
+	    else if (!strcmp(type, "uniform point source")) {
 		/*
-		 * solid sphere:
+		 * uniform point source:
 		 *  - array 'origin' [x,y,z] / double
-		 *  - 'radius' / double
 		 */
 		status += check_array("sources", this_s, "origin", i);
-		status += check_float("sources", this_s, "radius", i);
-
-	    }			/* end 'solid_sphere' */
+	    }			/* end 'uniform point source' */
 	}			/* end 'this_s', check next source */
     }
 

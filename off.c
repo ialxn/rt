@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
 #include <string.h>
@@ -18,9 +19,104 @@
 #include "math_utils.h"
 #include "off.h"
 
-#define DZ 0.005
-#define AXES_LENGTH 5.0
+#define INSIDE 0		/* reflecting surface of non-planar targets */
+#define OUTSIDE 1
 
+#define DZ 0.005		/* offset between inside/outside or front/back surface */
+
+#define RAY_DIAMETER 0.05	/* diameter of rays logged to OFF file */
+
+#define AXES_LENGTH 5.0
+#define AXES_WIDTH 0.05
+
+#define S_SCREEN 10.0		/* size of screens */
+
+#define N_TRANS 11		/* rotationally symmertric targets */
+#define N_ROT 24
+
+#define R_REFL 1.0		/* r g b values of reflecting surface (targets) */
+#define G_REFL 1.0
+#define B_REFL 1.0
+
+#define R_ABS 0.0		/* r g b values of absorbing surface (targets) */
+#define G_ABS 0.0
+#define B_ABS 0.0
+
+#define R_SCREEN 1.0		/* r g b values of screens (targets) */
+#define G_SCREEN 0.0
+#define B_SCREEN 0.0
+
+#define R_TRNSP 0.390		/* r g b values of transparent targets */
+#define G_TRNSP 0.785
+#define B_TRNSP 0.785
+
+#define R_SRC 1.0		/* r g b value of (yellow) sources */
+#define G_SRC 1.0
+#define B_SRC 0.0
+
+#define SPOT_LENGTH 1.2		/* length of cone for spot source */
+#define SPOT_RADIUS 0.3		/* radius of cone for spot source */
+
+#define R_POINT_SRC 0.2		/* radius of point source */
+
+
+/*
+ * macros and functions to write vertices
+ */
+#define WRITE_VERTEX(_F, _X, _Y, _Z, _P, _ALPHA, _BETA) do { \
+        double _L[3], _G[3]; \
+        _L[0] = _X; \
+        _L[1] = _Y; \
+        _L[2] = _Z; \
+        l2g_off(_P, _L, _G, _ALPHA, _BETA); \
+        fprintf(_F, "%f\t%f\t%f\n", _G[0], _G[1], _G[2]); \
+} while(0);
+
+static void write_ring_vertices(FILE * outf, const double l2,
+				const double r, const double *origin,
+				const double alpha, const double beta)
+{
+    int j;
+    double l[3];
+    const double delta_phi = 2.0 * M_PI / N_ROT;
+
+    l[2] = l2;
+    for (j = 0; j < N_ROT; j++) {
+	const double phi = j * delta_phi;
+	double g[3];
+
+	l[0] = r * sin(phi);
+	l[1] = r * cos(phi);
+
+	l2g_off(origin, l, g, alpha, beta);
+
+	fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
+    }
+}
+
+static void write_ann_vertices(FILE * outf, const double R, const double r,
+			       const double *origin, const double alpha,
+			       const double beta, const double offset)
+{
+    const double delta_phi = 2.0 * M_PI / N_ROT;
+    double P[3], g_P[3];
+    int i;
+
+    P[2] = offset;
+    for (i = 0; i < N_ROT; i++) {
+	const double arg = i * delta_phi;
+	const double sa = sin(arg);
+	const double ca = cos(arg);
+	P[0] = R * sa;
+	P[1] = R * ca;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+	P[0] = r * sa;
+	P[1] = r * ca;
+	l2g_off(origin, P, g_P, alpha, beta);
+	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    }
+}
 
 static void block_vertices(FILE * f, const double *P, const double *N,
 			   const double x, const double y)
@@ -29,73 +125,99 @@ static void block_vertices(FILE * f, const double *P, const double *N,
  * and diameter 'x' times 'y' to file 'f'
  */
 {
-    double L[3], G[3];
+    double L[3];
     double alpha, beta;
-    double l;
     const double x2 = x / 2.0;
     const double y2 = y / 2.0;
 
 /*
  * determine alpha, beta for transformation from local to global system.
- * copy length from z component of 'L'.
+ * length is z component of 'L'.
  */
     g2l_off(P, N, L, &alpha, &beta);
-    l = L[2];
+
+    WRITE_VERTEX(f, x2, y2, 0.0, P, alpha, beta);
+    WRITE_VERTEX(f, x2, -y2, 0.0, P, alpha, beta);
+    WRITE_VERTEX(f, -x2, -y2, 0.0, P, alpha, beta);
+    WRITE_VERTEX(f, -x2, y2, 0.0, P, alpha, beta);
+    WRITE_VERTEX(f, x2, y2, L[2], P, alpha, beta);
+    WRITE_VERTEX(f, x2, -y2, L[2], P, alpha, beta);
+    WRITE_VERTEX(f, -x2, -y2, L[2], P, alpha, beta);
+    WRITE_VERTEX(f, -x2, y2, L[2], P, alpha, beta);
+}
+
+static void write_ell_vertices(FILE * outf, const double s,
+			       const double z_min, const double z_max,
+			       const double *axes, const double *origin,
+			       const double alpha, const double beta)
+{
+    const double delta_z = (z_max - z_min) / (N_TRANS - 1);
+    int i;
+
+    for (i = 0; i < N_TRANS; i++) {
+	double l = z_min + i * delta_z;
+	double r = s * axes[0] * sqrt(1.0 - l * l / (axes[2] * axes[2]));
+
+	write_ring_vertices(outf, l, r, origin, alpha, beta);
+    }
+}
+
+static void write_par_vertices(FILE * outf, const double s,
+			       const double z_min, const double z_max,
+			       const double foc, const double *origin,
+			       const double alpha, const double beta)
+{
+    const double delta_z = (z_max - z_min) / (N_TRANS - 1);
+    int i;
+
+    for (i = 0; i < N_TRANS; i++) {
+	double l = z_min + i * delta_z;
+	double r = s * sqrt(4.0 * foc * l);;
+
+	write_ring_vertices(outf, l, r, origin, alpha, beta);
+    }
+}
+
 
 /*
- * write the vertices
- *	+, +, 0
- *	+, -, 0
- *	-, -, 0
- *	-, +, 0
- *	+, +, l
- *	+, -, l
- *	-, -, l
- *	-, +, l
- *
+ * macros and functions to write faces
  */
-    L[0] = x2;
-    L[1] = y2;
-    L[2] = 0.0;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+#define WRITE_ANN_FACE(_F, _OFFSET, _R, _G, _B) do { \
+    int _I, _BASE; \
+    for (_I = _OFFSET; _I < _OFFSET + N_ROT - 1; _I++) { \
+	_BASE = 2 * _I; \
+	fprintf(_F, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", \
+	              _BASE, _BASE + 1, _BASE + 3, _BASE + 2, _BASE, \
+	              _R, _G, _B); \
+    } \
+    _BASE += 2; \
+    fprintf(_F, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", \
+                   _BASE, _BASE + 1, 2 * _OFFSET + 1, 2 * _OFFSET, _BASE, \
+                   _R, _G, _B); \
+} while(0);
 
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
+#define WRITE_C_WALL(_F, _OFFSET, _R, _G, _B) do { \
+    int _I; \
+    for (_I = _OFFSET; _I < N_ROT - 1 + _OFFSET; _I++) \
+	fprintf(_F, "5 %d %d %d %d %d %f %f %f 1.0\n", \
+	        _I, _I + 1, _I + N_ROT + 1, _I + N_ROT, _I, _R, _G, _B); \
+    fprintf(_F, "5 %d %d %d %d %d %f %f %f 1.0\n", \
+            _OFFSET + N_ROT - 1, _OFFSET, _OFFSET + N_ROT, \
+            _OFFSET + 2 * N_ROT - 1, _OFFSET + N_ROT - 1, _R, _G, _B); \
+} while(0);
 
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = x2;
-    L[2] = l;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = -y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[0] = -x2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-    L[1] = y2;
-    l2g_off(P, L, G, alpha, beta);
-    fprintf(f, "%f\t%f\t%f\n", G[0], G[1], G[2]);
-
-}
+#define WRITE_W_FACE(_F, _OFFSET, _R, _G, _B) do { \
+    int _I; \
+    fprintf(_F, "%d ", N_ROT + 1); \
+    for (_I = _OFFSET; _I < N_ROT + _OFFSET; _I++) \
+	fprintf(_F, "%d ", _I); \
+    fprintf(_F, "%d %f\t%f\t%f\t 1.0\n", _OFFSET, _R, _G, _B); \
+} while(0);
 
 static void block_faces(FILE * f, const int i, const double r,
 			const double g, const double b)
 /*
  * prints the faces of a block (in OFF format) to 'f'.
- * all faces are colored 'r','g','b'.
  * 'i' denotes offset (index) of first vertex of block.
  * NOTE: vertices have to be written before to OFF file
  *       in the correct order! (use 'block_vertices()'
@@ -115,25 +237,32 @@ static void block_faces(FILE * f, const int i, const double r,
 	    i + 7, i + 4, r, g, b);
 }
 
+static void write_ell_faces(FILE * outf, const int offset,
+			    const double R, const double G, const double B)
+{
+    int i;
+
+    for (i = 0; i < (N_TRANS - 1); i++)
+	WRITE_C_WALL(outf, offset + i * N_ROT, R, G, B);
+}
 
 
+/*
+ * individual off_XXX() functions for axes, sources and targets
+ */
 static void off_axes(const char *name, const double *origin,
 		     const double *X, const double *Y, const double *Z)
 {
 /*
- * draw axes of global coordinate system as colored bars
- * x-axis (X): red
- * y-axis (Y): green
- * z-axis (Z): blue
+ * draw x,y,z (r,g,b) axes of global coordinate system as colored bars
  */
-    const double s = 0.05;
     double P[3];
     int i;
     FILE *outf;
 
-    if (!name)
+    if (!name)			/* axes of global system */
 	outf = open_off("axes");
-    else {
+    else {			/* axes of local system */
 	char f_name[256];
 
 	snprintf(f_name, 256, "axes_%s", name);
@@ -146,13 +275,13 @@ static void off_axes(const char *name, const double *origin,
     /* output vertices of axes */
     for (i = 0; i < 3; i++)
 	P[i] = origin[i] + X[i];
-    block_vertices(outf, origin, P, s, s);
+    block_vertices(outf, origin, P, AXES_WIDTH, AXES_WIDTH);
     for (i = 0; i < 3; i++)
 	P[i] = origin[i] + Y[i];
-    block_vertices(outf, origin, P, s, s);
+    block_vertices(outf, origin, P, AXES_WIDTH, AXES_WIDTH);
     for (i = 0; i < 3; i++)
 	P[i] = origin[i] + Z[i];
-    block_vertices(outf, origin, P, s, s);
+    block_vertices(outf, origin, P, AXES_WIDTH, AXES_WIDTH);
 
     /* output faces of axes */
     block_faces(outf, 0, 1.0, 0.0, 0.0);
@@ -162,58 +291,86 @@ static void off_axes(const char *name, const double *origin,
     fclose(outf);
 }
 
-
-
-static void off_sphere(const char *name, double *O, const double radius,
-		       const double r, const double g, const double b)
+static void off_sphere_src(const char *name, double *O,
+			   const double radius)
 {
-/*
- * print octaeder as source
- */
+    int i;
+    double axes[3];
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "6 8 0\n");	/* 6 vertices, 8 faces */
+    fprintf(outf, "%d %d 0\n", N_TRANS * N_ROT, (N_TRANS - 1) * N_ROT);
 
-    /*
-     * list of vertices
-     * 0 ... 5
-     */
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2] + radius);
-    fprintf(outf, "%f\t%f\t%f\n", O[0] + radius, O[1], O[2]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] + radius, O[2]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0] - radius, O[1], O[2]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1] - radius, O[2]);
-    fprintf(outf, "%f\t%f\t%f\n", O[0], O[1], O[2] - radius);
+    for (i = 0; i < 3; i++)
+	axes[i] = radius;
 
-    /*
-     * list of (triangular) faces, each defined by 3 vertices, as
-     * a->b->c->a
-     */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 4 1 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 5 1 2 5 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 5 2 3 5 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 5 3 4 5 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 5 4 1 5 %f\t%f\t%f 1.0\n", r, g, b);
+    write_ell_vertices(outf, 1.0, -radius, radius, axes, O, 0.0, 0.0);
+    write_ell_faces(outf, 0, R_SRC, G_SRC, B_SRC);
 
     fclose(outf);
 }
 
-static void off_cone(const char *name, double *origin, double *dir,
-		     const double l, const double r, const double g,
-		     const double b)
+static void off_spot_src(const char *name, double *origin, double *dir)
 {
-    double P[3], g_P[3];
+    double P[3];
     double alpha, beta;
-    int i;
-
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "7 7 0\n");	/* 7 vertices, 7 faces */
+    fprintf(outf, "%d %d 0\n", 2 * N_ROT, 1 * N_ROT + 1);
+
+    g2l_off_rot(dir, P, &alpha, &beta);
+
+    write_ring_vertices(outf, SPOT_LENGTH, SPOT_RADIUS, origin, alpha,
+			beta);
+    write_ring_vertices(outf, 0.0, 0.0, origin, alpha, beta);
+
+    WRITE_C_WALL(outf, 0, R_SRC, G_SRC, B_SRC);
+    WRITE_W_FACE(outf, 0, R_SRC, G_SRC, B_SRC);
+
+    fclose(outf);
+}
+
+
+static void off_annulus(const char *name, const double *origin,
+			const double *dir, const double R, const double r)
+/*
+ * writes 'OFF' file to 'name.off' for annulus defined by its center 'origin',
+ * normal vector 'dir' and radii 'R' and 'r'.
+ */
+{
+    double P[3];
+    double alpha, beta;
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "%d %d 0\n", 2 * 2 * N_ROT, 2 * N_ROT);
+
+    g2l_off_rot(dir, P, &alpha, &beta);
+
+    write_ann_vertices(outf, R, r, origin, alpha, beta, 0.0);
+    write_ann_vertices(outf, R, r, origin, alpha, beta, DZ);
+
+    WRITE_ANN_FACE(outf, 0, R_ABS, G_ABS, B_ABS);
+    WRITE_ANN_FACE(outf, N_ROT, R_REFL, G_REFL, B_REFL);
+
+    fclose(outf);
+}
+
+static void off_cone(const char *name, const double *origin,
+		     const double *dir, const double h, double Radius,
+		     double radius, const int r_surface)
+{
+/*
+ * writes 'OFF' file to 'name.off' for cone with radius of base disk 'Radius',
+ * radius of top disk 'radius', heigth (between the two disks) 'h'.
+ */
+    double P[3];
+    double alpha, beta;
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "%d %d 0\n", 4 * N_ROT, 2 * N_ROT);
 
     /*
      * determine alpha, beta for transformation from local to global system.
@@ -221,52 +378,131 @@ static void off_cone(const char *name, double *origin, double *dir,
      */
     g2l_off_rot(dir, P, &alpha, &beta);
 
-    fprintf(outf, "%f\t%f\t%f\n", origin[0], origin[1], origin[2]);
     /*
-     * vertices at hexagonal base of cone
+     * write vertices: outside/bottom, outside/top, inside/bottom, inside/top
      */
-    for (i = 0; i < 6; i++) {
-	const double arg = i / 3.0 * M_PI;	/* i * 60 / 360 * 2 * M_PI */
-	const double radius = l / 4.0;
-	P[0] = radius * sin(arg);
-	P[1] = radius * cos(arg);
-	P[2] = l;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+    write_ring_vertices(outf, 0.0, Radius, origin, alpha, beta);
+    write_ring_vertices(outf, h, radius, origin, alpha, beta);
+    write_ring_vertices(outf, 0.0, Radius * (1 - DZ), origin, alpha, beta);
+    write_ring_vertices(outf, h, radius * (1 - DZ), origin, alpha, beta);
+
+    if (r_surface == OUTSIDE) {
+	WRITE_C_WALL(outf, 0, R_REFL, G_REFL, B_REFL);	/* outside */
+	WRITE_C_WALL(outf, 2 * N_ROT, R_ABS, R_ABS, R_ABS);	/* inside */
+    } else {
+	WRITE_C_WALL(outf, 0, R_ABS, R_ABS, R_ABS);	/* outside */
+	WRITE_C_WALL(outf, 2 * N_ROT, R_REFL, G_REFL, B_REFL);	/* inside */
     }
-
-    /*
-     * list of (triangular) faces, each defined by 3 vertices, as
-     * a->b->c->a
-     */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 2 3 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 3 4 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 4 5 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 5 6 0 %f\t%f\t%f 1.0\n", r, g, b);
-    fprintf(outf, "4 0 6 1 0 %f\t%f\t%f 1.0\n", r, g, b);
-
-    /* hexagonal face */
-    fprintf(outf, "7 1 2 3 4 5 6 1 %f\t%f\t%f 1.0\n", r, g, b);
 
     fclose(outf);
 }
 
+static void off_ellipsoid(const char *name, const double *origin,
+			  const double *Z, const double *axes,
+			  const double z_min, const double
+			  z_max, const int r_surface)
+{
+    double alpha, beta;
+    double l[3];
+    FILE *outf = open_off(name);
 
-static void off_plane(const char *name, const double *P, const double *N,
-		      const double x, const double y, const double rf,
-		      const double gf, const double bf, const double rb,
-		      const double gb, const double bb, const double dz)
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "%d %d 0\n", 2 * N_TRANS * N_ROT,
+	    2 * (N_TRANS - 1) * N_ROT);
+
+    g2l_off_rot(Z, l, &alpha, &beta);
+
+    write_ell_vertices(outf, 1.0, z_min, z_max, axes, origin, alpha, beta);
+    write_ell_vertices(outf, 1.0 - DZ, z_min, z_max, axes, origin, alpha,
+		       beta);
+
+    if (r_surface == OUTSIDE) {
+	write_ell_faces(outf, 0, R_REFL, G_REFL, B_REFL);	/* outside */
+	write_ell_faces(outf, N_TRANS * N_ROT, R_ABS, R_ABS, R_ABS);	/* inside */
+    } else {
+	write_ell_faces(outf, 0, R_ABS, R_ABS, R_ABS);	/* outside */
+	write_ell_faces(outf, N_TRANS * N_ROT, R_REFL, G_REFL, B_REFL);	/* inside */
+    }
+
+    fclose(outf);
+}
+
+static void off_paraboloid(const char *name, const double *origin,
+			   const double *Z, const double foc,
+			   const double z_min, const double z_max,
+			   const int r_surface)
+{
+    double alpha, beta;
+    double l[3];
+    FILE *outf = open_off(name);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "%d %d 0\n", 2 * N_TRANS * N_ROT,
+	    2 * (N_TRANS - 1) * N_ROT);
+
+    g2l_off_rot(Z, l, &alpha, &beta);
+
+    write_par_vertices(outf, 1.0, z_min, z_max, foc, origin, alpha, beta);
+    write_par_vertices(outf, 1.0 - DZ, z_min, z_max, foc, origin, alpha,
+		       beta);
+
+    if (r_surface == OUTSIDE) {
+	write_ell_faces(outf, 0, R_REFL, G_REFL, B_REFL);	/* outside */
+	write_ell_faces(outf, N_TRANS * N_ROT, R_ABS, R_ABS, R_ABS);	/* inside */
+    } else {
+	write_ell_faces(outf, 0, R_ABS, R_ABS, R_ABS);	/* outside */
+	write_ell_faces(outf, N_TRANS * N_ROT, R_REFL, G_REFL, B_REFL);	/* inside */
+    }
+
+    fclose(outf);
+}
+
+static void off_rectangle(const char *name, const double *P,
+			  const double *X, const double *Y)
+{
+    double N[3];
+    FILE *outf = open_off(name);
+
+    cross_product(X, Y, N);
+    normalize(N);
+
+    fprintf(outf, "OFF\n");
+    fprintf(outf, "8 2 0\n");	/* 8 vertices, 2 faces */
+
+    /* back side */
+    fprintf(outf, "%f\t%f\t%f\n", P[0], P[1], P[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0], P[1] + X[1], P[2] + X[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0] + Y[0], P[1] + X[1] + Y[1],
+	    P[2] + X[2] + Y[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + Y[0], P[1] + Y[1], P[2] + Y[2]);
+
+    /* front side: offset by 'DZ' times 'N' */
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0], P[1] + DZ * N[1],
+	    P[2] + DZ * N[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + X[0],
+	    P[1] + DZ * N[1] + X[1], P[2] + DZ * N[2] + X[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + X[0] + Y[0],
+	    P[1] + DZ * N[1] + X[1] + Y[1],
+	    P[2] + DZ * N[2] + X[2] + Y[2]);
+    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + Y[0],
+	    P[1] + DZ * N[1] + Y[1], P[2] + DZ * N[2] + Y[2]);
+
+    /*
+     * output faces (back, front)
+     */
+    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", R_ABS, G_ABS, B_ABS);
+    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", R_REFL, G_REFL, B_REFL);
+
+    fclose(outf);
+
+}
+
+static void off_screen(const char *name, const double *P, const double *N,
+		       const double rf, const double gf, const double bf,
+		       const double rb, const double gb, const double bb)
 /*
- * writes 'OFF' file to 'name.off' for two sided plane. the plane is defined
+ * writes 'OFF' file to 'name.off' for screens defined
  * by the point 'P' and its normal vector 'N'.
- * two planes are actually draw:
- *	- front side ('P2', offset by 'dz'*'N') colored 'rf','gf','bf'
- *	- back side ('P')colored rb,gb,bb
- * the dimension of the planes drawn is 'x' by 'y'.
- * the structure of the vertices for two parallel
- * planes is identical to the one for a block. we
- * thus can abuse 'block_vertices()' for this task
  */
 {
     int i;
@@ -277,9 +513,9 @@ static void off_plane(const char *name, const double *P, const double *N,
     fprintf(outf, "8 2 0\n");	/* 8 vertices, 2 faces */
 
     for (i = 0; i < 3; i++)	/* 'P2' is point on front side */
-	P2[i] = P[i] + dz * N[i];
+	P2[i] = P[i] + DZ * N[i];
 
-    block_vertices(outf, P, P2, x, y);
+    block_vertices(outf, P, P2, S_SCREEN, S_SCREEN);
 
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
@@ -288,67 +524,19 @@ static void off_plane(const char *name, const double *P, const double *N,
     fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", rf, gf, bf);
 
     fclose(outf);
-}
-
-static void off_rectangle(const char *name, const double *P,
-			  const double *X, const double *Y,
-			  const double rf, const double gf,
-			  const double bf, const double rb,
-			  const double gb, const double bb,
-			  const double dz)
-{
-    double N[3];
-    FILE *outf = open_off(name);
-
-    cross_product(X, Y, N);
-    normalize(N);
-
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "8 2 0\n");	/* 6 vertices, 2 faces */
-
-    /* front side */
-    fprintf(outf, "%f\t%f\t%f\n", P[0], P[1], P[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0], P[1] + X[1], P[2] + X[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0] + Y[0], P[1] + X[1] + Y[1],
-	    P[2] + X[2] + Y[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + Y[0], P[1] + Y[1], P[2] + Y[2]);
-
-    /* backside side: offset by 'dz' times 'N' */
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0], P[1] + dz * N[1],
-	    P[2] + dz * N[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + X[0],
-	    P[1] + dz * N[1] + X[1], P[2] + dz * N[2] + X[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + X[0] + Y[0],
-	    P[1] + dz * N[1] + X[1] + Y[1],
-	    P[2] + dz * N[2] + X[2] + Y[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + dz * N[0] + Y[0],
-	    P[1] + dz * N[1] + Y[1], P[2] + dz * N[2] + Y[2]);
-
-    /*
-     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
-     */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", rf, gf, bf);
-    fclose(outf);
-
 }
 
 static void off_triangle(const char *name, const double *P1,
 			 const double *P2, const double *P3,
-			 const double *N, const double rf, const double gf,
-			 const double bf, const double rb, const double gb,
-			 const double bb, const double d)
+			 const double *N)
 /*
- * writes 'OFF' file to 'name.off' for two sided triangle. the triangle is defined
+ * writes 'OFF' file to 'name.off' for triangle defined
  * by the point 'P1' and the two sides 'P2' and 'P3'. its normal vector is 'N'.
- * two triangles are actually draw:
- *	- front side ('Pi', offset by 'dz'*'N') colored 'rf','gf','bf'
- *	- back side ('Pi')colored rb,gb,bb
  */
 {
-    const double dx = N[0] * d;
-    const double dy = N[1] * d;
-    const double dz = N[2] * d;
+    const double dx = N[0] * DZ;
+    const double dy = N[1] * DZ;
+    const double dz = N[2] * DZ;
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
@@ -366,429 +554,29 @@ static void off_triangle(const char *name, const double *P1,
 	    P3[2] + P1[2] + dz);
 
     /*
-     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
+     * output faces (back, front)
      */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
-    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f 1.0\n", rf, gf, bf);
-
-    fclose(outf);
-}
-
-static void off_ellipsoid(const char *name, const double *origin,
-			  const double *Z, const double *axes,
-			  const double z_min, const double
-			  z_max,
-			  const double ri, const double gi,
-			  const double bi, const double ro,
-			  const double go, const double bo,
-			  const double dz)
-{
-#define N_TRANS 11
-#define N_ROT 24
-
-    int i, j;
-    double alpha, beta;
-    const double delta_z = (z_max - z_min) / (N_TRANS - 1);
-    const double delta_phi = 2.0 * M_PI / N_ROT;
-    double l[3], g[3];
-    FILE *outf = open_off(name);
-
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "%d %d 0\n", 2 * N_TRANS * N_ROT,
-	    2 * (N_TRANS - 1) * N_ROT);
-
-    /*
-     * determine alpha, beta for transformation from local to global system.
-     * discard 'l'
-     */
-    g2l_off_rot(Z, l, &alpha, &beta);
-
-    /*
-     * calculate and output vertices
-     * outside surface ('ro', 'go', 'bo')
-     */
-    for (i = 0; i < N_TRANS; i++) {
-	double r;
-
-	l[2] = z_min + i * delta_z;
-	r = axes[0] * sqrt(1.0 - l[2] * l[2] / (axes[2] * axes[2]));
-
-	if (r < GSL_SQRT_DBL_EPSILON)
-	    r = GSL_SQRT_DBL_EPSILON;
-
-	for (j = 0; j < N_ROT; j++) {
-	    const double phi = j * delta_phi;
-
-	    l[0] = r * sin(phi);
-	    l[1] = r * cos(phi);
-
-	    l2g_off(origin, l, g, alpha, beta);
-
-	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
-	}
-    }
-
-    /*
-     * calculate and output vertices
-     * inside surface scaled by 'dz' ('ri', 'gi', 'bi')
-     */
-    for (i = 0; i < N_TRANS; i++) {
-	double r;
-
-	l[2] = z_min + i * delta_z;
-	r = dz * axes[0] * sqrt(1.0 - l[2] * l[2] / (axes[2] * axes[2]));
-
-	if (r < GSL_SQRT_DBL_EPSILON)
-	    r = GSL_SQRT_DBL_EPSILON;
-
-	for (j = 0; j < N_ROT; j++) {
-	    const double phi = j * delta_phi;
-
-	    l[0] = r * sin(phi);
-	    l[1] = r * cos(phi);
-
-	    l2g_off(origin, l, g, alpha, beta);
-
-	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
-	}
-    }
-
-    /*
-     * outside surface
-     * output faces (N_ROT=12, N_TRANS=5)
-     *   0       1      13      12       0
-     *   1       2      14      13       1
-     *           .
-     *  10      11      23      22      10
-     *  11       0      12      23      11
-     *  12      13      25      24      12
-     *           .
-     *           .
-     *           .
-     *  46      47      59      58      46
-     *  47      36      48      59      47
-     */
-    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
-	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i, i + 1, i + 1 + N_ROT, i + N_ROT, i, ro, go, bo);
-	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i, i + 1 - N_ROT, i + 1, i + N_ROT, i, ro, go, bo);
-
-    /*
-     * same for inside surface
-     */
-    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
-	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i + N_TRANS * N_ROT, i + 1 + N_TRANS * N_ROT,
-		    i + 1 + N_ROT + N_TRANS * N_ROT,
-		    i + N_ROT + N_TRANS * N_ROT, i + N_TRANS * N_ROT, ri,
-		    gi, bi);
-	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i + N_TRANS * N_ROT, i + N_TRANS * N_ROT + 1 - N_ROT,
-		    i + N_TRANS * N_ROT + 1, i + N_TRANS * N_ROT + N_ROT,
-		    i + N_TRANS * N_ROT, ri, gi, bi);
-
-    fclose(outf);
-
-}
-
-static void off_paraboloid(const char *name, const double *origin,
-			   const double *Z, const double a,
-			   const double z_min, const double z_max,
-			   const double ri, const double gi,
-			   const double bi, const double ro,
-			   const double go, const double bo,
-			   const double dz)
-{
-#define N_TRANS 11
-#define N_ROT 24
-
-    int i, j;
-    double alpha, beta;
-    double O[] = { 0.0, 0.0, 0.0 };
-    const double delta_z = (z_max - z_min) / (N_TRANS - 1);
-    const double delta_phi = 2.0 * M_PI / N_ROT;
-    double l[3], g[3];
-    FILE *outf = open_off(name);
-
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "%d %d 0\n", 2 * N_TRANS * N_ROT,
-	    2 * (N_TRANS - 1) * N_ROT);
-
-    /*
-     * determine alpha, beta for transformation from local to global system.
-     * discard 'l'
-     */
-    g2l_off(O, Z, l, &alpha, &beta);
-
-    /*
-     * calculate and output vertices
-     * outside surface ('ro', 'go', 'bo')
-     */
-    for (i = 0; i < N_TRANS; i++) {
-	double r;
-
-	l[2] = z_min + i * delta_z;
-	r = sqrt(4.0 * a * l[2]);
-
-	if (r < GSL_SQRT_DBL_EPSILON)
-	    r = GSL_SQRT_DBL_EPSILON;
-
-	for (j = 0; j < N_ROT; j++) {
-	    const double phi = j * delta_phi;
-
-	    l[0] = r * sin(phi);
-	    l[1] = r * cos(phi);
-
-	    l2g_off(origin, l, g, alpha, beta);
-
-	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
-	}
-    }
-
-    /*
-     * calculate and output vertices
-     * inside surface scaled by 'dz' ('ri', 'gi', 'bi')
-     */
-    for (i = 0; i < N_TRANS; i++) {
-	double r;
-
-	l[2] = z_min + i * delta_z;
-	r = dz * sqrt(4.0 * a * l[2]);
-
-	if (r < GSL_SQRT_DBL_EPSILON)
-	    r = GSL_SQRT_DBL_EPSILON;
-
-	for (j = 0; j < N_ROT; j++) {
-	    const double phi = j * delta_phi;
-
-	    l[0] = r * sin(phi);
-	    l[1] = r * cos(phi);
-
-	    l2g_off(origin, l, g, alpha, beta);
-
-	    fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
-	}
-    }
-
-    /*
-     * outside surface
-     * output faces (N_ROT=12, N_TRANS=5)
-     *   0       1      13      12       0
-     *   1       2      14      13       1
-     *           .
-     *  10      11      23      22      10
-     *  11       0      12      23      11
-     *  12      13      25      24      12
-     *           .
-     *           .
-     *           .
-     *  46      47      59      58      46
-     *  47      36      48      59      47
-     */
-    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
-	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i, i + 1, i + 1 + N_ROT, i + N_ROT, i, ro, go, bo);
-	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i, i + 1 - N_ROT, i + 1, i + N_ROT, i, ro, go, bo);
-
-    /*
-     * same for inside surface
-     */
-    for (i = 0; i < (N_TRANS - 1) * N_ROT; i++)
-	if ((i + 1) % N_ROT)
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i + N_TRANS * N_ROT, i + 1 + N_TRANS * N_ROT,
-		    i + 1 + N_ROT + N_TRANS * N_ROT,
-		    i + N_ROT + N_TRANS * N_ROT, i + N_TRANS * N_ROT, ri,
-		    gi, bi);
-	else
-	    fprintf(outf, "5 %d\t%d\t%d\t%d\t%d\t%f\t%f\t%f 1.0\n",
-		    i + N_TRANS * N_ROT, i + N_TRANS * N_ROT + 1 - N_ROT,
-		    i + N_TRANS * N_ROT + 1, i + N_TRANS * N_ROT + N_ROT,
-		    i + N_TRANS * N_ROT, ri, gi, bi);
-
-    fclose(outf);
-
-}
-
-static void off_disk(const char *name, const double *origin,
-		     const double *dir, const double r, const double rf,
-		     const double gf, const double bf, const double rb,
-		     const double gb, const double bb, const double dz)
-/*
- * writes 'OFF' file to 'name.off' for disk. the disk is defined by its
- * center 'origin', normal vector 'dir' and radius 'r'.
- * two planes are actually draw:
- *	- front side (offset by 'dz') colored 'rf','gf','bf'
- *	- back side colored rb,gb,bb
- */
-{
-    double P[3], g_P[3];
-    double alpha, beta;
-    int i;
-
-    FILE *outf = open_off(name);
-
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "24 2 0\n");	/* 2*12 vertices, 2 faces */
-
-    /*
-     * determine alpha, beta for transformation from local to global system.
-     * discard 'P'
-     */
-    g2l_off_rot(dir, P, &alpha, &beta);
-
-    /*
-     * vertices at center
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	P[0] = r * sin(arg);
-	P[1] = r * cos(arg);
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
-
-    /*
-     * vertices at center + 'dz'
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	P[0] = r * sin(arg);
-	P[1] = r * cos(arg);
-	P[2] = dz;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
-    /*
-     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
-     */
-    fprintf(outf, "13 ");
-    for (i = 0; i < 12; i++)
-	fprintf(outf, "%d ", i);
-    fprintf(outf, "0 %f\t%f\t%f 1.0\n", rb, gb, bb);
-
-    fprintf(outf, "13 ");
-    for (i = 12; i < 24; i++)
-	fprintf(outf, "%d ", i);
-    fprintf(outf, "12 %f\t%f\t%f 1.0\n", rf, gf, bf);
-
-    fclose(outf);
-}
-
-static void off_annulus(const char *name, const double *origin,
-			const double *dir, const double R, const double r,
-			const double rf, const double gf, const double bf,
-			const double rb, const double gb, const double bb,
-			const double dz)
-/*
- * writes 'OFF' file to 'name.off' for disk. the disk is defined by its
- * center 'origin', normal vector 'dir' and radius 'r'.
- * two planes are actually draw:
- *	- front side (offset by 'dz') colored 'rf','gf','bf'
- *	- back side colored rb,gb,bb
- */
-{
-    double P[3], g_P[3];
-    double alpha, beta;
-    int i;
-
-    FILE *outf = open_off(name);
-
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "48 24 0\n");	/* 2*12 vertices,
-				   2 faces with 12 patches each */
-
-    /*
-     * determine alpha, beta for transformation from local to global system.
-     * discard 'P'
-     */
-    g2l_off_rot(dir, P, &alpha, &beta);
-
-    /*
-     * vertices at center
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = R * sa;
-	P[1] = R * ca;
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-	P[0] = r * sa;
-	P[1] = r * ca;
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
-
-    /*
-     * vertices at center + 'dz'
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = R * sa;
-	P[1] = R * ca;
-	P[2] = dz;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-	P[0] = r * sa;
-	P[1] = r * ca;
-	P[2] = dz;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
-    /*
-     * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
-     */
-    for (i = 0; i < 11; i++) {
-	const int base = 2 * i;
-	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", base, base + 1,
-		base + 3, base + 2, base, rb, gb, bb);
-    }
-    fprintf(outf, "5 22 23 1 0 22 %f\t%f\t%f 1.0\n", rb, gb, bb);
-
-    for (i = 12; i < 23; i++) {
-	const int base = 2 * i;
-	fprintf(outf, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", base, base + 1,
-		base + 3, base + 2, base, rf, gf, bf);
-    }
-    fprintf(outf, "5 46 47 25 24 46 %f\t%f\t%f 1.0\n", rf, gf, bf);
+    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", R_ABS, G_ABS, B_ABS);
+    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f 1.0\n", R_REFL, G_REFL, B_REFL);
 
     fclose(outf);
 }
 
 static void off_window(const char *name, const double *origin,
-		       const double *dir, const double R, const double d,
-		       const double r, const double g, const double b)
+		       const double *dir, const double R, const double d)
 {
 /*
  * writes 'OFF' file to 'name.off' for window. the window is defined by the
  * center 'origin' of one face, the direction vector 'dir' of the cylinder,
  * its radius 'r', and its thickness.
  */
-    double P[3], g_P[3];
+    double P[3];
     double alpha, beta;
-    int i;
-
     FILE *outf = open_off(name);
 
     fprintf(outf, "OFF\n");
-    fprintf(outf, "24 14 0\n");	/* 2*12 vertices,
-				   2 faces with 1 patch each
-				   plus cylinde wall with 12 patches */
+    fprintf(outf, "%d %d 0\n", 2 * N_ROT, N_ROT + 2);
+    /* 2 faces with 1 patch each plus cylinder wall with 'N_ROT' patches */
 
     /*
      * determine alpha, beta for transformation from local to global system.
@@ -796,160 +584,60 @@ static void off_window(const char *name, const double *origin,
      */
     g2l_off_rot(dir, P, &alpha, &beta);
 
-    /*
-     * vertices at first face
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = R * sa;
-	P[1] = R * ca;
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
+    write_ring_vertices(outf, 0.0, R, origin, alpha, beta);
+    write_ring_vertices(outf, d, R, origin, alpha, beta);
 
-    /*
-     * vertices at second face (+ 'd')
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = R * sa;
-	P[1] = R * ca;
-	P[2] = d;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
+    WRITE_W_FACE(outf, 0, R_TRNSP, G_TRNSP, B_TRNSP);
+    WRITE_W_FACE(outf, N_ROT, R_TRNSP, G_TRNSP, B_TRNSP);
 
-    /*
-     * print two faces
-     */
-    fprintf(outf, "13 ");
-    for (i = 0; i < 12; i++)
-	fprintf(outf, "%d ", i);
-    fprintf(outf, "0 %f\t%f\t%f\t 1.0\n", r, g, b);
-
-    fprintf(outf, "13 ");
-    for (i = 12; i < 24; i++)
-	fprintf(outf, "%d ", i);
-    fprintf(outf, "12 %f\t%f\t%f\t 1.0\n", r, g, b);
-
-    /*
-     * print cylinder wall black
-     */
-    for (i = 0; i < 11; i++)
-	fprintf(outf, "5 %d %d %d %d %d 0.0 0.0 0.0 1.0\n", i, i + 1,
-		i + 13, i + 12, i);
-    fprintf(outf, "5 11 0 12 23 0.0 0.0 0.0 1.0\n");
+    WRITE_C_WALL(outf, 0, R_ABS, G_ABS, B_ABS);
 
     fclose(outf);
 }
 
-static void off_cylinder(const char *name, const double *origin,
-			 const double *dir, const double L,
-			 const double radius, const double r,
-			 const double g, const double b,
-			 const double Radius, const double R,
-			 const double G, const double B)
+
+
+static void output_sources(const config_t * cfg)
 {
-/*
- * writes 'OFF' file to 'name.off' for cylinder with radius 'Radius',
- * length 'L' with direction of axis 'dir'. 'radius', 'r', 'g', 'b' define
- * inside wall of cylinder while 'Radius', 'R', 'G', 'B' define its outside
- * wall
- */
-    double P[3], g_P[3];
-    double alpha, beta;
     int i;
+    const config_setting_t *s = config_lookup(cfg, "sources");
+    const int n_sources = config_setting_length(s);
 
-    FILE *outf = open_off(name);
+    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
+	const char *type, *name;
+	const config_setting_t *this_s =
+	    config_setting_get_elem(s, (unsigned int) i);
 
-    fprintf(outf, "OFF\n");
-    fprintf(outf, "48 24 0\n");
+	config_setting_lookup_string(this_s, "name", &name);
+	config_setting_lookup_string(this_s, "type", &type);
 
-    /*
-     * determine alpha, beta for transformation from local to global system.
-     * discard 'P'
-     */
-    g2l_off_rot(dir, P, &alpha, &beta);
+	if (!strcmp(type, "sphere") || !strcmp(type, "solid sphere")) {
+	    double O[3];
+	    double radius;
 
-    /*
-     * OUTSIDE: vertices at first face
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = Radius * sa;
-	P[1] = Radius * ca;
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
+	    read_vector(this_s, "origin", O);
+	    config_setting_lookup_float(this_s, "radius", &radius);
 
-    /*
-     * OUTSIDE: vertices at second face (+ 'L')
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = Radius * sa;
-	P[1] = Radius * ca;
-	P[2] = L;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
+	    off_sphere_src(name, O, radius);
+	} /* end 'sphere' or 'solid_sphere' */
+	else if (!strcmp(type, "spot source")) {
+	    double O[3], dir[3];
 
-    /*
-     * INSIDE: vertices at first face
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = radius * sa;
-	P[1] = radius * ca;
-	P[2] = 0.0;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
+	    read_vector(this_s, "origin", O);
+	    read_vector(this_s, "direction", dir);
 
-    /*
-     * INSIDE: vertices at second face (+ 'L')
-     */
-    for (i = 0; i < 12; i++) {
-	const double arg = i / 6.0 * M_PI;	/* i * 30 / 360 * 2 * M_PI */
-	const double sa = sin(arg);
-	const double ca = cos(arg);
-	P[0] = radius * sa;
-	P[1] = radius * ca;
-	P[2] = L;
-	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
-    }
-    /*
-     * print cylinder OUTSIDE wall
-     */
-    for (i = 0; i < 11; i++)
-	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
-		i + 13, i + 12, i, R, G, B);
-    fprintf(outf, "5 11 0 12 23 11 %f %f %f 1.0\n", R, G, B);
+	    off_spot_src(name, O, dir);
 
-    /*
-     * print cylinder INSIDE wall
-     */
-    for (i = 12; i < 23; i++)
-	fprintf(outf, "5 %d %d %d %d %d %f %f %f 1.0\n", i, i + 1,
-		i + 13, i + 12, i, r, g, b);
-    fprintf(outf, "5 35 24 36 47 35 %f %f %f 1.0\n", r, g, b);
+	} /* end 'spot source' */
+	else if (!strcmp(type, "uniform point source")) {
+	    double O[3];
 
-    fclose(outf);
+	    read_vector(this_s, "origin", O);
+
+	    off_sphere_src(name, O, R_POINT_SRC);
+	}			/* end 'uniform point source' */
+    }				/* end all sources */
 }
-
 
 static void output_targets(const config_t * cfg)
 {
@@ -965,175 +653,7 @@ static void output_targets(const config_t * cfg)
 	config_setting_lookup_string(this_t, "name", &name);
 	config_setting_lookup_string(this_t, "type", &type);
 
-	if (!strcmp(type, "one-sided plane screen")) {
-	    double P[3], N[3];
-	    double X[3], Y[3];
-
-	    read_vector(this_t, "point", P);
-	    read_vector_normalize(this_t, "normal", N);
-	    read_vector_normalize(this_t, "x", X);
-
-	    /* Y = N cross X */
-	    cross_product(N, X, Y);
-
-	    off_axes(name, P, X, Y, N);	/* local system */
-
-	    /*
-	     * draw plane:
-	     *   front (red, counter) at 'P'+'DZ'
-	     *   back side (black) at 'P'
-	     */
-	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0,
-		      DZ);
-
-	} else if (!strcmp(type, "two-sided plane screen")) {
-	    double P[3], N[3];
-	    double X[3], Y[3];
-
-	    read_vector(this_t, "point", P);
-	    read_vector_normalize(this_t, "normal", N);
-	    read_vector_normalize(this_t, "x", X);
-
-	    /* Y = N cross X */
-	    cross_product(N, X, Y);
-
-	    off_axes(name, P, X, Y, N);	/*local system */
-
-	    /*
-	     * draw plane:
-	     *   front (red, counter) at 'P'+'DZ'
-	     *   back side (red, counter) at 'P'
-	     */
-	    off_plane(name, P, N, 10.0, 10.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0,
-		      DZ);
-
-	} else if (!strcmp(type, "rectangle")) {
-	    int j;
-	    double P[3], N[3];
-	    double X[3], Y[3];
-
-	    /*
-	     * read three corner points:
-	     * P1:
-	     * P2: -> P2-P1 defines x axis
-	     * P3: -> P3-P1 defines y axis
-	     */
-	    read_vector(this_t, "P1", P);
-	    read_vector(this_t, "P2", X);
-	    read_vector(this_t, "P3", Y);
-	    for (j = 0; j < 3; j++) {
-		X[j] -= P[j];
-		Y[j] -= P[j];
-	    }
-
-	    /*
-	     * draw plane:
-	     *   front (white, mirror) at 'P'+'DZ'
-	     *   rear side (black, absorbs) at 'P'
-	     */
-	    off_rectangle(name, P, X, Y, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
-
-	    /* make 'P1' point to center of rectangle */
-	    for (j = 0; j < 3; j++)
-		P[j] += (X[j] + Y[j]) / 2.0;
-
-	    normalize(X);
-	    normalize(Y);
-	    /* surface normal N = X cross Y */
-	    cross_product(X, Y, N);
-
-	    off_axes(name, P, X, Y, N);	/*local system */
-
-	} else if (!strcmp(type, "triangle")) {
-	    int j;
-	    double P1[3];
-	    double P2[3];	/* redefined 'P2'='P2'-'P1' */
-	    double P3[3];	/* redefined 'P3'='P3'-'P1' */
-	    double N[3];	/* 'P2' cross 'P3' */
-	    double Y[3];	/* local system. 'X' parallel 'P2' */
-	    config_setting_t *this;
-
-	    read_vector(this_t, "P1", P1);
-
-	    this = config_setting_get_member(this_t, "P2");
-	    for (j = 0; j < 3; j++)
-		P2[j] = config_setting_get_float_elem(this, j) - P1[j];
-
-	    this = config_setting_get_member(this_t, "P3");
-	    for (j = 0; j < 3; j++)
-		P3[j] = config_setting_get_float_elem(this, j) - P1[j];
-
-	    /* N = P2 cross P3 */
-	    cross_product(P2, P3, N);
-	    normalize(N);
-
-	    /*
-	     * draw triangle:
-	     *   front (white, mirror) at 'P1' + 'N' * 'DZ'
-	     *   rear side (black, absorbs) at 'P1'
-	     */
-	    off_triangle(name, P1, P2, P3, N, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-			 DZ);
-
-	    /* 'Y' = 'N' cross 'P2' */
-	    normalize(P2);
-	    cross_product(N, P2, Y);
-
-	    off_axes(name, P1, P2, Y, N);	/*local system */
-
-	} else if (!strcmp(type, "ellipsoid")) {
-	    double O[3], X[3], Y[3], Z[3];
-	    double axes[3];
-	    double z_min, z_max;
-	    const char *S;
-
-	    read_vector(this_t, "center", O);
-	    read_vector_normalize(this_t, "x", X);
-	    read_vector_normalize(this_t, "z", Z);
-	    read_vector(this_t, "axes", axes);
-
-	    config_setting_lookup_float(this_t, "z_min", &z_min);
-	    config_setting_lookup_float(this_t, "z_max", &z_max);
-
-	    orthonormalize(X, Y, Z);
-
-	    off_axes(name, O, X, Y, Z);	/*local system */
-
-	    /*
-	     * draw ellipsoid:
-	     *   inside: (white, reflecting) scaled by 1-'DZ'
-	     *   outside (black, absorbing)
-	     *   or vice versa (colors) if reflecting surface is outside
-	     */
-	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
-	    if (!strcmp(S, "inside"))
-		off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0,
-			      1.0, 0.0, 0.0, 0.0, 1.0 - DZ);
-	    else
-		off_ellipsoid(name, O, Z, axes, z_min, z_max, 0.0, 0.0,
-			      0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
-
-	} else if (!strcmp(type, "disk")) {
-	    double O[3], X[3], Y[3], Z[3];
-	    double r;
-
-	    read_vector(this_t, "P", O);
-	    read_vector_normalize(this_t, "x", X);
-	    read_vector_normalize(this_t, "N", Z);
-	    config_setting_lookup_float(this_t, "r", &r);
-
-	    orthonormalize(X, Y, Z);
-
-	    off_axes(name, O, X, Y, Z);	/*local system */
-
-	    /*
-	     * draw disk:
-	     *   front (white, mirror) at 'P'+'DZ'
-	     *   rear side (black, absorbs) at 'P'
-	     */
-	    off_disk(name, O, Z, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, DZ);
-
-	} else if (!strcmp(type, "annulus")) {
+	if (!strcmp(type, "annulus")) {
 	    double O[3], X[3], Y[3], Z[3];
 	    double R, r;
 
@@ -1147,13 +667,30 @@ static void output_targets(const config_t * cfg)
 
 	    off_axes(name, O, X, Y, Z);	/*local system */
 
-	    /*
-	     * draw disk:
-	     *   front (white, mirror) at 'P'+'DZ'
-	     *   rear side (black, absorbs) at 'P'
-	     */
-	    off_annulus(name, O, Z, R, r, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0,
-			DZ);
+	    off_annulus(name, O, Z, R, r);
+
+	} else if (!strcmp(type, "cone")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double R, r;
+	    double h;
+	    const char *S;
+
+	    read_vector(this_t, "origin", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "axis", Z);
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_float(this_t, "R", &R);
+	    config_setting_lookup_float(this_t, "r", &r);
+	    config_setting_lookup_float(this_t, "h", &h);
+
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_cone(name, O, Z, h, R, r, INSIDE);
+	    else
+		off_cone(name, O, Z, h, R, r, OUTSIDE);
 
 	} else if (!strcmp(type, "cylinder")) {
 	    double O[3], X[3], Y[3], Z[3];
@@ -1173,32 +710,49 @@ static void output_targets(const config_t * cfg)
 
 	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
 	    if (!strcmp(S, "inside"))
-		off_cylinder(name, O, Z, l, r * (1.0 - DZ), 0.39, 0.785,
-			     0.785, r, 0.0, 0.0, 0.0);
+		off_cone(name, O, Z, l, r, r, INSIDE);
 	    else
-		off_cylinder(name, O, Z, l, r * (1.0 - DZ), 0.0, 0.0, 0.0,
-			     r, 0.39, 0.785, 0.785);
-	} else if (!strcmp(type, "window")) {
-	    double O[3], X[3], Y[3], Z[3];
-	    double d, r;
+		off_cone(name, O, Z, l, r, r, OUTSIDE);
 
-	    read_vector(this_t, "C", O);
+	} else if (!strcmp(type, "disk")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double r;
+
+	    read_vector(this_t, "P", O);
 	    read_vector_normalize(this_t, "x", X);
-	    read_vector_normalize(this_t, "a", Z);
-	    config_setting_lookup_float(this_t, "d", &d);
+	    read_vector_normalize(this_t, "N", Z);
 	    config_setting_lookup_float(this_t, "r", &r);
 
 	    orthonormalize(X, Y, Z);
 
 	    off_axes(name, O, X, Y, Z);	/*local system */
 
-	    /*
-	     * draw window:
-	     *   front at 'C'+'d'
-	     *   rear at 'C'
-	     *   tiny hole in the middle
-	     */
-	    off_window(name, O, Z, r, d, 0.39, 0.785, 0.785);
+	    off_annulus(name, O, Z, r, 0.0);
+
+	} else if (!strcmp(type, "ellipsoid")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double axes[3];
+	    double z_min, z_max;
+	    const char *S;
+
+	    read_vector(this_t, "center", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "z", Z);
+	    read_vector(this_t, "axes", axes);
+
+	    config_setting_lookup_float(this_t, "z_min", &z_min);
+	    config_setting_lookup_float(this_t, "z_max", &z_max);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
+	    if (!strcmp(S, "inside"))
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, INSIDE);
+	    else
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, OUTSIDE);
+
 	} else if (!strcmp(type, "paraboloid")) {
 	    double vertex[3], X[3], Y[3], Z[3];
 	    double foc;
@@ -1219,11 +773,67 @@ static void output_targets(const config_t * cfg)
 
 	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
 	    if (!strcmp(S, "inside"))
-		off_paraboloid(name, vertex, Z, foc, z_min + DZ, z_max,
-			       1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 1.0 - DZ);
+		off_paraboloid(name, vertex, Z, foc, z_min, z_max, INSIDE);
 	    else
-		off_paraboloid(name, vertex, Z, foc, z_min, z_max, 0.0,
-			       0.0, 0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
+		off_paraboloid(name, vertex, Z, foc, z_min, z_max,
+			       OUTSIDE);
+
+	} else if (!strcmp(type, "one-sided plane screen")) {
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
+
+	    cross_product(N, X, Y);
+
+	    off_axes(name, P, X, Y, N);	/* local system */
+
+	    off_screen(name, P, N, R_SCREEN, G_SCREEN, B_SCREEN, R_ABS,
+		       G_ABS, B_ABS);
+
+	} else if (!strcmp(type, "two-sided plane screen")) {
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    read_vector(this_t, "point", P);
+	    read_vector_normalize(this_t, "normal", N);
+	    read_vector_normalize(this_t, "x", X);
+
+	    cross_product(N, X, Y);
+
+	    off_axes(name, P, X, Y, N);	/*local system */
+
+	    off_screen(name, P, N, R_SCREEN, G_SCREEN, B_SCREEN, R_SCREEN,
+		       G_SCREEN, B_SCREEN);
+
+	} else if (!strcmp(type, "rectangle")) {
+	    int j;
+	    double P[3], N[3];
+	    double X[3], Y[3];
+
+	    read_vector(this_t, "P1", P);
+	    read_vector(this_t, "P2", X);
+	    read_vector(this_t, "P3", Y);
+	    for (j = 0; j < 3; j++) {
+		X[j] -= P[j];
+		Y[j] -= P[j];
+	    }
+
+	    off_rectangle(name, P, X, Y);
+
+	    /* make 'P1' point to center of rectangle */
+	    for (j = 0; j < 3; j++)
+		P[j] += (X[j] + Y[j]) / 2.0;
+
+	    normalize(X);
+	    normalize(Y);
+	    /* surface normal N = X cross Y */
+	    cross_product(X, Y, N);
+
+	    off_axes(name, P, X, Y, N);	/*local system */
+
 	} else if (!strcmp(type, "sphere")) {
 	    double O[3], X[3], Y[3], Z[3];
 	    double axes[3];
@@ -1252,71 +862,57 @@ static void output_targets(const config_t * cfg)
 	     */
 	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
 	    if (!strcmp(S, "inside"))
-		off_ellipsoid(name, O, Z, axes, z_min, z_max, 1.0, 1.0,
-			      1.0, 0.0, 0.0, 0.0, 1.0 - DZ);
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, INSIDE);
 	    else
-		off_ellipsoid(name, O, Z, axes, z_min, z_max, 0.0, 0.0,
-			      0.0, 1.0, 1.0, 1.0, 1.0 - DZ);
+		off_ellipsoid(name, O, Z, axes, z_min, z_max, OUTSIDE);
+
+	} else if (!strcmp(type, "triangle")) {
+	    int j;
+	    double P1[3];
+	    double P2[3];	/* redefined 'P2'='P2'-'P1' */
+	    double P3[3];	/* redefined 'P3'='P3'-'P1' */
+	    double N[3];	/* 'P2' cross 'P3' */
+	    double Y[3];	/* local system. 'X' parallel 'P2' */
+	    config_setting_t *this;
+
+	    read_vector(this_t, "P1", P1);
+
+	    this = config_setting_get_member(this_t, "P2");
+	    for (j = 0; j < 3; j++)
+		P2[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+	    this = config_setting_get_member(this_t, "P3");
+	    for (j = 0; j < 3; j++)
+		P3[j] = config_setting_get_float_elem(this, j) - P1[j];
+
+	    cross_product(P2, P3, N);
+	    normalize(N);
+
+	    off_triangle(name, P1, P2, P3, N);
+
+	    normalize(P2);
+	    cross_product(N, P2, Y);
+
+	    off_axes(name, P1, P2, Y, N);	/*local system */
+
+	} else if (!strcmp(type, "window")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double d, r;
+
+	    read_vector(this_t, "C", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "a", Z);
+	    config_setting_lookup_float(this_t, "d", &d);
+	    config_setting_lookup_float(this_t, "r", &r);
+
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    off_window(name, O, Z, r, d);
+
 	}
     }				/* end all targets */
-}
-
-static void output_sources(const config_t * cfg)
-{
-    int i;
-    const config_setting_t *s = config_lookup(cfg, "sources");
-    const int n_sources = config_setting_length(s);
-
-    for (i = 0; i < n_sources; ++i) {	/* iterate through all sources */
-	const char *type, *name;
-	const config_setting_t *this_s =
-	    config_setting_get_elem(s, (unsigned int) i);
-
-	config_setting_lookup_string(this_s, "name", &name);
-	config_setting_lookup_string(this_s, "type", &type);
-
-	if (!strcmp(type, "uniform point source")) {
-	    double O[3];
-
-	    read_vector(this_s, "origin", O);
-
-	    /*
-	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
-	     * with size 1.2
-	     * at origin 'O'
-	     */
-	    off_sphere(name, O, 1.2, 1.0, 1.0, 0.0);
-	} /* end 'uniform point source' */
-	else if (!strcmp(type, "sphere") || !strcmp(type, "solid sphere")) {
-	    double O[3];
-	    double radius;
-
-	    read_vector(this_s, "origin", O);
-	    config_setting_lookup_float(this_s, "radius", &radius);
-
-	    /*
-	     * draw yellow (rgb=1.0,1.0,0.0) octahedron
-	     * with size 'radius'
-	     * at origin 'O'
-	     */
-	    off_sphere(name, O, radius, 1.0, 1.0, 0.0);
-	} /* end 'sphere' or 'solid_sphere' */
-	else if (!strcmp(type, "spot source")) {
-	    double O[3], dir[3];
-
-	    read_vector(this_s, "origin", O);
-	    read_vector(this_s, "direction", dir);
-
-	    /*
-	     * draw yellow (rgb=1.0,1.0,0.0) cone
-	     * with size 1.2
-	     * at origin 'O'
-	     * in direction 'dir'
-	     */
-	    off_cone(name, O, dir, 1.2, 1.0, 1.0, 0.0);
-	}
-	/* end 'spot source' */
-    }				/* end all sources */
 }
 
 
@@ -1332,6 +928,25 @@ void output_geometry(config_t * cfg)
 
     output_sources(cfg);
     output_targets(cfg);
+}
+
+FILE *open_off(const char *name)
+{
+    char f_name[256];
+
+    snprintf(f_name, 256, "%s.off", name);
+    return fopen(f_name, "w");
+}
+
+void write_ray(FILE * f, const double *start, const double *stop,
+	       const int r, const int g, const int b)
+{
+    fprintf(f, "{ = OFF\n");
+    fprintf(f, "8 6 0\n");
+
+    block_vertices(f, start, stop, RAY_DIAMETER, RAY_DIAMETER);
+    block_faces(f, 0, r, g, b);
+    fprintf(f, "}\n");
 }
 
 void g2l_off(const double *P, const double *N, double *L,
@@ -1382,12 +997,12 @@ void l2g_off(const double *P, const double *L, double *G,
  */
 {
     int i;
-    const double ca = cos(-alpha);
-    const double cb = cos(-beta);
-    const double sa = sin(-alpha);
-    const double sb = sin(-beta);
+    double sa, ca, sb, cb;
+    double x;
 
-    const double x = L[0] * ca - L[2] * sa;
+    sincos(-alpha, &sa, &ca);
+    sincos(-beta, &sb, &cb);
+    x = L[0] * ca - L[2] * sa;
 
     G[0] = x * cb - L[1] * sb;
     G[1] = -x * sb - L[1] * cb;
@@ -1437,35 +1052,14 @@ void l2g_off_rot(const double *L, double *G, const double alpha,
  * return alpha, beta, and resulting vector in G
  */
 {
-    const double ca = cos(-alpha);
-    const double cb = cos(-beta);
-    const double sa = sin(-alpha);
-    const double sb = sin(-beta);
+    double sa, ca, sb, cb;
+    double x;
 
-    const double x = L[0] * ca - L[2] * sa;
+    sincos(-alpha, &sa, &ca);
+    sincos(-beta, &sb, &cb);
+    x = L[0] * ca - L[2] * sa;
 
     G[0] = x * cb - L[1] * sb;
     G[1] = -x * sb - L[1] * cb;
     G[2] = L[0] * sa + L[2] * ca;;
-}
-
-FILE *open_off(const char *name)
-{
-    char f_name[256];
-
-    snprintf(f_name, 256, "%s.off", name);
-    return fopen(f_name, "w");
-}
-
-void write_ray(FILE * f, const double *start, const double *stop,
-	       const int r, const int g, const int b)
-{
-#define DIAMETER 0.05
-
-    fprintf(f, "{ = OFF\n");
-    fprintf(f, "8 6 0\n");
-
-    block_vertices(f, start, stop, DIAMETER, DIAMETER);
-    block_faces(f, 0, r, g, b);
-    fprintf(f, "}\n");
 }
