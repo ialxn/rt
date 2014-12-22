@@ -73,7 +73,6 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
 			const double p_missed)
 {
     size_t i;
-    double t;
     double min, max;
     const size_t n = gsl_histogram_bins(h);
 
@@ -82,17 +81,13 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
      * divide by bin width. all bins are identical so use bin 0.
      */
     gsl_histogram_get_range(h, 0, &min, &max);
-    t = max - min;
-    gsl_histogram_scale(h, 1.0 / t);
+    gsl_histogram_scale(h, 1.0 / (max - min));
 
     /* print header with statistics */
     fprintf(f_out, "#   histogram definition\n");
-    t = gsl_histogram_min(h);
-    fprintf(f_out, "#      minimum x-value: %.0f\n", t);
-    t = gsl_histogram_max(h);
-    fprintf(f_out, "#      maximum x-value: %.0f\n", t);
-    i = gsl_histogram_bins(h);
-    fprintf(f_out, "#       number of bins: %d\n", i);
+    fprintf(f_out, "#      minimum x-value: %.0f\n", gsl_histogram_min(h));
+    fprintf(f_out, "#      maximum x-value: %.0f\n", gsl_histogram_max(h));
+    fprintf(f_out, "#       number of bins: %d\n", gsl_histogram_bins(h));
 
     fprintf(f_out, "#\n#   histogram statistics\n");
     fprintf(f_out, "#      number of data points not included: %d\n",
@@ -104,18 +99,18 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#               total power accounted for: %e\n#\n",
 	    p_inc);
 
-    t = gsl_histogram_min_val(h);
     i = gsl_histogram_min_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
-    fprintf(f_out, "#        minimum y-value: %e\n", t);
+    fprintf(f_out, "#        minimum y-value: %e\n",
+	    gsl_histogram_min_val(h));
     fprintf(f_out,
 	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
 	    min, max);
 
-    t = gsl_histogram_max_val(h);
     i = gsl_histogram_max_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
-    fprintf(f_out, "#        maximum y-value: %e\n", t);
+    fprintf(f_out, "#        maximum y-value: %e\n",
+	    gsl_histogram_max_val(h));
     fprintf(f_out,
 	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
 	    min, max);
@@ -131,9 +126,9 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
 
 	gsl_histogram_get_range(h, i, &min, &max);
 	t_x = (min + max) / 2.0;
-	t = gsl_histogram_get(h, i);
 
-	fprintf(f_out, "%.1f\t%e\t%.0f\t%.0f\n", t_x, t, min, max);
+	fprintf(f_out, "%.1f\t%e\t%.0f\t%.0f\n", t_x,
+		gsl_histogram_get(h, i), min, max);
     }
 }
 
