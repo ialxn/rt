@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 {
     float t[MAX_FLOAT_ITEMS];
     unsigned char tmp_8;
-    size_t idx_p, idx_l;
+    size_t idx_l;
     size_t n_float_items_read, n_uchar_items_read;
     int coordinates = LOCAL;
     double M[9];
@@ -90,7 +90,7 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
     }
 
-    if (get_idx(stdin, &idx_l, &idx_p) == ERR)
+    if (get_idx(stdin, &idx_l) == ERR)
 	exit(EXIT_FAILURE);
 
     if (coordinates == LOCAL) {
@@ -100,9 +100,9 @@ int main(int argc, char **argv)
 	read_transformation(stdin, M, origin);
 
     /*
-     * read data. (x,y,[z,]power,lambda)
+     * read data. (x,y,[z,]lambda)
      */
-    n_float_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+    n_float_items_read = fread(t, sizeof(float), idx_l, stdin);
 
     if (!n_float_items_read) {
 	fprintf(stderr, "No data found\n");
@@ -112,14 +112,14 @@ int main(int argc, char **argv)
 
     while (n_float_items_read && n_uchar_items_read) {
 
-	if ((n_float_items_read < idx_l + 1) || !n_uchar_items_read) {	/* insufficient data read */
+	if ((n_float_items_read < idx_l) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
 		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
-		    n_float_items_read, idx_l + 1, n_uchar_items_read);
+		    n_float_items_read, idx_l, n_uchar_items_read);
 	    exit(EXIT_FAILURE);
 	}
 
-	if (idx_l == MAX_FLOAT_ITEMS - 1) {
+	if (idx_l == MAX_FLOAT_ITEMS) {
 	    if (coordinates == GLOBAL) {
 		double g_xyz[3];
 		double l_xyz[3];
@@ -129,12 +129,12 @@ int main(int argc, char **argv)
 		l_xyz[2] = t[2];
 
 		l2g(M, origin, l_xyz, g_xyz);
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
-			g_xyz[1], g_xyz[2], t[idx_p], t[idx_l], tmp_8);
+		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0], g_xyz[1],
+			g_xyz[2], t[idx_l], tmp_8);
 
 	    } else
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
-			t[2], t[idx_p], t[idx_l], tmp_8);
+		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1], t[2],
+			t[idx_l], tmp_8);
 
 	} else {
 	    if (coordinates == GLOBAL) {
@@ -146,15 +146,15 @@ int main(int argc, char **argv)
 		l_xyz[2] = 0.0;
 
 		l2g(M, origin, l_xyz, g_xyz);
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
-			g_xyz[1], g_xyz[2], t[idx_p], t[idx_l], tmp_8);
+		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0], g_xyz[1],
+			g_xyz[2], t[idx_l - 1], tmp_8);
 
 	    } else
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
-			t[idx_p], t[idx_l], tmp_8);
+		fprintf(stdout, "%e\t%e\t%e\t%u\n", t[0], t[1],
+			t[idx_l - 1], tmp_8);
 	}
 
-	n_float_items_read = fread(t, sizeof(float), idx_l + 1, stdin);
+	n_float_items_read = fread(t, sizeof(float), idx_l, stdin);
 	n_uchar_items_read =
 	    fread(&tmp_8, sizeof(unsigned char), 1, stdin);
 

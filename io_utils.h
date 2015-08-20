@@ -21,9 +21,9 @@
 
 #define LINE_LEN 256
 #define BSIZE 256
-#define T_HEADER_LINES 15	/* number of header lines in target output */
-#define MAX_FLOAT_ITEMS 5	/* maximum number of items per data set
-				   (x,y,z,power,lambda) */
+#define T_HEADER_LINES 17	/* number of header lines in target output */
+#define MAX_FLOAT_ITEMS 4	/* maximum number of items per data set
+				   (x,y,z,lambda) */
 
 
 extern int check_array(const char *section, const config_setting_t * s,
@@ -51,7 +51,7 @@ extern int read_data(FILE * f, double **x, double **y, size_t * n);
 extern int skip_header(FILE * f);
 extern void read_transformation(FILE * f_in, double M[], double origin[]);
 extern double *range(const double min, const double max, const size_t n);
-extern int get_idx(FILE * f_in, size_t * idx_lambda, size_t * idx_power);
+extern int get_idx(FILE * f_in, size_t * idx_lambda);
 
 
 #endif				/* __IO_UTIL_H__ */
