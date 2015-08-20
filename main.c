@@ -498,6 +498,7 @@ int main(int argc, char **argv)
 	int64_t n_lost;
 	double p_total;
 	double p_lost;
+	double P_factor;
 
     case CHECK_CONFIG:		/* print parsed input */
 	config_write(&cfg, stdout);
@@ -514,6 +515,8 @@ int main(int argc, char **argv)
     case RUN:			/* do the simulation */
 	fprintf(stdout, "rt version %s running ...\n", RELEASE);
 
+        config_lookup_float(&cfg, "P_factor", &P_factor);
+        
 	source_list = init_sources(&cfg, &n_sources);
 	fprintf(stdout, "    %d sources initialized\n", n_sources);
 	target_list =
@@ -531,6 +534,8 @@ int main(int argc, char **argv)
 		    "    using %d as seed for random number generator from command line\n",
 		    seed);
 	}
+	
+	fprintf(stdout, "    One absorbed ray represents %f W\n", P_factor);
 
 	if (n_threads > 1) {
 	    if (!n_log)
