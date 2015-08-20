@@ -713,12 +713,11 @@ void store_xy(union fh_t output, const int flags, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char)))
+    if (data->i == BUF_SIZE * (3 * sizeof(float) + sizeof(unsigned char)))
 	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
-    WRITE_FLOAT(ray->power, data->buf, data->i);
     WRITE_FLOAT(ray->lambda, data->buf, data->i);
     WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
@@ -732,13 +731,12 @@ void store_xyz(union fh_t output, const int flags, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (5 * sizeof(float) + sizeof(unsigned char)))
+    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char)))
 	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
     WRITE_FLOAT(hit_local[1], data->buf, data->i);
     WRITE_FLOAT(hit_local[2], data->buf, data->i);
-    WRITE_FLOAT(ray->power, data->buf, data->i);
     WRITE_FLOAT(ray->lambda, data->buf, data->i);
     WRITE_UCHAR(ray->n_refl, data->buf, data->i);
 }
