@@ -29,6 +29,7 @@
 struct run_simulation_args {
     source_list_t *source_list;	/* list of all sources */
     target_list_t *target_list;	/* list of all targets */
+    double P_factor;
     int seed_base;
     int seed_incr;
 };
@@ -189,7 +190,7 @@ static void *run_simulation(void *args)
 		}
 
 	    retval->n_total++;
-	    retval->p_total += ray->power;
+	    retval->p_total += a->P_factor;
 
 	    while (ray) {
 		/*
@@ -292,7 +293,7 @@ else \
 		    }
 
 		    retval->n_lost++;
-		    retval->p_lost += ray->power;
+		    retval->p_lost += a->P_factor;
 		    free(ray);
 		    ray = NULL;
 
@@ -520,7 +521,8 @@ int main(int argc, char **argv)
 	source_list = init_sources(&cfg, &n_sources, P_factor);
 	fprintf(stdout, "    %d sources initialized\n", n_sources);
 	target_list =
-	    init_targets(&cfg, &n_targets, file_mode, keep_closed);
+	    init_targets(&cfg, &n_targets, file_mode, keep_closed,
+			 P_factor);
 	fprintf(stdout, "    %d targets initialized\n", n_targets);
 
 	if (file_mode == O_TRUNC) {	/* use seed from cfg, otherwise from command line */
@@ -556,6 +558,7 @@ int main(int argc, char **argv)
 	    malloc(sizeof(struct run_simulation_args));
 	rs_args->source_list = source_list;
 	rs_args->target_list = target_list;
+	rs_args->P_factor = P_factor;
 	rs_args->seed_base = seed;
 	rs_args->seed_incr = 0;
 

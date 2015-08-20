@@ -36,7 +36,8 @@ typedef struct par_state_t {
 
 
 static int par_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_mode, const int keep_closed)
+			  const int file_mode, const int keep_closed,
+			  const double P_factor)
 {
     par_state_t *state = (par_state_t *) vstate;
 
@@ -60,7 +61,7 @@ static int par_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= KEEP_CLOSED;
 
     if (init_output
-	(TARGET_TYPE, this_target, file_mode, &state->output,
+	(TARGET_TYPE, this_target, file_mode, P_factor, &state->output,
 	 &state->flags, state->vertex, state->M) == ERR) {
 	state->refl_spectrum = NULL;
 	state->flags |= MODEL_NONE;

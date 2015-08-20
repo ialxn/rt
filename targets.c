@@ -22,7 +22,7 @@
  */
 target_t *target_alloc(const target_type_t * type,
 		       config_setting_t * this_t, const int file_mode,
-		       const int keep_closed)
+		       const int keep_closed, const double P_factor)
 {
     target_t *T;
 
@@ -43,7 +43,7 @@ target_t *target_alloc(const target_type_t * type,
 
     /* initialize data structures */
     if ((T->type->init_state) (T->state, this_t, file_mode,
-			       keep_closed) == ERR) {
+			       keep_closed, P_factor) == ERR) {
 	target_free(T);
 	return NULL;
     }
@@ -462,13 +462,15 @@ int check_targets(config_t * cfg)
 }
 
 static void write_target_header(const int fd, const char *name,
-				const char *type, const double *origin,
-				const double *Mat)
+				const char *type, const double P_factor,
+				const double *origin, const double *Mat)
 {
     char string[1024];
 
     snprintf(string, 1023,
 	     "# %s (%s)\n"
+	     "#\n"
+	     "# One absorbed ray represents %f W\n"
 	     "#\n"
 	     "# Transformations:\n"
 	     "#    g(x, y, z) = MT l(x, y, z) + origin(x, y, z)\n"
@@ -482,15 +484,16 @@ static void write_target_header(const int fd, const char *name,
 	     "#\n"
 	     "# x\ty\t[z]\tpower\tlambda\t\t(z component is missing for plane targets!)\n"
 	     "#\n",
-	     name, type, Mat[0], Mat[1], Mat[2], Mat[3], Mat[4], Mat[5],
-	     Mat[6], Mat[7], Mat[8], origin[0], origin[1], origin[2]);
+	     name, type, P_factor, Mat[0], Mat[1], Mat[2], Mat[3], Mat[4],
+	     Mat[5], Mat[6], Mat[7], Mat[8], origin[0], origin[1],
+	     origin[2]);
 
     write(fd, string, strlen(string));
 }
 
 int init_output(const char *target_type, config_setting_t * this_target,
-		const int file_mode, union fh_t *output, int *flags,
-		double point[], double M[])
+		const int file_mode, const double P_factor,
+		union fh_t *output, int *flags, double point[], double M[])
 {
     int i;
 
@@ -512,8 +515,8 @@ int init_output(const char *target_type, config_setting_t * this_target,
 	    return ERR;
 	} else {		/* write header to dump file (only if new file) */
 	    if (file_mode == O_TRUNC)
-		write_target_header(output->fh, name, target_type, point,
-				    M);
+		write_target_header(output->fh, name, target_type,
+				    P_factor, point, M);
 	}
 
 	if (*flags & KEEP_CLOSED) {

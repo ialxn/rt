@@ -32,7 +32,8 @@ typedef struct ps_state_t {
 
 
 static int ps_init_state(void *vstate, config_setting_t * this_target,
-			 const int file_mode, const int keep_closed)
+			 const int file_mode, const int keep_closed,
+			 const double P_factor)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
@@ -46,13 +47,13 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 
     if (state->one_sided) {
 	if (init_output
-	    (TARGET_TYPE_A, this_target, file_mode, &state->output,
-	     &state->flags, state->point, state->M) == ERR)
+	    (TARGET_TYPE_A, this_target, file_mode, P_factor,
+	     &state->output, &state->flags, state->point, state->M) == ERR)
 	    return ERR;
     } else {
 	if (init_output
-	    (TARGET_TYPE_B, this_target, file_mode, &state->output,
-	     &state->flags, state->point, state->M) == ERR)
+	    (TARGET_TYPE_B, this_target, file_mode, P_factor,
+	     &state->output, &state->flags, state->point, state->M) == ERR)
 	    return ERR;
     }
 
@@ -63,21 +64,25 @@ static int ps_init_state(void *vstate, config_setting_t * this_target,
 }
 
 static int ps1_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_name, const int keep_closed)
+			  const int file_name, const int keep_closed,
+			  const double P_factor)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 1;
-    return ps_init_state(vstate, this_target, file_name, keep_closed);
+    return ps_init_state(vstate, this_target, file_name, keep_closed,
+			 P_factor);
 }
 
 static int ps2_init_state(void *vstate, config_setting_t * this_target,
-			  const int file_name, const int keep_closed)
+			  const int file_name, const int keep_closed,
+			  const double P_factor)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
     state->one_sided = 0;
-    return ps_init_state(vstate, this_target, file_name, keep_closed);
+    return ps_init_state(vstate, this_target, file_name, keep_closed,
+			 P_factor);
 }
 
 static void ps_free_state(void *vstate)

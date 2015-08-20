@@ -63,7 +63,8 @@ typedef struct target_type_t {
 				   (individual, type specific data) of
 				   the target. */
     int (*init_state) (void *state, config_setting_t * this_t,
-		       const int file_mode, const int keep_closed);
+		       const int file_mode, const int keep_closed,
+		       const double P_factor);
     /* initialize internal data from configuration */
     void (*free_state) (void *state);	/* free */
     double *(*get_intercept) (void *state, ray_t * ray);
@@ -100,7 +101,8 @@ const target_type_t *target_window;
  */
 extern target_t *target_alloc(const target_type_t * type,
 			      config_setting_t * this_t,
-			      const int file_mode, const int keep_closed);
+			      const int file_mode, const int keep_closed,
+			      const double P_factor);
 extern void target_free(target_t * T);
 extern double *icpt(const target_t * T, ray_t * ray);
 extern ray_t *out_ray(const target_t * T, ray_t * ray, double *hit,
@@ -116,8 +118,8 @@ extern void free_PTDT(void *p);
 extern int check_targets(config_t * cfg);
 extern int init_output(const char *target_type,
 		       config_setting_t * this_target, const int file_mode,
-		       union fh_t *output, int *out_flag, double point[],
-		       double M[]);
+		       const double P_factor, union fh_t *output,
+		       int *out_flag, double point[], double M[]);
 extern int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum);
 extern void init_refl_model(const struct config_setting_t *s, int *model,
 			    void **refl_model_params);

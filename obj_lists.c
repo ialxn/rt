@@ -73,7 +73,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 
 static void add_targets(target_list_t * t_list, config_t * cfg,
 			int *n_targets, const int file_mode,
-			const int keep_closed)
+			const int keep_closed, const double P_factor)
 {
 
     int i;
@@ -103,51 +103,51 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	if (!strcmp(type, "annulus"))
 	    new_target =
 		target_alloc(target_annulus, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "cone"))
 	    new_target =
 		target_alloc(target_cone, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "cylinder"))
 	    new_target =
 		target_alloc(target_cylinder, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "disk"))
 	    new_target =
 		target_alloc(target_disk, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "ellipsoid"))
 	    new_target =
 		target_alloc(target_ellipsoid, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "paraboloid"))
 	    new_target =
 		target_alloc(target_paraboloid, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "one-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_one_sided, this_target,
-			     file_mode, keep_closed);
+			     file_mode, keep_closed, P_factor);
 	else if (!strcmp(type, "two-sided plane screen"))
 	    new_target =
 		target_alloc(target_plane_screen_two_sided, this_target,
-			     file_mode, keep_closed);
+			     file_mode, keep_closed, P_factor);
 	else if (!strcmp(type, "rectangle"))
 	    new_target =
 		target_alloc(target_rectangle, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "sphere"))
 	    new_target =
 		target_alloc(target_sphere, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "triangle"))
 	    new_target =
 		target_alloc(target_triangle, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "window"))
 	    new_target =
 		target_alloc(target_window, this_target, file_mode,
-			     keep_closed);
+			     keep_closed, P_factor);
 	else {
 	    fprintf(stderr,
 		    "Unknown target type (%s) found. Ignoring target %s\n",
@@ -190,7 +190,7 @@ static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
 	if (!strcmp(type, "solid sphere"))
 	    new_virtual_target =
 		target_alloc(virtual_target_solid_sphere, this_source, 0,
-			     0);
+			     0, 0);
 	else			/* transparent source found, no virtual target added */
 	    continue;
 
@@ -202,7 +202,8 @@ static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
 
 
 target_list_t *init_targets(config_t * cfg, int *n_targets,
-			    const int file_mode, const int keep_closed)
+			    const int file_mode, const int keep_closed,
+			    const double P_factor)
 {
 
     target_list_t *t_list =
@@ -210,7 +211,7 @@ target_list_t *init_targets(config_t * cfg, int *n_targets,
 
     INIT_LIST_HEAD(&t_list->list);
 
-    add_targets(t_list, cfg, n_targets, file_mode, keep_closed);
+    add_targets(t_list, cfg, n_targets, file_mode, keep_closed, P_factor);
     add_virtual_targets(t_list, cfg);
 
     return t_list;

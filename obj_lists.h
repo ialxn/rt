@@ -32,7 +32,8 @@ extern source_list_t *init_sources(config_t * cfg, int *n_sources,
 				   const double P_factor);
 extern target_list_t *init_targets(config_t * cfg, int *n_targets,
 				   const int file_mode,
-				   const int keep_closed);
+				   const int keep_closed,
+				   const double P_factor);
 
 extern void source_list_free(source_list_t * s);
 extern void target_list_free(target_list_t * t);

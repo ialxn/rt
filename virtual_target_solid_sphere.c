@@ -25,11 +25,13 @@ typedef struct vtssp_state_t {
 
 
 static int vtssp_init_state(void *vstate, config_setting_t * this_target,
-			    const int file_mode, const int keep_closed)
+			    const int file_mode, const int keep_closed,
+			    const double P_factor)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;
     (void) file_mode;
     (void) keep_closed;
+    (void) P_factor;
 
     read_vector(this_target, "origin", state->center);
     config_setting_lookup_float(this_target, "radius", &state->radius);

@@ -109,7 +109,8 @@ static int snell(ray_t * ray, const double *normal, const double n1,
 }
 
 static int window_init_state(void *vstate, config_setting_t * this_target,
-			     const int file_mode, const int keep_closed)
+			     const int file_mode, const int keep_closed,
+			     const double P_factor)
 {
     window_state_t *state = (window_state_t *) vstate;
 
@@ -124,7 +125,7 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= KEEP_CLOSED;
 
     if (init_output
-	(TARGET_TYPE, this_target, file_mode, &state->output,
+	(TARGET_TYPE, this_target, file_mode, P_factor, &state->output,
 	 &state->flags, state->C, state->M) == ERR) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
