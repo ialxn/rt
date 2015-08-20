@@ -16,7 +16,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "disk"
-#define NO_ITEMS 4
+#define NO_ITEMS 3
 
 
 typedef struct disk_state_t {

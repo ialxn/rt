@@ -16,7 +16,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "cone"
-#define NO_ITEMS 5
+#define NO_ITEMS 4
 
 
 typedef struct cone_state_t {

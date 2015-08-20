@@ -17,7 +17,7 @@
 
 #define TARGET_TYPE_A "one-sided plane screen"
 #define TARGET_TYPE_B "two-sided plane screen"
-#define NO_ITEMS 4
+#define NO_ITEMS 3
 
 
 typedef struct ps_state_t {

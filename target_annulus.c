@@ -16,7 +16,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "annulus"
-#define NO_ITEMS 4
+#define NO_ITEMS 3
 
 
 typedef struct ann_state_t {

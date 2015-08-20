@@ -16,7 +16,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "cylinder"
-#define NO_ITEMS 5
+#define NO_ITEMS 4
 
 
 typedef struct cyl_state_t {

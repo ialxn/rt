@@ -17,7 +17,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "ellipsoid"
-#define NO_ITEMS 5
+#define NO_ITEMS 4
 
 
 typedef struct ell_state_t {

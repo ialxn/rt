@@ -16,7 +16,7 @@
 #include "targets.h"
 
 #define TARGET_TYPE "rectangle"
-#define NO_ITEMS 4
+#define NO_ITEMS 3
 
 
 typedef struct sq_state_t {
