@@ -112,13 +112,14 @@ All sources and all targets are identified by their {\tt type}. The common {\tt 
 \begin{itemize}
 \item[{\bf seed}:]{Seed value (unsigned integer) for random number generator. Using the same seed value again will result in the identical sequence of pseudo random number and thus an identical output.\footnote{This is not true anymore if you use more than one worker thread. First, each worker uses its own rng and seed value. Each produces a unique sequence of pseudo random numbers. Second, the exact sequence with which blocks of output from the different worker are interleaved in the final output is non-deterministic. Third, the amount of work performed by an individual worker is non-deterministic.}\\
 The value will be overridden by the {\tt -a} command line argument. Using this option, existing results can be improved by tracing additional rays.}
+\item[{\bf P\_factor}:]{Power represented by one (absorbed) ray. The number of rays to be tracked for each source is calculated as {\tt n\_rays} = {\tt power} / {\tt P\_factor}.}
 \end{itemize}
 
 
 
 \section{Sources}
 
-All sources define the keywords {\tt origin} (doubles), {\tt power} (double), {\tt n\_rays} (unsigned integer), and {\tt spectrum} (string) i.e.\ the origin of the source, the total power assigned to the source, the number of rays that start from it, and the name of a file\footnote{The spectrum will be represented by a linear interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt power}/{\tt n\_rays} at a random wavelength.
+All sources define the keywords {\tt origin} (doubles), {\tt power} (double), and {\tt spectrum} (string) i.e.\ the origin of the source, the total power assigned to the source, and the name of a file\footnote{The spectrum will be represented by a linear interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt P\_factor} at a random wavelength.
 
 \subsection{Uniform Point Source}
 
@@ -129,8 +130,6 @@ All sources define the keywords {\tt origin} (doubles), {\tt power} (double), {\
 \noindent {\tt origin=[X.x, Y.y, Z.z];}
 
 \noindent {\tt power=P.p;}
-
-\noindent {\tt n\_rays=N;}
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
@@ -152,8 +151,6 @@ Defines an uniform point source located at {\tt origin}.
 
 \noindent {\tt power=P.p;}
 
-\noindent {\tt n\_rays=N;}
-
 \noindent {\tt spectrum="FILE\_NAME";}
 
 \vspace{0.25cm}
@@ -171,8 +168,6 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 
 \noindent {\tt power=P.p;}
 
-\noindent {\tt n\_rays=N;}
-
 \noindent {\tt spectrum="FILE\_NAME";}
 
 \vspace{0.25cm}
@@ -189,8 +184,6 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 \noindent {\tt radius=R.r;}
 
 \noindent {\tt power=P.p;}
-
-\noindent {\tt n\_rays=N;}
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
@@ -511,11 +504,11 @@ Additional, model specific parameters might be defined by the different models.
 
 \section{Utilities}
 
-The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed ray) follow consisting of 4\footnote{5, for non-planar targets} single precicions floats and one unsigned character (x, y, z\footnote{missing for planar targets}, $\lambda$, power, $n_{\mathrm{refl}}$) per absorbed ray.   
+The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed ray) follow consisting of 3\footnote{4, for non-planar targets} single precicions floats and one unsigned character (x, y, z\footnote{missing for planar targets}, $\lambda$, $n_{\mathrm{refl}}$) per absorbed ray.   
 
 \subsection{{\tt spectrum}}
 
-{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a non-absorbing screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. The spectrum is reported as power per wavelength interval.
+{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a non-absorbing screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. To obtain the spectrum as power per wavelength interval the resulting data have to be scaled by {\tt P\_factor}.
 
 {\bf Syntax:} {\tt spectrum} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -534,7 +527,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt flux\_2D}}
-{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed and the total power contained in those is reported in the header.
+{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed is reported in the header. Tha data obtained has to be scaled by {\tt P\_factor} to represent the correct flux density.
 
 {\bf Syntax:} {\tt flux\_2D} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -557,7 +550,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt get\_flux}}
-{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ power $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ power $\lambda$ $n_{\mathrm{refl}}$ otherwise.
+{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ $\lambda$ $n_{\mathrm{refl}}$ otherwise.
 
 {\bf Syntax:} {\tt get\_flux} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
