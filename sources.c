@@ -18,7 +18,8 @@
 /*
  * public functions to access / manipulate sources
  */
-source_t *source_alloc(const source_type_t * T, config_setting_t * this_s)
+source_t *source_alloc(const source_type_t * T, config_setting_t * this_s,
+		       const double P_factor)
 {
     source_t *S;
 
@@ -37,7 +38,7 @@ source_t *source_alloc(const source_type_t * T, config_setting_t * this_s)
 
     S->type = T;
 
-    (S->type->init_state) (S->state, this_s);	/* initialize data structures */
+    (S->type->init_state) (S->state, this_s, P_factor);	/* initialize data structures */
 
     return S;
 }

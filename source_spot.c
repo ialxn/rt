@@ -7,6 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _ISOC99_SOURCE		/* because of llrint() */
 #define _GNU_SOURCE		/* for sincos() */
 
 #include <math.h>
@@ -30,14 +31,14 @@ typedef struct sp_state_t {
     double beta;		/* used to convert from local to global system */
     int64_t n_rays;		/* number of rays remaining until source is exhausted */
     double power;		/* power of source */
-    double ppr;			/* power allotted to one ray */
     gsl_spline *spectrum;	/* spline holding cdf of source spectrum */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
     pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
 } sp_state_t;
 
 
-static void sp_init_state(void *vstate, config_setting_t * this_s)
+static void sp_init_state(void *vstate, config_setting_t * this_s,
+			  const double P_factor)
 {
     sp_state_t *state = (sp_state_t *) vstate;
 
@@ -46,10 +47,11 @@ static void sp_init_state(void *vstate, config_setting_t * this_s)
 
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);
-    config_setting_lookup_int64(this_s, "n_rays", &state->n_rays);
-    pthread_mutex_init(&state->mutex_n_rays, NULL);
+
     config_setting_lookup_float(this_s, "power", &state->power);
-    state->ppr = state->power / (double) state->n_rays;
+    state->n_rays = llrint(state->power / P_factor);
+    pthread_mutex_init(&state->mutex_n_rays, NULL);
+
     config_setting_lookup_float(this_s, "theta", &state->cos_theta);
     state->cos_theta = cos(state->cos_theta / 180.0 * M_PI);
 
@@ -117,7 +119,6 @@ static ray_t *sp_emit_ray(void *vstate, const gsl_rng * r)
 	/* copy / initialize rest of structure */
 	memcpy(ray->orig, state->orig, 3 * sizeof(double));
 
-	ray->power = state->ppr;
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
 	ray->n_refl = 0;

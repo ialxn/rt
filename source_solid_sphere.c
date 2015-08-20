@@ -7,6 +7,9 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
+#define _ISOC99_SOURCE		/* because of llrint() */
+
+#include <math.h>
 #include <string.h>
 
 #include <gsl/gsl_cblas.h>
@@ -25,14 +28,14 @@ typedef struct ssp_state_t {
     double radius;
     int64_t n_rays;		/* number of rays remaining until source is exhausted */
     double power;		/* power of source */
-    double ppr;			/* power allotted to one ray */
     gsl_spline *spectrum;	/* spline holding cdf of source spectrum */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
     pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
 } ssp_state_t;
 
 
-static void ssp_init_state(void *vstate, config_setting_t * this_s)
+static void ssp_init_state(void *vstate, config_setting_t * this_s,
+			   const double P_factor)
 {
     ssp_state_t *state = (ssp_state_t *) vstate;
 
@@ -40,10 +43,10 @@ static void ssp_init_state(void *vstate, config_setting_t * this_s)
 
     config_setting_lookup_string(this_s, "name", &S);
     state->name = strdup(S);
-    config_setting_lookup_int64(this_s, "n_rays", &state->n_rays);
-    pthread_mutex_init(&state->mutex_n_rays, NULL);
+
     config_setting_lookup_float(this_s, "power", &state->power);
-    state->ppr = state->power / (double) state->n_rays;
+    state->n_rays = llrint(state->power / P_factor);
+    pthread_mutex_init(&state->mutex_n_rays, NULL);
 
     config_setting_lookup_float(this_s, "radius", &state->radius);
     read_vector(this_s, "origin", state->orig);
@@ -102,7 +105,6 @@ static ray_t *ssp_emit_ray(void *vstate, const gsl_rng * r)
 	 */
 	get_uniform_random_vector_hemisphere(ray->dir, 1.0, point, r);
 
-	ray->power = state->ppr;
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
 	ray->n_refl = 0;

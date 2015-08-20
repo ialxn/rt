@@ -28,20 +28,21 @@ typedef struct source_type_t {
     size_t size;		/* internally used to allocate the state
 				   (individual, type specific data) of
 				   the source. */
-    void (*init_state) (void *state, config_setting_t * this_s);
-	/* initialize internal data from configuration */
+    void (*init_state) (void *state, config_setting_t * this_s,
+			const double P_factor);
+    /* initialize internal data from configuration */
     void (*free_state) (void *state);
-	/* free */
+    /* free */
     ray_t *(*emit_ray) (void *state, const gsl_rng * r);
-	/* returns a new ray, or NULL if exhausted */
+    /* returns a new ray, or NULL if exhausted */
     const char *(*get_source_name) (void *state);
-	/* get name of source */
-    int64_t(*get_source_n_rays) (void *state);
-	/* get number of rays of source */
+    /* get name of source */
+     int64_t(*get_source_n_rays) (void *state);
+    /* get number of rays of source */
     double (*get_source_power) (void *state);
-	/* get power of source */
+    /* get power of source */
     void (*init_rays_remain) (void *state);
-	/* init PTD variable */
+    /* init PTD variable */
 } source_type_t;
 
 typedef struct source_t {
@@ -61,7 +62,8 @@ const source_type_t *source_uniform_point_source;
  *  public functions to access / manipulate the sources (found in sources.c)
  */
 extern source_t *source_alloc(const source_type_t * T,
-			      config_setting_t * this_s);
+			      config_setting_t * this_s,
+			      const double P_factor);
 extern void source_free(source_t * S);
 extern ray_t *emit_ray(const source_t * S, const gsl_rng * r);
 extern const char *get_source_type(const source_t * S);
