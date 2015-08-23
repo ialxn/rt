@@ -508,7 +508,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 
 \subsection{{\tt spectrum}}
 
-{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a non-absorbing screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered. To obtain the spectrum as power per wavelength interval the resulting data have to be scaled by {\tt P\_factor}.
+{\tt spectrum} reads the output file of a target produced by \rt and extract the spectrum (histogram) of the radiation absorbed by the target\footnote{or impinging on the target in case of a non-absorbing screen}. Statistical data of the spectrum are reported in its header including the number of rays and their total power that fall outside the range considered.
 
 {\bf Syntax:} {\tt spectrum} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -527,7 +527,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt flux\_2D}}
-{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed is reported in the header. Tha data obtained has to be scaled by {\tt P\_factor} to represent the correct flux density.
+{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed is reported in the header.
 
 {\bf Syntax:} {\tt flux\_2D} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
