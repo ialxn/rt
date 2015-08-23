@@ -1,6 +1,6 @@
 /*	flux_2D.c
  *
- * Copyright (C) 2011,2012,2013,2014 Ivo Alxneit
+ * Copyright (C) 2011,2012,2013,2014,2015 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
