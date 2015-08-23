@@ -94,7 +94,7 @@ int main(int argc, char **argv)
 	exit(EXIT_FAILURE);
 
     if (coordinates == LOCAL) {
-	if (skip_header(stdin) == ERR)
+	if (skip_N_comments(stdin, HEADER_LINES) == ERR)
 	    return ERR;
     } else
 	read_transformation(stdin, M, origin);

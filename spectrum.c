@@ -23,15 +23,19 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
     float t[MAX_FLOAT_ITEMS];
     unsigned char tmp_8;
     size_t n_float_items_read, n_uchar_items_read;
+    double P_factor;
 
-    if (skip_header(f_in) == ERR)
+    P_factor = get_P_factor(f_in);
+    if (P_factor < 0.0)
+	return ERR;
+
+    if (skip_N_comments(f_in, REST_HEADER_LINES) == ERR)
 	return ERR;
 
     /*
      * read data. (x,y,[z,]lambda)
      */
     n_float_items_read = fread(t, sizeof(float), idx_lambda + 1, f_in);
-
     if (!n_float_items_read) {
 	fprintf(stderr, "No data found\n");
 	return (ERR);
@@ -48,7 +52,7 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 	    return (ERR);
 	}
 
-	if (gsl_histogram_accumulate(h, t[idx_lambda], 1.0))
+	if (gsl_histogram_accumulate(h, t[idx_lambda], P_factor))
 	    /* data lies outside of range of histogram */
 	    (*n_missed)++;
 	else

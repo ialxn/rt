@@ -302,13 +302,12 @@ int read_data(FILE * f, double **x, double **y, size_t * n)
 
 }
 
-int skip_header(FILE * f)
+int skip_N_comments(FILE * f, const int N)
 {
-    /* skip header (first line is has already been read */
     char line[LINE_LEN];
     int n;
 
-    for (n = 0; n < T_HEADER_LINES - 1; n++) {
+    for (n = 0; n < N; n++) {
 	fgets(line, LINE_LEN, f);
 	if (line[0] != '#') {	/* not a header line */
 	    fprintf(stderr,
@@ -316,8 +315,22 @@ int skip_header(FILE * f)
 	    return (ERR);
 	}
     }
+    return NO_ERR;
+}
 
-    return (NO_ERR);
+double get_P_factor(FILE * f)
+{
+    char line[LINE_LEN];
+    double P_factor;
+
+    /* first line read in 'get_idx()' */
+    if (skip_N_comments(f, 1))
+	return -1.0;
+
+    fgets(line, LINE_LEN, f);
+    sscanf(&line[30], "%lf", &P_factor);
+
+    return P_factor;
 }
 
 void read_transformation(FILE * f_in, double M[], double origin[])
@@ -325,8 +338,7 @@ void read_transformation(FILE * f_in, double M[], double origin[])
     char line[LINE_LEN];
     size_t i;
 
-    for (i = 0; i < 7; i++)	/* skip comments */
-	fgets(line, LINE_LEN, f_in);
+    skip_N_comments(f_in, 7);
 
     for (i = 0; i < 3; i++) {
 	fgets(line, LINE_LEN, f_in);
@@ -339,8 +351,7 @@ void read_transformation(FILE * f_in, double M[], double origin[])
     fgets(line, LINE_LEN, f_in);
     sscanf(&line[1], "%lf%lf%lf", &origin[0], &origin[1], &origin[2]);
 
-    for (i = 0; i < 4; i++)	/* skip rest of comments */
-	fgets(line, LINE_LEN, f_in);
+    skip_N_comments(f_in, 4);
 }
 
 double *range(const double min, const double max, const size_t n)

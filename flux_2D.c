@@ -74,9 +74,14 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
     float t[MAX_FLOAT_ITEMS];
     unsigned char tmp_8;
     size_t n_float_items_read, n_uchar_items_read;
+    double P_factor;
+
+    P_factor = get_P_factor(f_in);
+    if (P_factor < 0.0)
+	return ERR;
 
     if (coordinates == LOCAL) {
-	if (skip_header(f_in) == ERR)
+	if (skip_N_comments(f_in, REST_HEADER_LINES) == ERR)
 	    return ERR;
     } else
 	read_transformation(f_in, M, origin);
@@ -106,7 +111,7 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	    return (ERR);
 	}
 
-	if (gsl_histogram2d_accumulate(h, t[0], t[1], 1.0))
+	if (gsl_histogram2d_accumulate(h, t[0], t[1], P_factor))
 	    /* data lies outside of range of histogram */
 	    (*n_missed)++;
 	else

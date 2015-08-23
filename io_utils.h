@@ -21,7 +21,8 @@
 
 #define LINE_LEN 256
 #define BSIZE 256
-#define T_HEADER_LINES 17	/* number of header lines in target output */
+#define HEADER_LINES 16		/* number of header lines after 'get_id()' */
+#define REST_HEADER_LINES 13	/* number of header lines after 'P_factor' */
 #define MAX_FLOAT_ITEMS 4	/* maximum number of items per data set
 				   (x,y,z,lambda) */
 
@@ -48,7 +49,8 @@ extern void read_vector(const config_setting_t * s, const char *name,
 extern void read_vector_normalize(const config_setting_t * s,
 				  const char *name, double *const vec);
 extern int read_data(FILE * f, double **x, double **y, size_t * n);
-extern int skip_header(FILE * f);
+extern double get_P_factor(FILE * f);
+extern int skip_N_comments(FILE * f, const int N);
 extern void read_transformation(FILE * f_in, double M[], double origin[]);
 extern double *range(const double min, const double max, const size_t n);
 extern int get_idx(FILE * f_in, size_t * idx_lambda);
