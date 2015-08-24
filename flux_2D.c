@@ -1,6 +1,6 @@
 /*	flux_2D.c
  *
- * Copyright (C) 2011,2012,2013,2014 Ivo Alxneit
+ * Copyright (C) 2011,2012,2013,2014,2015 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -136,7 +136,6 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 {
     size_t i, j;
     size_t nx, ny;
-    double t;
     double A;
     double xmin, xmax;
     double ymin, ymax;
@@ -153,16 +152,16 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
     gsl_histogram2d_scale(h, 1.0 / A);
 
     fprintf(f_out, "#   histogram definition (local system)\n");
-    t = gsl_histogram2d_xmin(h);
-    fprintf(f_out, "#      minimum x-value: % e\n", t);
-    t = gsl_histogram2d_xmax(h);
-    fprintf(f_out, "#      maximum x-value: % e\n", t);
+    fprintf(f_out, "#      minimum x-value: % e\n",
+	    gsl_histogram2d_xmin(h));
+    fprintf(f_out, "#      maximum x-value: % e\n",
+	    gsl_histogram2d_xmax(h));
     nx = gsl_histogram2d_nx(h);
     fprintf(f_out, "#     number of x-bins: %d\n", nx);
-    t = gsl_histogram2d_ymin(h);
-    fprintf(f_out, "#      minimum y-value: % e\n", t);
-    t = gsl_histogram2d_ymax(h);
-    fprintf(f_out, "#      maximum y-value: % e\n", t);
+    fprintf(f_out, "#      minimum y-value: % e\n",
+	    gsl_histogram2d_ymin(h));
+    fprintf(f_out, "#      maximum y-value: % e\n",
+	    gsl_histogram2d_ymax(h));
     ny = gsl_histogram2d_ny(h);
     fprintf(f_out, "#     number of y-bins: %d\n", ny);
 
@@ -178,22 +177,22 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 
     fprintf(f_out, "#        area represented by one bin: %e\n#\n", A);
 
-    t = gsl_histogram2d_min_val(h);
     gsl_histogram2d_min_bin(h, &i, &j);
     gsl_histogram2d_get_xrange(h, i, &xmin, &xmax);
     gsl_histogram2d_get_yrange(h, j, &ymin, &ymax);
-    fprintf(f_out, "#        minimum value: %e\n", t);
+    fprintf(f_out, "#        minimum value: %e\n",
+	    gsl_histogram2d_min_val(h));
     fprintf(f_out, "#            at bin (xrange): %d (% e - % e)\n", i,
 	    xmin, xmax);
     fprintf(f_out, "#            at bin (yrange): %d (% e - % e)\n", j,
 	    ymin, ymax);
     fprintf(f_out, "#\n");
 
-    t = gsl_histogram2d_max_val(h);
     gsl_histogram2d_max_bin(h, &i, &j);
     gsl_histogram2d_get_xrange(h, i, &xmin, &xmax);
     gsl_histogram2d_get_yrange(h, j, &ymin, &ymax);
-    fprintf(f_out, "#        maximum value: %e\n", t);
+    fprintf(f_out, "#        maximum value: %e\n",
+	    gsl_histogram2d_max_val(h));
     fprintf(f_out, "#            at bin (xrange): %d (% e - % e)\n", i,
 	    xmin, xmax);
     fprintf(f_out, "#            at bin (yrange): %d (% e - % e)\n", j,
@@ -227,12 +226,12 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 	x = (x_hi + x_lo) / 2.0;
 
 	for (j = 0; j < ny; j++) {
-	    double y, y_lo, y_hi;
+	    double y, y_lo, y_hi, val;
 
 	    gsl_histogram2d_get_yrange(h, j, &y_lo, &y_hi);
 	    y = (y_hi + y_lo) / 2.0;
 
-	    t = gsl_histogram2d_get(h, i, j);
+	    val = gsl_histogram2d_get(h, i, j);
 
 	    if (coordinates == GLOBAL) {
 		double l_xyz[3];
@@ -244,11 +243,11 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
 
 		l2g(M, origin, l_xyz, g_xyz);
 		fprintf(f_out, "% e\t% e\t%e\t% e\n", g_xyz[0], g_xyz[1],
-			g_xyz[2], t);
+			g_xyz[2], val);
 
 	    } else
 		fprintf(f_out, "% e\t% e\t%e\t% e\t% e\t% e\t% e\n", x, y,
-			t, x_lo, x_hi, y_lo, y_hi);
+			val, x_lo, x_hi, y_lo, y_hi);
 	}
     }
 }

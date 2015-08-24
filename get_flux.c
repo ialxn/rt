@@ -1,6 +1,6 @@
 /*	spectrum.c
  *
- * Copyright (C) 2011,2012,2013,2014 Ivo Alxneit
+ * Copyright (C) 2011,2012,2013,2014,2015 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -111,6 +111,9 @@ int main(int argc, char **argv)
     n_uchar_items_read = fread(&tmp_8, sizeof(unsigned char), 1, stdin);
 
     while (n_float_items_read && n_uchar_items_read) {
+	double g_xyz[3];
+	double l_xyz[3];
+
 
 	if ((n_float_items_read < idx_l) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
@@ -119,11 +122,8 @@ int main(int argc, char **argv)
 	    exit(EXIT_FAILURE);
 	}
 
-	if (idx_l == MAX_FLOAT_ITEMS) {
+	if (idx_l == MAX_FLOAT_ITEMS) {	/* non-planar target */
 	    if (coordinates == GLOBAL) {
-		double g_xyz[3];
-		double l_xyz[3];
-
 		l_xyz[0] = t[0];
 		l_xyz[1] = t[1];
 		l_xyz[2] = t[2];
@@ -136,11 +136,8 @@ int main(int argc, char **argv)
 		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1], t[2],
 			t[idx_l], tmp_8);
 
-	} else {
+	} else {		/* planar target */
 	    if (coordinates == GLOBAL) {
-		double g_xyz[3];
-		double l_xyz[3];
-
 		l_xyz[0] = t[0];
 		l_xyz[1] = t[1];
 		l_xyz[2] = 0.0;
