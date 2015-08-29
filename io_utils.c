@@ -137,7 +137,7 @@ int check_reflectivity_model(const char *section,
 	    if (config_setting_lookup_float
 		(s, "microfacet_gaussian_sigma", &sigma) == CONFIG_FALSE) {
 		fprintf(stderr,
-			"missing model parameter 'multifacet_gaussian_sigma' in reflectivity model '%s' found in '%s' section %d\n",
+			"missing model parameter 'microfacet_gaussian_sigma' in reflectivity model '%s' found in '%s' section %d\n",
 			S, section, nr + 1);
 
 		status = ERR;
