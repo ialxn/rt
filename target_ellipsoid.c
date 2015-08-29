@@ -26,7 +26,8 @@ typedef struct ell_state_t {
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    void *refl_model_params;
+    refl_func_pointer_t refl_func;	/* reflection model */
+    void *refl_func_pars;	/* model specific parameters */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -74,7 +75,8 @@ static int ell_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->flags, &state->refl_model_params);
+    init_refl_model(this_target, &state->refl_func,
+		    &state->refl_func_pars);
 
     state->flags |= init_reflecting_surface(this_target);
 
@@ -89,7 +91,8 @@ static void ell_free_state(void *vstate)
     ell_state_t *state = (ell_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_model_params);
+	       state->refl_spectrum, state->refl_func,
+	       state->refl_func_pars);
 }
 
 static double *ell_get_intercept(void *vstate, ray_t * ray)
@@ -169,7 +172,7 @@ static ray_t *ell_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	if (!(state->flags & OUTSIDE))
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
-	reflect(ray, N, hit, state->flags, r, state->refl_model_params);
+	state->refl_func(ray, &state->M[6], hit, r, state->refl_func_pars);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */

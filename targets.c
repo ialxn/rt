@@ -562,29 +562,30 @@ int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
     return NO_ERR;
 }
 
-void init_refl_model(const config_setting_t * s, int *model,
-		     void **refl_model_params)
+void init_refl_model(const config_setting_t * s,
+		     refl_func_pointer_t * refl_func,
+		     void **refl_func_pars)
 {
     const char *S;
 
-    *model &= ~0xFFFF;		/* clear bit 0-15) */
     config_setting_lookup_string(s, "reflectivity_model", &S);
-    if (!strcmp(S, "specular"))
-	*model |= SPECULAR;
-    else if (!strcmp(S, "lambertian"))
-	*model |= LAMBERTIAN;
-    else if (!strcmp(S, "microfacet_gaussian")) {
+
+    if (!strcmp(S, "specular")) {
+	*refl_func = (refl_func_pointer_t) reflect_specular;
+	refl_func_pars = NULL;
+    } else if (!strcmp(S, "lambertian")) {
+	*refl_func = (refl_func_pointer_t) reflect_lambertian;
+	refl_func_pars = NULL;
+    } else if (!strcmp(S, "microfacet_gaussian")) {
 	double *number;
 
-	*model |= MICROFACET_GAUSSIAN;
+	*refl_func = (refl_func_pointer_t) reflect_microfacet_gaussian;
 	number = (double *) malloc(sizeof(double));
-
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
 				    number);
 	*number /= (180.0 * M_PI);	/* degree to radian */
-	*refl_model_params = number;
+	*refl_func_pars = number;
     }
-
 }
 
 int init_reflecting_surface(config_setting_t * this_target)
@@ -660,25 +661,8 @@ void per_thread_flush(union fh_t output, const int flags,
 	write_buffer(output, flags, data, mutex);
 }
 
-static void free_refl_model(const int model, void *refl_model_params)
-/*
- * free's model specific parameters
- */
-{
-
-    switch (model & 0xFFFF) {
-
-    case MICROFACET_GAUSSIAN:
-	{
-	    free((double *) refl_model_params);
-	}
-
-    }
-
-}
-
-void state_free(union fh_t output, const int flags, double *M,
-		gsl_spline * s, void *p)
+void state_free(union fh_t output, int flags, double *M,
+		gsl_spline * s, refl_func_pointer_t refl_func, void *p)
 {
     if (flags & OUTPUT_REQUIRED) {
 	if (flags & KEEP_CLOSED)
@@ -692,8 +676,12 @@ void state_free(union fh_t output, const int flags, double *M,
     if (s)
 	gsl_spline_free(s);
 
-    if (flags & 0xFFFF)
-	free_refl_model(flags, p);
+    /*
+     * free's model specific parameters
+     */
+    if (refl_func == reflect_microfacet_gaussian)
+	free((double *) p);
+
 }
 
 #define WRITE_UCHAR(VAR,BUF_PTR,BUF_IDX) do { \

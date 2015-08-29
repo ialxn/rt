@@ -25,8 +25,8 @@ typedef struct sq_state_t {
     double dy;
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    int reflectivity_model;	/* reflectivity model used for this target */
-    void *refl_model_params;
+    refl_func_pointer_t refl_func;	/* reflection model */
+    void *refl_func_pars;	/* model specific parameters */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -91,7 +91,8 @@ static int sq_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->flags, &state->refl_model_params);
+    init_refl_model(this_target, &state->refl_func,
+		    &state->refl_func_pars);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -104,7 +105,8 @@ static void sq_free_state(void *vstate)
     sq_state_t *state = (sq_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_model_params);
+	       state->refl_spectrum, state->refl_func,
+	       state->refl_func_pars);
 }
 
 static double *sq_get_intercept(void *vstate, ray_t * ray)
@@ -178,8 +180,7 @@ static ray_t *sq_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, &state->M[6], hit, state->flags, r,
-		state->refl_model_params);
+	state->refl_func(ray, &state->M[6], hit, r, state->refl_func_pars);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
