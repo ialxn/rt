@@ -130,8 +130,6 @@ static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
     ps_state_t *state = (ps_state_t *) vstate;
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-    (void) r;			/* avoid warning : unused parameter 'r' */
-
     if (state->flags & OUTPUT_REQUIRED)
 	store_xy(state->output, state->flags, ray, hit, state->M,
 		 state->point, data, &state->mutex_writefd);
