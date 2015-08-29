@@ -25,7 +25,7 @@ typedef struct disk_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_model_params;	/* model specific parameters */
+    void *refl_func_pars;	/* model specific parameters */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -63,7 +63,7 @@ static int disk_init_state(void *vstate, config_setting_t * this_target,
 	return ERR;
     }
     init_refl_model(this_target, &state->refl_func,
-		    &state->refl_model_params);
+		    &state->refl_func_pars);
 
     config_setting_lookup_float(this_target, "r", &t);
     state->r2 = t * t;
@@ -80,7 +80,7 @@ static void disk_free_state(void *vstate)
 
     state_free(state->output, state->flags, state->M,
 	       state->refl_spectrum, state->refl_func,
-	       state->refl_model_params);
+	       state->refl_func_pars);
 }
 
 static double *disk_get_intercept(void *vstate, ray_t * ray)
@@ -161,8 +161,7 @@ static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	state->refl_func(ray, &state->M[6], hit, r,
-			 state->refl_model_params);
+	state->refl_func(ray, &state->M[6], hit, r, state->refl_func_pars);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 

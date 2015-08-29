@@ -561,7 +561,7 @@ int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
 
 void init_refl_model(const config_setting_t * s,
 		     refl_func_pointer_t * refl_func,
-		     void **refl_model_params)
+		     void **refl_func_pars)
 {
     const char *S;
 
@@ -569,10 +569,10 @@ void init_refl_model(const config_setting_t * s,
 
     if (!strcmp(S, "specular")) {
 	*refl_func = (refl_func_pointer_t) reflect_specular;
-	refl_model_params = NULL;
+	refl_func_pars = NULL;
     } else if (!strcmp(S, "lambertian")) {
 	*refl_func = (refl_func_pointer_t) reflect_lambertian;
-	refl_model_params = NULL;
+	refl_func_pars = NULL;
     } else if (!strcmp(S, "microfacet_gaussian")) {
 	double *number;
 
@@ -581,7 +581,7 @@ void init_refl_model(const config_setting_t * s,
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
 				    number);
 	*number /= (180.0 * M_PI);	/* degree to radian */
-	*refl_model_params = number;
+	*refl_func_pars = number;
     }
 }
 
