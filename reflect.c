@@ -21,8 +21,8 @@
 #include "reflect.h"
 
 
-static void reflect_specular(ray_t * r, const double N[3],
-			     const double P[3])
+void reflect_specular(ray_t * r, const double N[3], const double P[3],
+		      const gsl_rng * rng, void *model_params)
 /*
  * return specularly reflected ray 'r'. surface normal of reflecting surface
  * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
@@ -33,10 +33,15 @@ static void reflect_specular(ray_t * r, const double N[3],
 
     cblas_daxpy(3, -2.0 * t, N, 1, r->dir, 1);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
     memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
+
+    if (r->n_refl == UCHAR_MAX)
+	fprintf(stderr,
+		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
+    ++r->n_refl;
 }
 
-static void reflect_lambertian(ray_t * r, const double N[3],
-			       const double P[3], const gsl_rng * rng)
+void reflect_lambertian(ray_t * r, const double N[3], const double P[3],
+			const gsl_rng * rng, void *model_params)
  /*
   * return diffusely reflected ray 'r'. surface normal of reflecting surface
   * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
@@ -45,12 +50,16 @@ static void reflect_lambertian(ray_t * r, const double N[3],
 {
     get_uniform_random_vector_hemisphere(r->dir, 1.0, N, rng);
     memcpy(r->orig, P, 3 * sizeof(double));
+
+    if (r->n_refl == UCHAR_MAX)
+	fprintf(stderr,
+		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
+    ++r->n_refl;
 }
 
-static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
-					const double P[3],
-					const gsl_rng * rng,
-					const double sigma)
+void reflect_microfacet_gaussian(ray_t * r, const double N[3],
+				 const double P[3], const gsl_rng * rng,
+				 void *model_params)
 {
 /*
  * surface consists of uniformly distributed random facets. surface normal of
@@ -73,6 +82,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
     double alpha, beta;
     double dummy[3];
     double original_ray_dir[3];
+    double *sigma = (double *) model_params;
 
     /*
      * determine alpha / beta to transform 'N' into local
@@ -92,7 +102,7 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	memcpy(r->dir, original_ray_dir, 3 * sizeof(double));	/* restore */
 
 	do {			/* gaussian theta */
-	    theta = gsl_ran_gaussian(rng, sigma);
+	    theta = gsl_ran_gaussian(rng, *sigma);
 	} while (fabs(theta) > M_PI_2);
 
 	phi = 2.0 * M_PI * gsl_rng_uniform(rng);
@@ -109,40 +119,13 @@ static void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	 */
 	l2g_off_rot(random_N, new_N, alpha, beta);
 
-	reflect_specular(r, new_N, P);
+	reflect_specular(r, new_N, P, rng, model_params);
 	dot_product = cblas_ddot(3, r->dir, 1, N, 1);
 
     } while (dot_product < 0.0);	/* 'r' transmitted (not reflected) */
 
-}
-
-void reflect(ray_t * r, const double N[3], const double P[3],
-	     const int model, const gsl_rng * rng, void *model_params)
-{
-
-    switch (model & 0xFFFF) {
-
-    case SPECULAR:
-	reflect_specular(r, N, P);
-	break;
-
-    case LAMBERTIAN:
-	reflect_lambertian(r, N, P, rng);
-	break;
-
-    case MICROFACET_GAUSSIAN:
-	{
-	    double *sigma = (double *) model_params;
-
-	    reflect_microfacet_gaussian(r, N, P, rng, *sigma);
-	    break;
-	}
-
-    }
-
     if (r->n_refl == UCHAR_MAX)
 	fprintf(stderr,
 		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
-
     ++r->n_refl;
 }

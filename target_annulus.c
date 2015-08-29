@@ -25,7 +25,8 @@ typedef struct ann_state_t {
     double r2;			/* inner radius^2 of annulus */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    void *refl_model_params;
+    refl_func_pointer_t refl_func;	/* reflection model */
+    void *refl_model_params;	/* model specific parameters */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -63,7 +64,8 @@ static int ann_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->flags, &state->refl_model_params);
+    init_refl_model(this_target, &state->refl_func,
+		    &state->refl_model_params);
 
     config_setting_lookup_float(this_target, "R", &t);
     state->R2 = t * t;
@@ -81,7 +83,8 @@ static void ann_free_state(void *vstate)
     ann_state_t *state = (ann_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_model_params);
+	       state->refl_spectrum, state->refl_func,
+	       state->refl_model_params);
 }
 
 static double *ann_get_intercept(void *vstate, ray_t * ray)
@@ -163,8 +166,8 @@ static ray_t *ann_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	reflect(ray, &state->M[6], hit, state->flags, r,
-		state->refl_model_params);
+	state->refl_func(ray, &state->M[6], hit, r,
+			 state->refl_model_params);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 

@@ -84,7 +84,7 @@ static void ps_free_state(void *vstate)
 {
     ps_state_t *state = (ps_state_t *) vstate;
 
-    state_free(state->output, state->flags, state->M, NULL, NULL);
+    state_free(state->output, state->flags, state->M, NULL, NULL, NULL);
 }
 
 static double *ps_get_intercept(void *vstate, ray_t * ray)

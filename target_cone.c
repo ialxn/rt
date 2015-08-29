@@ -26,7 +26,8 @@ typedef struct cone_state_t {
     double z_max;		/* height at radius 'r' */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    void *refl_model_params;
+    refl_func_pointer_t refl_func;	/* reflection model */
+    void *refl_model_params;	/* model specific parameters */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -71,7 +72,8 @@ static int cone_init_state(void *vstate, config_setting_t * this_target,
 	state->flags |= MODEL_NONE;
 	return ERR;
     }
-    init_refl_model(this_target, &state->flags, &state->refl_model_params);
+    init_refl_model(this_target, &state->refl_func,
+		    &state->refl_model_params);
 
     state->flags |= init_reflecting_surface(this_target);
 
@@ -86,7 +88,8 @@ static void cone_free_state(void *vstate)
     cone_state_t *state = (cone_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_model_params);
+	       state->refl_spectrum, state->refl_func,
+	       state->refl_model_params);
 }
 
 static double *cone_get_intercept(void *vstate, ray_t * ray)
@@ -171,7 +174,8 @@ static ray_t *cone_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	if (!(state->flags & OUTSIDE))
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
-	reflect(ray, N, hit, state->flags, r, state->refl_model_params);
+	state->refl_func(ray, &state->M[6], hit, r,
+			 state->refl_model_params);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */
