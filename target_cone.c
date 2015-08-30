@@ -63,16 +63,14 @@ static int cone_init_state(void *vstate, config_setting_t * this_target,
 	(TARGET_TYPE, this_target, file_mode, P_factor, &state->output,
 	 &state->flags, state->origin, state->M) == ERR) {
 	state->refl_spectrum = NULL;
-	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
     /* initialize reflectivity spectrum */
     config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_spectrum(S, &state->refl_spectrum)) {
-	state->flags |= MODEL_NONE;
+    if (init_spectrum(S, &state->refl_spectrum))
 	return ERR;
-    }
+
     init_refl_model(this_target, &state->refl_func,
 		    &state->refl_func_pars);
 

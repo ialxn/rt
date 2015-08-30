@@ -130,7 +130,6 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 	 &state->flags, state->C, state->M) == ERR) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
-	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
@@ -139,7 +138,6 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     if (init_spectrum(S, &state->abs_spectrum)) {
 	state->abs_spectrum = NULL;
 	state->dispersion = NULL;
-	state->flags |= MODEL_NONE;
 	return ERR;
     }
 
@@ -147,7 +145,6 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_string(this_target, "idx_refraction", &S);
     if (init_spectrum(S, &state->dispersion)) {
 	state->dispersion = NULL;
-	state->flags |= MODEL_NONE;
 	return ERR;
     }
 

@@ -15,8 +15,6 @@
 
 #include "ray.h"
 
-#define MODEL_NONE		0
-
 
 extern void reflect_specular(ray_t * r, const double N[3],
 			     const double P[3], const gsl_rng * rng,
