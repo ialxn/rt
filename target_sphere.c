@@ -38,8 +38,6 @@ static int sph_init_state(void *vstate, config_setting_t * this_target,
 {
     sph_state_t *state = (sph_state_t *) vstate;
 
-    const char *S;
-
     read_vector(this_target, "origin", state->origin);
 
     state->M = init_M(this_target, "x", "z");
@@ -63,8 +61,7 @@ static int sph_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize reflectivity spectrum */
-    config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_spectrum(S, &state->refl_spectrum))
+    if (init_spectrum(this_target, "reflectivity", &state->refl_spectrum))
 	return ERR;
 
     init_refl_model(this_target, &state->refl_func,

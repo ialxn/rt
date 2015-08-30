@@ -41,7 +41,6 @@ static int tr_init_state(void *vstate, config_setting_t * this_target,
     tr_state_t *state = (tr_state_t *) vstate;
 
     int i;
-    const char *S;
     config_setting_t *point;
 
     read_vector(this_target, "P1", state->P1);
@@ -86,8 +85,7 @@ static int tr_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize reflectivity spectrum */
-    config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_spectrum(S, &state->refl_spectrum))
+    if (init_spectrum(this_target, "reflectivity", &state->refl_spectrum))
 	return ERR;
 
     init_refl_model(this_target, &state->refl_func,

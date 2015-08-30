@@ -115,8 +115,6 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 {
     window_state_t *state = (window_state_t *) vstate;
 
-    const char *S;
-
     read_vector(this_target, "C", state->C);
 
     state->M = init_M(this_target, "x", "a");
@@ -134,17 +132,15 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize absorptivity spectrum */
-    config_setting_lookup_string(this_target, "absorptivity", &S);
-    if (init_spectrum(S, &state->abs_spectrum)) {
-	state->abs_spectrum = NULL;
+    if (init_spectrum(this_target, "absorptivity", &state->abs_spectrum)) {
 	state->dispersion = NULL;
 	return ERR;
     }
 
     /* initialize dispersion curve */
-    config_setting_lookup_string(this_target, "idx_refraction", &S);
-    if (init_spectrum(S, &state->dispersion)) {
-	state->dispersion = NULL;
+    if (init_spectrum(this_target, "idx_refraction", &state->dispersion)) {
+	gsl_spline_free(state->abs_spectrum);
+	state->abs_spectrum = NULL;
 	return ERR;
     }
 

@@ -124,7 +124,8 @@ extern int init_output(const char *target_type,
 		       config_setting_t * this_target, const int file_mode,
 		       const double P_factor, union fh_t *output,
 		       int *out_flag, double point[], double M[]);
-extern int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum);
+extern int init_spectrum(config_setting_t * this_target, const char *kw,
+			 gsl_spline ** spectrum);
 extern void init_refl_model(const struct config_setting_t *s,
 			    refl_func_pointer_t * refl_func,
 			    void **refl_model_params);

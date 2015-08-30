@@ -39,9 +39,7 @@ static int sq_init_state(void *vstate, config_setting_t * this_target,
 			 const double P_factor)
 {
     sq_state_t *state = (sq_state_t *) vstate;
-
     int i;
-    const char *S;
 
     read_vector(this_target, "P1", state->point);
     /*
@@ -85,8 +83,7 @@ static int sq_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize reflectivity spectrum */
-    config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_spectrum(S, &state->refl_spectrum))
+    if (init_spectrum(this_target, "reflectivity", &state->refl_spectrum))
 	return ERR;
 
     init_refl_model(this_target, &state->refl_func,

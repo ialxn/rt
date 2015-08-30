@@ -37,8 +37,6 @@ static int disk_init_state(void *vstate, config_setting_t * this_target,
 			   const double P_factor)
 {
     disk_state_t *state = (disk_state_t *) vstate;
-
-    const char *S;
     double t;
 
     read_vector(this_target, "P", state->point);
@@ -57,8 +55,7 @@ static int disk_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize reflectivity spectrum */
-    config_setting_lookup_string(this_target, "reflectivity", &S);
-    if (init_spectrum(S, &state->refl_spectrum))
+    if (init_spectrum(this_target, "reflectivity", &state->refl_spectrum))
 	return ERR;
 
     init_refl_model(this_target, &state->refl_func,

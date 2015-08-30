@@ -530,35 +530,38 @@ int init_output(const char *target_type, config_setting_t * this_target,
     return NO_ERR;
 }
 
-int init_spectrum(const char *f_name, gsl_spline ** refl_spectrum)
+int init_spectrum(config_setting_t * this_target, const char *kw,
+		  gsl_spline ** spectrum)
 {
-    FILE *refl_data;
+    FILE *data;
     double *lambda;
-    double *refl;
+    double *values;
     size_t n_lambda;
+    const char *f_name;
 
-    if ((refl_data = fopen(f_name, "r")) == NULL) {
-	fprintf(stderr, "Error %s (errno=%d) opening refl_spectrum %s\n",
+    config_setting_lookup_string(this_target, kw, &f_name);
+
+    if ((data = fopen(f_name, "r")) == NULL) {
+	fprintf(stderr, "Error %s (errno=%d) opening spectrum %s\n",
 		strerror(errno), errno, f_name);
-	*refl_spectrum = NULL;
+	*spectrum = NULL;
 	return ERR;
     }
 
-    if (read_data(refl_data, &lambda, &refl, &n_lambda) == ERR) {
-	fprintf(stderr, "Error while reading refl_data (%d items read)\n",
+    if (read_data(data, &lambda, &values, &n_lambda) == ERR) {
+	fprintf(stderr, "Error while reading data (%d items read)\n",
 		n_lambda);
-	fclose(refl_data);
-	*refl_spectrum = NULL;
+	fclose(data);
+	*spectrum = NULL;
 	return ERR;
     }
-    fclose(refl_data);
+    fclose(data);
 
-    *refl_spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
-
-    gsl_spline_init(*refl_spectrum, lambda, refl, n_lambda);
+    *spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
+    gsl_spline_init(*spectrum, lambda, values, n_lambda);
 
     free(lambda);
-    free(refl);
+    free(values);
 
     return NO_ERR;
 }
