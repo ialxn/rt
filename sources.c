@@ -190,19 +190,23 @@ static double *calc_CDF(const double *I, const double *lambda,
     return CDF;
 }
 
-void init_source_spectrum(const char *f_name, gsl_spline ** spectrum)
+void init_source_spectrum(config_setting_t * this_s, const char *kw,
+			  gsl_spline ** spectrum)
 {
-    FILE *sp_data;
+    FILE *data;
     double *lambda;
-    double *I;
+    double *values;
     double *CDF;
     size_t n_lambda;
+    const char *f_name;
 
-    sp_data = fopen(f_name, "r");
-    read_data(sp_data, &lambda, &I, &n_lambda);
-    fclose(sp_data);
+    config_setting_lookup_string(this_s, kw, &f_name);
 
-    CDF = calc_CDF(I, lambda, n_lambda);
+    data = fopen(f_name, "r");
+    read_data(data, &lambda, &values, &n_lambda);
+    fclose(data);
+
+    CDF = calc_CDF(values, lambda, n_lambda);
 
     *spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
 
@@ -210,7 +214,7 @@ void init_source_spectrum(const char *f_name, gsl_spline ** spectrum)
     gsl_spline_init(*spectrum, CDF, lambda, n_lambda);
 
     free(lambda);
-    free(I);
+    free(values);
     free(CDF);
 }
 

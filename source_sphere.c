@@ -38,7 +38,6 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
 			  const double P_factor)
 {
     sp_state_t *state = (sp_state_t *) vstate;
-
     const char *S;
 
     config_setting_lookup_string(this_s, "name", &S);
@@ -52,8 +51,7 @@ static void sp_init_state(void *vstate, config_setting_t * this_s,
     read_vector(this_s, "origin", state->orig);
 
     /* initialize source spectrum */
-    config_setting_lookup_string(this_s, "spectrum", &S);
-    init_source_spectrum(S, &state->spectrum);
+    init_source_spectrum(this_s, "spectrum", &state->spectrum);
 
     pthread_key_create(&state->rays_remain_key, free);
 }
