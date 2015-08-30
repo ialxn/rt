@@ -37,12 +37,10 @@
 
 /*
  * per target flags
- * bit 0-15: select reflectivity model (defined in reflect.h)
- * bit 16-31: general purpose flags
  */
-#define KEEP_CLOSED	(1<<16)	/* open/close output when flushing buffer */
-#define OUTPUT_REQUIRED	(1<<17)	/* 'no_output' was set */
-#define OUTSIDE		(1<<18)	/* mark reflecting surface of non-planar targets */
+#define KEEP_CLOSED	(1<<0)	/* open/close output when flushing buffer */
+#define OUTPUT_REQUIRED	(1<<1)	/* 'no_output' was set */
+#define OUTSIDE		(1<<2)	/* mark reflecting surface of non-planar targets */
 
 #define BUF_SIZE 4096
 
