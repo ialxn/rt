@@ -69,7 +69,7 @@ static double R_fresnell(ray_t * ray, const double *normal,
     rp = (t1 - t2) / (t1 + t2);
     rp *= rp;
 
-    R = (rs + rp) / 2.0;
+    R = (rs + rp) * 0.5;
 
     return R;
 }
