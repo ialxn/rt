@@ -169,7 +169,7 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	if (!(state->flags & OUTSIDE))
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
-	state->refl_func(ray, &state->M[6], hit, r, state->refl_func_pars);
+	state->refl_func(ray, N, hit, r, state->refl_func_pars);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */
