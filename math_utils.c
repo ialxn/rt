@@ -17,36 +17,27 @@
 #include "math_utils.h"
 
 
-void a_plus_cb(double result[3], const double a[3], const double c,
-	       const double b[3])
-/*
- * 'result' = 'a' + 'c' * 'b'
- */
+inline void a_plus_cb(double result[3], const double a[3], const double c,
+		      const double b[3])
 {
-    size_t i;
-
-    for (i = 0; i < 3; i++)
-	result[i] = a[i] + c * b[i];
+    result[0] = a[0] + c * b[0];
+    result[1] = a[1] + c * b[1];
+    result[2] = a[2] + c * b[2];
 }
 
-void a_times_const(double result[3], const double a[3], const double c)
+inline void a_times_const(double result[3], const double a[3],
+			  const double c)
 {
-    size_t i;
-
-    for (i = 0; i < 3; i++)
-	result[i] = a[i] * c;
+    result[0] = a[0] * c;
+    result[1] = a[1] * c;
+    result[2] = a[2] * c;
 }
 
-void diff(double result[3], const double a[3], const double b[3])
-/*
- * calculate difference of vectors 'a' and 'b'
- * 'result' = 'a' - 'b'
- */
+inline void diff(double result[3], const double a[3], const double b[3])
 {
-    size_t i;
-
-    for (i = 0; i < 3; i++)
-	result[i] = a[i] - b[i];
+    result[0] = a[0] - b[0];
+    result[1] = a[1] - b[1];
+    result[2] = a[2] - b[2];
 }
 
 double d_sqr(const double a[3], const double b[3])
@@ -66,7 +57,8 @@ double d_sqr(const double a[3], const double b[3])
 
 }
 
-void cross_product(const double a[3], const double b[3], double result[3])
+inline void cross_product(const double a[3], const double b[3],
+			  double result[3])
 {
     result[0] = a[1] * b[2] - a[2] * b[1];
     result[1] = a[2] * b[0] - a[0] * b[2];
