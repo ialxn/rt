@@ -65,9 +65,13 @@ inline void cross_product(const double a[3], const double b[3],
 
 double normalize(double a[3])
 {
-    double norm = cblas_dnrm2(3, a, 1);
+    const double norm = sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);
+    const double inv_norm = 1.0 / norm;
 
-    cblas_dscal(3, 1.0 / norm, a, 1);
+    a[0] *= inv_norm;
+    a[1] *= inv_norm;
+    a[2] *= inv_norm;
+
     return norm;
 }
 
