@@ -47,8 +47,8 @@ static int ell_init_state(void *vstate, config_setting_t * this_target,
     state->M = init_M(this_target, "x", "z");
 
     read_vector(this_target, "axes", state->axes);
-    for (i = 0; i < 3; i++)	/* we will use only a^2, b^2, c^2 */
-	state->axes[i] *= state->axes[i];
+    for (i = 0; i < 3; i++)	/* we will use only 1/a^2, 1/b^2, 1/c^2 */
+	state->axes[i] = 1.0 / (state->axes[i] * state->axes[i]);
 
     config_setting_lookup_float(this_target, "z_min", &state->z_min);
     config_setting_lookup_float(this_target, "z_max", &state->z_max);

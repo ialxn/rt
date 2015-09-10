@@ -173,7 +173,7 @@ void ell_surf_normal(const double *point, const double *axes,
     double norm;
 
     for (i = 0, norm = 0.0; i < 3; i++) {
-	normal[i] = point[i] / axes[i];
+	normal[i] = point[i] * axes[i];
 	norm += normal[i] * normal[i];
     }
     norm = sqrt(norm);
@@ -378,9 +378,9 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
      * solve quadratic equation
      */
     for (i = 0; i < 3; i++) {
-	A += r_N[i] * r_N[i] / axes[i];
-	B += 2.0 * r_O[i] * r_N[i] / axes[i];
-	C += r_O[i] * r_O[i] / axes[i];
+	A += r_N[i] * r_N[i] * axes[i];
+	B += 2.0 * r_O[i] * r_N[i] * axes[i];
+	C += r_O[i] * r_O[i] * axes[i];
     }
 
     n_solns = gsl_poly_solve_quadratic(A, B, C, &x_small, &x_large);
