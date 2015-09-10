@@ -50,7 +50,8 @@ static pthread_mutex_t mutex_print1 = PTHREAD_MUTEX_INITIALIZER;
 static int print1 = 0;
 
 static pthread_mutex_t mutex_print2 = PTHREAD_MUTEX_INITIALIZER;
-static int print2 = 0;
+static int *print2;
+static int n_print2 = 0;
 
 static int n_threads = 1;	/* default single threaded */
 static int n_log = 0;		/* default do not log path of rays */
@@ -103,19 +104,35 @@ static void print1_once(const char *rng_name)
     pthread_mutex_unlock(&mutex_print1);
 }
 
-static void print2_once(const char *s_type, const char *s_name, int64_t n,
-			double power)
+static void print2_once(source_t * current_source)
 {
+    int *p;
+    int n;
+
     pthread_mutex_lock(&mutex_print2);
 
-    if (print2 % n_threads == 0) {	/* only true during first call */
-	fprintf(stdout, "        %s (%s) started\n", s_name, s_type);
-	fprintf(stdout, "            %" PRId64 " rays to trace\n", n);
-	fprintf(stdout, "            with total power of %e\n", power);
-	fflush(stdout);
+    p = print2;
+    n = 0;
+    while (*p && n <= n_print2) {
+	if (*p == (int) current_source || n == n_print2) {
+	    /* current_source is already in array or end of array is reached */
+	    pthread_mutex_unlock(&mutex_print2);
+	    return;
+	}
+	n++;
+	p++;
     }
 
-    print2++;
+    fprintf(stdout, "        %s (%s) started\n",
+	    get_source_name(current_source),
+	    get_source_type(current_source));
+    fprintf(stdout, "            %" PRId64 " rays to trace\n",
+	    get_source_n_rays(current_source));
+    fprintf(stdout, "            with total power of %e\n",
+	    get_source_power(current_source));
+    fflush(stdout);
+
+    *p = (int) current_source;	/* insert current_source into array */
     pthread_mutex_unlock(&mutex_print2);
 }
 
@@ -170,10 +187,7 @@ static void *run_simulation(void *args)
 	    }
 	}
 
-	print2_once(get_source_type(current_source),
-		    get_source_name(current_source),
-		    get_source_n_rays(current_source),
-		    get_source_power(current_source));
+	print2_once(current_source);
 
 	while ((ray = emit_ray(current_source, r))) {
 	    /*
@@ -552,6 +566,9 @@ int main(int argc, char **argv)
 	    }
 	}
 
+	print2 = (int *) calloc((size_t) n_sources, sizeof(int));
+	n_print2 = n_sources - 1;
+
 	config_destroy(&cfg);
 
 	rs_args = (struct run_simulation_args *)
@@ -600,6 +617,7 @@ int main(int argc, char **argv)
 	target_list_free(target_list);
 	free(source_list);
 	free(target_list);
+	free(print2);
 
     default:
 	break;
