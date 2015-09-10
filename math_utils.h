@@ -30,6 +30,7 @@ extern void cross_product(const double a[3], const double b[3],
 extern double normalize(double a[3]);
 extern int orthonormalize(double x[3], double y[3], double z[3]);
 extern void my_dscal(const double c, double a[3]);
+extern void my_daxpy(const double a, const double x[3], double y[3]);
 extern void g2l(const double *mat, const double *origin, const double *g,
 		double *l);
 extern void l2g(const double *mat, const double *origin, const double *l,

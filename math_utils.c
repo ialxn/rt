@@ -108,6 +108,13 @@ inline void my_dscal(const double c, double a[3])
     a[2] *= c;
 }
 
+inline void my_daxpy(const double a, const double x[3], double y[3])
+{
+    y[0] += a * x[0];
+    y[1] += a * x[1];
+    y[2] += a * x[2];
+}
+
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*

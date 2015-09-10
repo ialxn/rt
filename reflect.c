@@ -32,7 +32,7 @@ void reflect_specular(ray_t * r, const double N[3], const double P[3],
 {
     const double t = cblas_ddot(3, N, 1, r->dir, 1);	/* 'N' dot 'r' */
 
-    cblas_daxpy(3, -2.0 * t, N, 1, r->dir, 1);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
+    my_daxpy(-2.0 * t, N, r->dir);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
     memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
 
     if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */

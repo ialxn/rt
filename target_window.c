@@ -104,7 +104,7 @@ static int snell(ray_t * ray, const double *normal, const double n1,
     cs2 = sqrt(cs2);
 
     my_dscal(eta, ray->dir);
-    cblas_daxpy(3, -eta * c1 + cs2, normal, 1, ray->dir, 1);
+    my_daxpy(-eta * c1 + cs2, normal, ray->dir);
 
     return 0;
 }
