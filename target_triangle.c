@@ -129,23 +129,23 @@ static double *tr_get_intercept(void *vstate, ray_t * ray)
      */
     cross_product(ray->dir, state->E3, P);
 
-    det = cblas_ddot(3, state->E2, 1, P, 1);
+    det = my_ddot(state->E2, P);
 
     if (fabs(det) < GSL_SQRT_DBL_EPSILON)	/* parallel to triangle */
 	return NULL;
 
     diff(T, ray->orig, state->P1);
-    u = cblas_ddot(3, T, 1, P, 1);
+    u = my_ddot(T, P);
     if (u < 0.0 || u > det)	/* outside */
 	return NULL;
 
     cross_product(T, state->E2, Q);
-    v = cblas_ddot(3, ray->dir, 1, Q, 1);
+    v = my_ddot(ray->dir, Q);
 
     if (v < 0.0 || u + v > det)	/* outside */
 	return NULL;
 
-    t = cblas_ddot(3, state->E3, 1, Q, 1) / det;
+    t = my_ddot(state->E3, Q) / det;
 
 /*
  * if (t<0)	ray points away from target

@@ -85,7 +85,7 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
     diff(radius_vector, hit, state->center);
     do {
 	get_uniform_random_vector(ray->dir, 1.0, r);
-    } while (cblas_ddot(3, radius_vector, 1, ray->dir, 1) < 0.0);
+    } while (my_ddot(radius_vector, ray->dir) < 0.0);
 
     data->flag |= LAST_WAS_HIT;	/* mark as hit */
 

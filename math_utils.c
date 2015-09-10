@@ -93,7 +93,7 @@ int orthonormalize(double x[3], double y[3], double z[3])
     cross_product(z, x, y);
     normalize(y);
 
-    if (cblas_ddot(3, x, 1, z, 1)) {	/* 'x' is not perpendicular to 'z' */
+    if (my_ddot(x, z)) {	/* 'x' is not perpendicular to 'z' */
 	cross_product(y, z, x);
 	status = ERR;
     }
@@ -133,7 +133,7 @@ void g2l(const double *mat, const double *origin, const double *g,
     diff(t, g, origin);
 
     for (i = 0; i < 3; i++)
-	l[i] = cblas_ddot(3, t, 1, &mat[3 * i], 1);
+	l[i] = my_ddot(t, &mat[3 * i]);
 }
 
 void l2g(const double *mat, const double *origin, const double *l,
@@ -143,10 +143,9 @@ void l2g(const double *mat, const double *origin, const double *l,
  *     g(x, y, z) = MT l(x, y, z) + o(x, y, z)
  */
 {
-    int i;
-
-    for (i = 0; i < 3; i++)
-	g[i] = cblas_ddot(3, &mat[i], 3, l, 1) + origin[i];
+    g[0] = mat[0] * l[0] + mat[3] * l[1] + mat[6] * l[2] + origin[0];
+    g[1] = mat[1] * l[0] + mat[4] * l[1] + mat[7] * l[2] + origin[1];
+    g[2] = mat[2] * l[0] + mat[5] * l[1] + mat[8] * l[2] + origin[2];
 }
 
 void g2l_rot(const double *mat, const double *g, double *l)
@@ -158,7 +157,7 @@ void g2l_rot(const double *mat, const double *g, double *l)
     int i;
 
     for (i = 0; i < 3; i++)
-	l[i] = cblas_ddot(3, g, 1, &mat[3 * i], 1);
+	l[i] = my_ddot(g, &mat[3 * i]);
 }
 
 void l2g_rot(const double *mat, const double *l, double *g)
@@ -166,12 +165,10 @@ void l2g_rot(const double *mat, const double *l, double *g)
  * local -> global: performs rotation part only
  */
 {
-    int i;
-
-    for (i = 0; i < 3; i++)
-	g[i] = cblas_ddot(3, &mat[i], 3, l, 1);
+    g[0] = mat[0] * l[0] + mat[3] * l[1] + mat[6] * l[2];
+    g[1] = mat[1] * l[0] + mat[4] * l[1] + mat[7] * l[2];
+    g[2] = mat[2] * l[0] + mat[5] * l[1] + mat[8] * l[2];
 }
-
 
 void get_uniform_random_vector(double *result, const double l,
 			       const gsl_rng * r)
@@ -203,7 +200,7 @@ void get_uniform_random_vector_hemisphere(double *result,
 
     get_uniform_random_vector(random_ray, radius, r);
 
-    if (cblas_ddot(3, normal, 1, random_ray, 1) < 0.0) {
+    if (my_ddot(normal, random_ray) < 0.0) {
 	/*
 	 * 'normal' and 'random_ray' point into opposite directions (are anti-
 	 * parallel). use inverted 'random_ray'.

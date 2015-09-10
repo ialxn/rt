@@ -113,7 +113,7 @@ static double *test_cyl_intercept(const double x, const double *orig,
 	intercept = (double *) malloc(3 * sizeof(double));
 	a_plus_cb(intercept, orig, x, dir);
 	diff(t3, intercept, c);
-	t1 = cblas_ddot(3, t3, 1, a, 1);
+	t1 = my_ddot(t3, a);
 
 	if (t1 < 0.0 || t1 > l) {	/* out of bounds */
 	    free(intercept);
@@ -153,7 +153,7 @@ void cyl_surf_normal(double *const intercept, const double *C,
     double t;
 
     diff(IC, intercept, C);
-    t = cblas_ddot(3, IC, 1, a, 1);
+    t = my_ddot(IC, a);
     a_plus_cb(normal, IC, -t, a);
 
     my_dscal(1.0 / r, normal);
@@ -247,7 +247,7 @@ double *intercept_cone(const ray_t * ray, const double *M,
      * where 'ray->dir' dot "surface_normal" is negative
      */
     cone_surf_normal(l_intercept, tan2_a, H, N_cone);
-    if (cblas_ddot(3, r_N, 1, N_cone, 1) < 0.0)
+    if (my_ddot(r_N, N_cone) < 0.0)
 	*hits_outside = 1;
     else
 	*hits_outside = 0;
@@ -301,11 +301,11 @@ double *intercept_cylinder(const ray_t * ray, const double *c,
      * Note: 'a' is normalized. 'd' * 'a' -> dc
      */
 
-    t1 = cblas_ddot(3, ray->dir, 1, a, 1);	/* dot(dl,dc)/dot(dc,dc) */
+    t1 = my_ddot(ray->dir, a);	/* dot(dl,dc)/dot(dc,dc) */
     a_plus_cb(e, ray->dir, -t1 * l, a);
 
     diff(t3, ray->orig, c);	/* l0-c0 */
-    t1 = cblas_ddot(3, t3, 1, a, 1);	/* dot((l0-c0),dc)/dot(dc,dc) */
+    t1 = my_ddot(t3, a);	/* dot((l0-c0),dc)/dot(dc,dc) */
     a_plus_cb(f, t3, -t1 * l, a);
 
     /*
@@ -314,9 +314,9 @@ double *intercept_cylinder(const ray_t * ray, const double *c,
      * B = 2*dot(e,f);
      * C = dot(f,f) - r^2;
      */
-    A = cblas_ddot(3, e, 1, e, 1);
-    B = 2.0 * cblas_ddot(3, e, 1, f, 1);
-    C = cblas_ddot(3, f, 1, f, 1) - r * r;
+    A = my_ddot(e, e);
+    B = 2.0 * my_ddot(e, f);
+    C = my_ddot(f, f) - r * r;
 
     n_solns = gsl_poly_solve_quadratic(A, B, C, &x_small, &x_large);
 
@@ -338,7 +338,7 @@ double *intercept_cylinder(const ray_t * ray, const double *c,
      */
     if (intercept) {
 	cyl_surf_normal(intercept, c, a, r, t3);
-	if (cblas_ddot(3, ray->dir, 1, t3, 1) < 0.0)
+	if (my_ddot(ray->dir, t3) < 0.0)
 	    *hits_outside = 1;
 	else
 	    *hits_outside = 0;
@@ -393,7 +393,7 @@ double *intercept_ellipsoid(const ray_t * ray, const double *M,
      * where 'ray->dir' dot "surface_normal" is negative
      */
     ell_surf_normal(l_intercept, axes, N_ellipsoid);
-    if (cblas_ddot(3, r_N, 1, N_ellipsoid, 1) < 0.0)
+    if (my_ddot(r_N, N_ellipsoid) < 0.0)
 	*hits_outside = 1;
     else
 	*hits_outside = 0;
@@ -440,7 +440,7 @@ double *intercept_paraboloid(const ray_t * ray, const double *M,
      * where 'ray->dir' dot "surface_normal" is negative
      */
     par_surf_normal(l_intercept, foc2, N_paraboloid);
-    if (cblas_ddot(3, r_N, 1, N_paraboloid, 1) < 0.0)
+    if (my_ddot(r_N, N_paraboloid) < 0.0)
 	*hits_outside = 1;
     else
 	*hits_outside = 0;
@@ -489,7 +489,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
     double d;
     double *intercept;
 
-    t1 = cblas_ddot(3, ray->dir, 1, plane_normal, 1);	/* l dot n */
+    t1 = my_ddot(ray->dir, plane_normal);	/* l dot n */
 
     if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
 	return NULL;
@@ -500,7 +500,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 	*hits_front = 0;
 
     diff(t2, plane_point, ray->orig);	/* p_0 - l_0 */
-    t3 = cblas_ddot(3, t2, 1, plane_normal, 1);	/* (p_0 - l_0) dot N */
+    t3 = my_ddot(t2, plane_normal);	/* (p_0 - l_0) dot N */
 
     if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
 	return NULL;
@@ -557,8 +557,8 @@ double *intercept_sphere(const ray_t * ray, const double *M,
 
 	diff(OminusC, ray->orig, center);
 
-	B = 2.0 * cblas_ddot(3, OminusC, 1, ray->dir, 1);
-	C = cblas_ddot(3, OminusC, 1, OminusC, 1) - radius * radius;
+	B = 2.0 * my_ddot(OminusC, ray->dir);
+	C = my_ddot(OminusC, OminusC) - radius * radius;
 
 	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
 	intercept = find_first_soln(n_solns, x_small, x_large, ray);
@@ -571,8 +571,8 @@ double *intercept_sphere(const ray_t * ray, const double *M,
 	g2l(M, center, ray->orig, r_O);
 	g2l_rot(M, ray->dir, r_N);
 
-	B = 2.0 * cblas_ddot(3, r_O, 1, r_N, 1);
-	C = cblas_ddot(3, r_O, 1, r_O, 1) - radius * radius;
+	B = 2.0 * my_ddot(r_O, r_N);
+	C = my_ddot(r_O, r_O) - radius * radius;
 
 	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
 	if (!find_first_soln_restricted
@@ -581,7 +581,7 @@ double *intercept_sphere(const ray_t * ray, const double *M,
 	    return NULL;
 
 	sph_surf_normal(l_intercept, N_sphere);
-	if (cblas_ddot(3, r_N, 1, N_sphere, 1) < 0)
+	if (my_ddot(r_N, N_sphere) < 0)
 	    *hits_outside = 1;
 	else
 	    *hits_outside = 0;

@@ -30,7 +30,7 @@ void reflect_specular(ray_t * r, const double N[3], const double P[3],
  * origin or reflected ray will be 'P'.
  */
 {
-    const double t = cblas_ddot(3, N, 1, r->dir, 1);	/* 'N' dot 'r' */
+    const double t = my_ddot(N, r->dir);	/* 'N' dot 'r' */
 
     my_daxpy(-2.0 * t, N, r->dir);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
     memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
@@ -121,7 +121,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	l2g_off_rot(random_N, new_N, alpha, beta);
 
 	reflect_specular(r, new_N, P, rng, model_params);
-	dot_product = cblas_ddot(3, r->dir, 1, N, 1);
+	dot_product = my_ddot(r->dir, N);
 
     } while (dot_product < 0.0);	/* 'r' transmitted (not reflected) */
 
