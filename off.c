@@ -12,7 +12,6 @@
 #include <math.h>
 #include <string.h>
 
-#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 
 #include "io_utils.h"
@@ -969,7 +968,7 @@ void g2l_off(const double *P, const double *N, double *L,
     for (i = 0; i < 3; i++)	/* translate to origin */
 	L[i] = N[i] - P[i];
 
-    norm = cblas_dnrm2(3, L, 1);	/* length of L */
+    norm = sqrt(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]);
 
     *beta = atan2(L[1], L[0]);
     *alpha = atan2(L[0] * cos(-*beta) - L[1] * sin(-*beta), L[2]);
@@ -1026,7 +1025,7 @@ void g2l_off_rot(const double *N, double *L, double *alpha, double *beta)
  * return alpha, beta, and resulting vector in L
  */
 {
-    const double norm = cblas_dnrm2(3, N, 1);	/* length of L */
+    const double norm = sqrt(N[0] * N[0] + N[1] * N[1] + N[2] * N[2]);
 
     *beta = atan2(N[1], N[0]);
     *alpha = atan2(N[0] * cos(-*beta) - N[1] * sin(-*beta), N[2]);
