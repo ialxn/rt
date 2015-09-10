@@ -16,6 +16,7 @@
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
 
+#include "likely.h"
 #include "math_utils.h"
 #include "off.h"
 #include "reflect.h"
@@ -34,7 +35,7 @@ void reflect_specular(ray_t * r, const double N[3], const double P[3],
     cblas_daxpy(3, -2.0 * t, N, 1, r->dir, 1);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
     memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
 
-    if (r->n_refl == UCHAR_MAX)
+    if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	fprintf(stderr,
 		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
     ++r->n_refl;
@@ -51,7 +52,7 @@ void reflect_lambertian(ray_t * r, const double N[3], const double P[3],
     get_uniform_random_vector_hemisphere(r->dir, 1.0, N, rng);
     memcpy(r->orig, P, 3 * sizeof(double));
 
-    if (r->n_refl == UCHAR_MAX)
+    if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	fprintf(stderr,
 		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
     ++r->n_refl;
@@ -124,7 +125,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 
     } while (dot_product < 0.0);	/* 'r' transmitted (not reflected) */
 
-    if (r->n_refl == UCHAR_MAX)
+    if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	fprintf(stderr,
 		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
     ++r->n_refl;

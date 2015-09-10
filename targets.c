@@ -14,6 +14,7 @@
 #include <gsl/gsl_cblas.h>
 
 #include "io_utils.h"
+#include "likely.h"
 #include "targets.h"
 
 
@@ -704,7 +705,9 @@ void store_xy(union fh_t output, const int flags, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (3 * sizeof(float) + sizeof(unsigned char)))
+    if (unlikely		/* buffer full is unlikely */
+	(data->i ==
+	 BUF_SIZE * (3 * sizeof(float) + sizeof(unsigned char))))
 	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
@@ -722,7 +725,9 @@ void store_xyz(union fh_t output, const int flags, ray_t * ray,
     /* transform to local coordinates */
     g2l(m, point, hit, hit_local);
 
-    if (data->i == BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char)))
+    if (unlikely		/* buffer full is unlikely */
+	(data->i ==
+	 BUF_SIZE * (4 * sizeof(float) + sizeof(unsigned char))))
 	write_buffer(output, flags, data, mutex_writefd);
 
     WRITE_FLOAT(hit_local[0], data->buf, data->i);
