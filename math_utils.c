@@ -115,6 +115,11 @@ inline void my_daxpy(const double a, const double x[3], double y[3])
     y[2] += a * x[2];
 }
 
+inline double my_ddot(const double a[3], const double b[3])
+{
+    return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
+}
+
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
