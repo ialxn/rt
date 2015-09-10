@@ -40,20 +40,18 @@ inline void diff(double result[3], const double a[3], const double b[3])
     result[2] = a[2] - b[2];
 }
 
-double d_sqr(const double a[3], const double b[3])
+inline double d_sqr(const double a[3], const double b[3])
 /*
  * return squared distance between point 'a' and 'b'
  */
 {
-    size_t i;
-    double d;
+    double t0, t1, t2;
 
-    for (i = 0, d = 0.0; i < 3; i++) {
-	const double t = a[i] - b[i];
-	d += t * t;
-    }
+    t0 = a[0] - b[0];
+    t1 = a[1] - b[1];
+    t2 = a[2] - b[2];
 
-    return (d);
+    return (t0 * t0 + t1 * t1 + t2 * t2);
 
 }
 
