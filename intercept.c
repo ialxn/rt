@@ -156,7 +156,7 @@ void cyl_surf_normal(double *const intercept, const double *C,
     t = cblas_ddot(3, IC, 1, a, 1);
     a_plus_cb(normal, IC, -t, a);
 
-    cblas_dscal(3, 1.0 / r, normal, 1);
+    my_dscal(1.0 / r, normal);
 }
 
 void ell_surf_normal(const double *point, const double *axes,
@@ -177,7 +177,7 @@ void ell_surf_normal(const double *point, const double *axes,
 	norm += normal[i] * normal[i];
     }
     norm = sqrt(norm);
-    cblas_dscal(3, 1.0 / norm, normal, 1);
+    my_dscal(1.0 / norm, normal);
 }
 
 void par_surf_normal(const double *point, const double foc2,

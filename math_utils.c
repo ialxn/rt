@@ -101,6 +101,13 @@ int orthonormalize(double x[3], double y[3], double z[3])
     return status;
 }
 
+inline void my_dscal(const double c, double a[3])
+{
+    a[0] *= c;
+    a[1] *= c;
+    a[2] *= c;
+}
+
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
@@ -128,7 +135,6 @@ void l2g(const double *mat, const double *origin, const double *l,
 
     for (i = 0; i < 3; i++)
 	g[i] = cblas_ddot(3, &mat[i], 3, l, 1) + origin[i];
-
 }
 
 void g2l_rot(const double *mat, const double *g, double *l)
