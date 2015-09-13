@@ -11,7 +11,6 @@
 
 #include <math.h>
 #include <string.h>
-#include <gsl/gsl_cblas.h>
 
 #include "io_utils.h"
 #include "math_utils.h"

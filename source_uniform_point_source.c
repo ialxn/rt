@@ -13,7 +13,6 @@
 #include <string.h>
 
 #include <gsl/gsl_spline.h>
-#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_rng.h>
 
 #include "io_utils.h"

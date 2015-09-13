@@ -11,7 +11,6 @@
 #include <errno.h>
 #include <string.h>
 #include <stdlib.h>
-#include <gsl/gsl_cblas.h>
 
 #include "io_utils.h"
 #include "likely.h"

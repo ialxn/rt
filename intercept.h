@@ -17,7 +17,6 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_spline.h>

@@ -10,7 +10,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <gsl/gsl_cblas.h>
 #include <gsl/gsl_poly.h>
 
 #include "intercept.h"
