@@ -168,15 +168,11 @@ void ell_surf_normal(const double *point, const double *axes,
  *
  * and points outwards! (factor 2.0 left out)
  */
-    int i;
-    double norm;
+    normal[0] = point[0] * axes[0];
+    normal[1] = point[1] * axes[1];
+    normal[2] = point[2] * axes[2];
 
-    for (i = 0, norm = 0.0; i < 3; i++) {
-	normal[i] = point[i] * axes[i];
-	norm += normal[i] * normal[i];
-    }
-    norm = sqrt(norm);
-    my_dscal(1.0 / norm, normal);
+    normalize(normal);
 }
 
 void par_surf_normal(const double *point, const double foc2,
