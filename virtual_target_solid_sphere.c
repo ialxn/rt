@@ -7,20 +7,20 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-#include <string.h>
-
 #include "io_utils.h"
 #include "intercept.h"
 #include "reflect.h"
+#include "targets.h"
 #include "virtual_targets.h"
-
-#define NO_ITEMS 0		/* no data will be stored */
 
 
 typedef struct vtssp_state_t {
     double center[3];		/* center coordinate of sphere */
     double radius;		/* radius^2 of disk */
-    pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
+    gsl_spline *spectrum;	/* interpolated emission spectrum */
+    gsl_spline *reflectivity;	/* interpolated reflectivity spectrum */
+    refl_func_pointer_t refl_func;	/* reflection model */
+    void *refl_func_pars;	/* model specific parameters */
 } vtssp_state_t;
 
 
@@ -33,26 +33,32 @@ static int vtssp_init_state(void *vstate, config_setting_t * this_target,
     read_vector(this_target, "origin", state->center);
     config_setting_lookup_float(this_target, "radius", &state->radius);
 
-    pthread_key_create(&state->PTDT_key, free_PTDT);
+    if (init_spectrum(this_target, "spectrum", &state->spectrum))
+	return ERR;
+
+    if (init_spectrum(this_target, "reflectivity", &state->reflectivity))
+	return ERR;
+
+    init_refl_model(this_target, &state->refl_func,
+		    &state->refl_func_pars);
 
     return NO_ERR;
 }
 
+static void vtssp_free_state(void *vstate)
+{
+    vtssp_state_t *state = (vtssp_state_t *) vstate;
+
+    gsl_spline_free(state->spectrum);
+    gsl_spline_free(state->reflectivity);
+
+    if (state->refl_func == reflect_microfacet_gaussian)
+	free((double *) state->refl_func_pars);
+}
 
 static double *vtssp_get_intercept(void *vstate, ray_t * ray)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;
-    PTDT_t *data = pthread_getspecific(state->PTDT_key);
-
-    if (data->flag & LAST_WAS_HIT) {
-	/*
-	 * ray starts on this target, no hit possible.
-	 * this test fails for ray initially emitted by
-	 * this solid source (flag cannot be set by source)
-	 */
-	data->flag &= ~LAST_WAS_HIT;
-	return NULL;
-    }
 
     return intercept_sphere(ray, NULL, state->center, state->radius, 0.0,
 			    0.0, NULL);
@@ -62,46 +68,44 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
 				const gsl_rng * r)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;
-    PTDT_t *data = pthread_getspecific(state->PTDT_key);
-    double radius_vector[3];
 
-    /*
-     * rays that hit solid sphere are scattered uniformly
-     * choose random direction but make sure ray does not enter sphere
-     * i.e. 'radius_vector' dot 'ray->dir' is positive. Note that the
-     * radius vector is parallel to the normal vector (but not normalized,
-     * which is no problem here).
-     * 
-     * More correct:
-     * - define reflectivity of source
-     * - non-absorbed rays are scattered as required by reflectivity model
-     * - ABSORBED rays transform a power of 'ray->power' to the source.
-     *   a number of rays with the same power are re-emitted from random points
-     *   on the source into random directions. CAREFUL 'ray->power' of absorbed
-     *   is not necessary equal to the power_per_ray of the source that was
-     *   hit (several sources involved). bookkeeping required.
-     */
-    memcpy(ray->orig, hit, 3 * sizeof(double));
-    diff(radius_vector, hit, state->center);
-    do {
-	get_uniform_random_vector(ray->dir, 1.0, r);
-    } while (my_ddot(radius_vector, ray->dir) < 0.0);
+    if (gsl_rng_uniform(r) >
+	gsl_spline_eval(state->reflectivity, ray->lambda, NULL)) {
+	/*
+	 * ray is absorbed. we emit the same power from a random point on the
+	 * source but with the emissionspectrum of this source.
+	 */
+	get_uniform_random_vector(ray->orig, state->radius, r);
+	ray->orig[0] += state->center[0];
+	ray->orig[1] += state->center[1];
+	ray->orig[2] += state->center[2];
 
-    data->flag |= LAST_WAS_HIT;	/* mark as hit */
+	get_uniform_random_vector_hemisphere(ray->dir, 1.0, ray->orig, r);
+
+	ray->lambda =
+	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+
+    } else {			/* reflect 'ray' */
+	double normal[3];
+
+	diff(normal, hit, state->center);
+	normalize(normal);
+	state->refl_func(ray, normal, hit, r, state->refl_func_pars);
+    }
 
     return ray;
 }
 
 static void vtssp_init_PTDT(void *vstate)
 {
-    per_thread_init(((vtssp_state_t *) vstate)->PTDT_key, NO_ITEMS);
+    return;
 }
 
 static const target_type_t vt_ssp_t = {
     NULL,
     sizeof(struct vtssp_state_t),
     &vtssp_init_state,
-    NULL,
+    &vtssp_free_state,
     &vtssp_get_intercept,
     &vtssp_get_out_ray,
     &vtssp_init_PTDT,
