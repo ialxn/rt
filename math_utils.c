@@ -126,13 +126,13 @@ void g2l(const double *mat, const double *origin, const double *g,
  *     l(x, y, z) = M (g(x, y, z) - o(x, y, z))
  */
 {
-    int i;
     double t[3];
 
     diff(t, g, origin);
 
-    for (i = 0; i < 3; i++)
-	l[i] = my_ddot(t, &mat[3 * i]);
+    l[0] = my_ddot(t, &mat[0]);
+    l[1] = my_ddot(t, &mat[3]);
+    l[2] = my_ddot(t, &mat[6]);
 }
 
 void l2g(const double *mat, const double *origin, const double *l,
@@ -153,10 +153,9 @@ void g2l_rot(const double *mat, const double *g, double *l)
  *     l(x, y, z) = M (g(x, y, z))
  */
 {
-    int i;
-
-    for (i = 0; i < 3; i++)
-	l[i] = my_ddot(g, &mat[3 * i]);
+    l[0] = my_ddot(g, &mat[0]);
+    l[1] = my_ddot(g, &mat[3]);
+    l[2] = my_ddot(g, &mat[6]);
 }
 
 void l2g_rot(const double *mat, const double *l, double *g)
@@ -204,10 +203,9 @@ void get_uniform_random_vector_hemisphere(double *result,
 	 * 'normal' and 'random_ray' point into opposite directions (are anti-
 	 * parallel). use inverted 'random_ray'.
 	 */
-	size_t i;
-
-	for (i = 0; i < 3; i++)
-	    result[i] = -random_ray[i];
+	result[0] = -random_ray[0];
+	result[1] = -random_ray[1];
+	result[2] = -random_ray[2];
     } else
 	memcpy(result, random_ray, 3 * sizeof(double));
 }
