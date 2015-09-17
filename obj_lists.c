@@ -43,7 +43,10 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 	 * argument in the call to 'source_alloc()'. 
 	 */
 	config_setting_lookup_string(this_source, "type", &type);
-	if (!strcmp(type, "solid sphere"))
+	if (!strcmp(type, "arc"))
+	    new_source =
+		source_alloc(source_solid_sphere, this_source, P_factor);
+	else if (!strcmp(type, "solid sphere"))
 	    new_source =
 		source_alloc(source_solid_sphere, this_source, P_factor);
 	else if (!strcmp(type, "sphere"))
