@@ -132,9 +132,20 @@ int check_sources(config_t * cfg)
 		 * solid sphere:
 		 *  - array 'origin' [x,y,z] / double
 		 *  - 'radius' / double
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
 		status += check_array("sources", this_s, "origin", i);
 		status += check_float("sources", this_s, "radius", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity", i);
+		status += check_file("sources", this_s, "reflectivity", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("sources", this_s,
+					     "reflectivity_model", i);
 	    } /* end 'solid_sphere' */
 	    else if (!strcmp(type, "sphere")) {
 		/*

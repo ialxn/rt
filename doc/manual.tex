@@ -121,7 +121,11 @@ The value will be overridden by the {\tt -a} command line argument. Using this o
 
 All sources define the keywords {\tt origin} (doubles), {\tt power} (double), and {\tt spectrum} (string) i.e.\ the origin of the source, the total power assigned to the source, and the name of a file\footnote{The spectrum will be represented by a linear interpolation of the data given in this file. Use a minimum number of data points to make the interpolation fast} containing the spectrum of the source. Each ray thus represents a power of {\tt P\_factor} at a random wavelength.
 
-\subsection{Uniform Point Source}
+\subsection{Transparent (non-interacting) Sources}
+
+Rays that intercect these sources pass through them without being changed in any way.
+
+\subsubsection{Uniform Point Source}
 
 \noindent {\tt type="uniform point source";}
 
@@ -137,7 +141,7 @@ All sources define the keywords {\tt origin} (doubles), {\tt power} (double), an
 Defines an uniform point source located at {\tt origin}. 
 
 
-\subsection{Spot Source}
+\subsubsection{Spot Source}
 
 \noindent {\tt type="spot source";}
 
@@ -156,7 +160,7 @@ Defines an uniform point source located at {\tt origin}.
 \vspace{0.25cm}
 Defines a point source located at {\tt origin}. The source emits homogeneously into a cone pointing in {\tt direction}. {\tt theta} defines the angle between the edge of the cone and {\tt direction}. If {\tt theta=0.0} all rays are emitted in {\tt direction}. {\tt theta=180.0} defines an uniform point source. The direction vector {\tt direction} does not need to be normalized.
 
-\subsection{Sphere}
+\subsubsection{Sphere}
 
 \noindent {\tt type="sphere";}
 
@@ -173,7 +177,11 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 \vspace{0.25cm}
 Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
-\subsection{Solid Sphere}
+\subsection{Solid (non-transparent, re-emitting) Sources}
+
+Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed ray are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin.
+
+\subsubsection{Solid Sphere}
 
 \noindent {\tt type="solid\_sphere";}
 
@@ -187,8 +195,9 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 \noindent {\tt spectrum="FILE\_NAME";}
 
+
 \vspace{0.25cm}
-Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position on the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed. In contrast to the source type {\tt sphere}, this source in not transparent. Rays that hit the source are absorbed and then re-emitted from a random position into a random direction.
+Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position on the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
 
 
