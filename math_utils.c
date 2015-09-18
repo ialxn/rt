@@ -194,18 +194,14 @@ void get_uniform_random_vector_hemisphere(double *result,
 					  const double *normal,
 					  const gsl_rng * r)
 {
-    double random_ray[3];
-
-    get_uniform_random_vector(random_ray, radius, r);
-
-    if (my_ddot(normal, random_ray) < 0.0) {
+    get_uniform_random_vector(result, radius, r);
+    if (my_ddot(normal, result) < 0.0) {
 	/*
-	 * 'normal' and 'random_ray' point into opposite directions (are anti-
-	 * parallel). use inverted 'random_ray'.
+	 * 'normal' and 'result' point into opposite directions (are anti-
+	 * parallel). use inverted 'result'.
 	 */
-	result[0] = -random_ray[0];
-	result[1] = -random_ray[1];
-	result[2] = -random_ray[2];
-    } else
-	memcpy(result, random_ray, 3 * sizeof(double));
+	result[0] = -result[0];
+	result[1] = -result[1];
+	result[2] = -result[2];
+    }
 }
