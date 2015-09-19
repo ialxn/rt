@@ -127,7 +127,31 @@ int check_sources(config_t * cfg)
 		continue;
 
 	    /* check source specific settings */
-	    if (!strcmp(type, "solid_sphere")) {
+	    if (!strcmp(type, "solid rod")) {
+		/*
+		 * solid rod:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - 'radius' / double
+		 *  - 'length' / double
+		 *  - array 'direction' [x,y,z] / double
+		 *  - base_face_emits / [true|false]
+		 *  - top_face_emits / [true|false]
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("sources", this_s, "origin", i);
+		status += check_float("sources", this_s, "radius", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity", i);
+		status += check_file("sources", this_s, "reflectivity", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("sources", this_s,
+					     "reflectivity_model", i);
+	    } /* end 'solid rod' */
+	    else if (!strcmp(type, "solid_sphere")) {
 		/*
 		 * solid sphere:
 		 *  - array 'origin' [x,y,z] / double
