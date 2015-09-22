@@ -962,11 +962,9 @@ void g2l_off(const double *P, const double *N, double *L,
  * return alpha, beta, and resulting vector in L
  */
 {
-    int i;
     double norm;
 
-    for (i = 0; i < 3; i++)	/* translate to origin */
-	L[i] = N[i] - P[i];
+    diff(L, N, P);
 
     norm = sqrt(L[0] * L[0] + L[1] * L[1] + L[2] * L[2]);
 
@@ -995,7 +993,6 @@ void l2g_off(const double *P, const double *L, double *G,
  * return alpha, beta, and resulting vector in G
  */
 {
-    int i;
     double sa, ca, sb, cb;
     double x;
 
@@ -1003,13 +1000,9 @@ void l2g_off(const double *P, const double *L, double *G,
     sincos(-beta, &sb, &cb);
     x = L[0] * ca - L[2] * sa;
 
-    G[0] = x * cb - L[1] * sb;
-    G[1] = -x * sb - L[1] * cb;
-    G[2] = L[0] * sa + L[2] * ca;;
-
-    for (i = 0; i < 3; i++)
-	G[i] += P[i];
-
+    G[0] = x * cb - L[1] * sb + P[0];
+    G[1] = -x * sb - L[1] * cb + P[1];
+    G[2] = L[0] * sa + L[2] * ca + P[2];
 }
 
 void g2l_off_rot(const double *N, double *L, double *alpha, double *beta)
