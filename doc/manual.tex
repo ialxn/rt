@@ -179,7 +179,7 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 \subsection{Solid (non-transparent, re-emitting) Sources}
 
-Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed ray are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin.
+Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed ray are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin. Note, that also re-emission of a ray is counted as a reflection. Thus the number of reflection corresponds to the number of reflections and re-emission a ray experiences on his way from the \emph{original} sources until it is either absorbed or leaves the system.
 
 \subsubsection{Solid Sphere}
 

@@ -9,6 +9,7 @@
  */
 #include "io_utils.h"
 #include "intercept.h"
+#include "likely.h"
 #include "reflect.h"
 #include "targets.h"
 #include "virtual_targets.h"
@@ -84,6 +85,11 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
 
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+
+	if (unlikely(ray->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
+	    fprintf(stderr,
+		    "                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
+	++ray->n_refl;
 
     } else {			/* reflect 'ray' */
 	double normal[3];
