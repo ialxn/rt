@@ -199,7 +199,7 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
  */
     window_state_t *state = (window_state_t *) vstate;
 
-    double *f_icpt, *w_icpt;
+    double *intercept;
     double center_face2[3];
     int surf_hit;
 
@@ -218,25 +218,23 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
      * if state->a is anti-parallel to ray->dir
      */
     if (my_ddot(&state->M[6], ray->dir) > 0)
-	f_icpt = intercept_face(ray, state, state->C);
+	intercept = intercept_face(ray, state, state->C);
     else {
 	a_plus_cb(center_face2, state->C, state->d, &state->M[6]);
-	f_icpt = intercept_face(ray, state, center_face2);
+	intercept = intercept_face(ray, state, center_face2);
     }
 
-    if (f_icpt)			/* intecept found with face, no need to check wall */
-	return f_icpt;
+    if (intercept)		/* intecept found with face, no need to check wall */
+	return intercept;
 
-    w_icpt =
+    intercept =
 	intercept_cylinder(ray, state->C, &state->M[6], state->r, state->d,
 			   &surf_hit);
 
-    if (w_icpt) {		/* intercept with outside wall */
+    if (intercept)		/* intercept with outside wall */
 	data->flag |= ABSORBED;
-	return w_icpt;
-    }
 
-    return NULL;
+    return intercept;
 }
 
 static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
