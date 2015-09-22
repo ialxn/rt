@@ -76,11 +76,11 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * source but with the emissionspectrum of this source.
 	 */
 	get_uniform_random_vector(ray->orig, state->radius, r);
+	get_uniform_random_vector_hemisphere(ray->dir, 1.0, ray->orig, r);
+
 	ray->orig[0] += state->center[0];
 	ray->orig[1] += state->center[1];
 	ray->orig[2] += state->center[2];
-
-	get_uniform_random_vector_hemisphere(ray->dir, 1.0, ray->orig, r);
 
 	ray->lambda =
 	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
