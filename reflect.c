@@ -81,7 +81,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
     double dot_product = 1.0;
     double alpha, beta;
     double dummy[3];
-    double original_ray_dir[3];
+    double original_ray_dir[3], original_ray_orig[3];
     double *sigma = (double *) model_params;
 
     /*
@@ -90,7 +90,8 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
      */
     g2l_off_rot(N, dummy, &alpha, &beta);
 
-    memcpy(original_ray_dir, r->dir, 3 * sizeof(double));	/* save */
+    memcpy(original_ray_dir, r->dir, 3 * sizeof(double));	/* save ray */
+    memcpy(original_ray_orig, r->orig, 3 * sizeof(double));
 
     do {
 	double theta = GSL_DBL_MAX;
@@ -99,7 +100,8 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	double sin_phi, cos_phi;
 	double random_N[3], new_N[3];
 
-	memcpy(r->dir, original_ray_dir, 3 * sizeof(double));	/* restore */
+	memcpy(r->dir, original_ray_dir, 3 * sizeof(double));	/* restore ray */
+	memcpy(r->orig, original_ray_orig, 3 * sizeof(double));
 
 	do {			/* gaussian theta */
 	    theta = gsl_ran_gaussian(rng, *sigma);
