@@ -78,7 +78,6 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
  * - reflect 'r' at new surface normal
  * - check that ray is reflected and not transmitted ('N' dot 'r' > 0)
  */
-    double dot_product = 1.0;
     double alpha, beta;
     double dummy[3];
     double original_ray_dir[3], original_ray_orig[3];
@@ -124,9 +123,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	reflect_specular(r, new_N, P, rng, model_params);
 	--r->n_refl;		/* reflect_specular increases count */
 
-	dot_product = my_ddot(r->dir, N);
-
-    } while (dot_product < 0.0);	/* 'r' transmitted (not reflected) */
+    } while (my_ddot(r->dir, N) < 0.0);	/* 'r' transmitted (not reflected) */
 
     if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	fprintf(stderr,
