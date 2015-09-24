@@ -74,7 +74,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
  *   by maximally 90 degrees relative to the macroscopic surface normal)
  *   90 degrees, otherwise reflected ray passes through surface.)
  * - tilt 'N' by random_theta and rotate around original 'N' by (uniform)
- *   random phi ( 0 <= phi < 2pi ).
+ *   random phi ( 0 <= phi < pi ).
  * - reflect 'r' at new surface normal
  * - check that ray is reflected and not transmitted ('N' dot 'r' > 0)
  */
@@ -105,7 +105,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	    theta = gsl_ran_gaussian(rng, *sigma);
 	} while (fabs(theta) > M_PI_2);
 
-	phi = 2.0 * M_PI * gsl_rng_uniform(rng);
+	phi = M_PI * gsl_rng_uniform(rng);
 
 	sincos(theta, &sin_theta, &cos_theta);
 	sincos(phi, &sin_phi, &cos_phi);
