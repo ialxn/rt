@@ -175,11 +175,38 @@ Defines a point source located at {\tt origin}. The source emits homogeneously i
 \noindent {\tt spectrum="FILE\_NAME";}
 
 \vspace{0.25cm}
+
 Defines an uniform spherical source of radius {\tt radius} located at {\tt origin}. Rays start at a random position inside the sphere in a random direction. Both, origin and direction of the ray are uniformly distributed.
 
 \subsection{Solid (non-transparent, re-emitting) Sources}
 
-Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed ray are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin.
+Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed rays are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin.
+
+\subsubsection{Solid Rod}
+
+\noindent {\tt type="solid\_rod";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt radius=R.r;}
+
+\noindent {\tt direction=[X.x, Y.y, Z.z];}
+
+\noindent {\tt length=L.l;}
+
+\noindent {\tt base\_face\_emits=[true|false];}
+
+\noindent {\tt top\_face\_emits=[true|false];}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt spectrum="FILE\_NAME";}
+
+
+\vspace{0.25cm}
+Defines a solid cylinder of radius {\tt radius} and length {\tt length} with the center of its base face located at {\tt origin}. Depending on settings for {\tt base\_face\_emits} and {\tt base\_face\_emits}, rays start at a random position on the cylinder wall only or also on one or two of its covering faces. Both, origin and direction of the ray are uniformly distributed. Faces that do not emit should be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
 
 \subsubsection{Solid Sphere}
 
