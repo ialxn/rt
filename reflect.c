@@ -120,7 +120,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	 */
 	l2g_off_rot(random_N, new_N, alpha, beta);
 
-	reflect_specular(r, new_N, P, rng, model_params);
+	reflect_specular(r, new_N, P, NULL, NULL);
 	--r->n_refl;		/* reflect_specular increases count */
 
     } while (my_ddot(r->dir, N) < 0.0);	/* 'r' transmitted (not reflected) */
