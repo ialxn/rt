@@ -10,6 +10,7 @@ CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstric
 
 SRCS= main.c \
       sources.c \
+      source_arc.c \
       source_solid_sphere.c \
       source_sphere.c \
       source_spot.c \
@@ -36,6 +37,7 @@ SRCS= main.c \
 
 OBJ= main.o \
      sources.o \
+     source_arc.o \
      source_solid_sphere.o \
      source_sphere.o \
      source_spot.o \

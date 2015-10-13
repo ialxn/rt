@@ -127,7 +127,20 @@ int check_sources(config_t * cfg)
 		continue;
 
 	    /* check source specific settings */
-	    if (!strcmp(type, "solid_sphere")) {
+	    if (!strcmp(type, "arc")) {
+		/*
+		 * arc:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - 'radius' / double
+		 *  - 'length' / double
+		 *  - 'direction' [x,y,y] / double
+		 */
+		status += check_array("sources", this_s, "origin", i);
+		status += check_float("sources", this_s, "radius", i);
+		status += check_float("sources", this_s, "length", i);
+		status += check_array("sources", this_s, "direction", i);
+	    } /* end 'arc' */
+	    else if (!strcmp(type, "solid_sphere")) {
 		/*
 		 * solid sphere:
 		 *  - array 'origin' [x,y,z] / double
