@@ -43,7 +43,10 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 	 * argument in the call to 'source_alloc()'. 
 	 */
 	config_setting_lookup_string(this_source, "type", &type);
-	if (!strcmp(type, "solid sphere"))
+	if (!strcmp(type, "solid rod"))
+	    new_source =
+		source_alloc(source_solid_rod, this_source, P_factor);
+	else if (!strcmp(type, "solid sphere"))
 	    new_source =
 		source_alloc(source_solid_sphere, this_source, P_factor);
 	else if (!strcmp(type, "sphere"))
@@ -173,6 +176,7 @@ static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
     /*
      * add the virtual targets that correspond to solid sources here
      * curently implemented:
+     *          - solid rod
      *          - solid sphere
      */
     const config_setting_t *sources = config_lookup(cfg, "sources");
@@ -187,7 +191,11 @@ static void add_virtual_targets(target_list_t * t_list, config_t * cfg)
 	    config_setting_get_elem(sources, (unsigned int) i);
 
 	config_setting_lookup_string(this_source, "type", &type);
-	if (!strcmp(type, "solid sphere"))
+	if (!strcmp(type, "solid rod"))
+	    new_virtual_target =
+		target_alloc(virtual_target_solid_rod, this_source, 0,
+			     0, 0);
+	else if (!strcmp(type, "solid sphere"))
 	    new_virtual_target =
 		target_alloc(virtual_target_solid_sphere, this_source, 0,
 			     0, 0);

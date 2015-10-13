@@ -84,6 +84,23 @@ int check_return_string(const char *section, const config_setting_t * s,
     return status;
 }
 
+int check_bool(const char *section, const config_setting_t * s,
+	       const char *name, const int nr)
+{
+    int status = NO_ERR;
+    int B;
+
+    if ((status = is_present(section, s, name, nr)) != ERR
+	&& config_setting_lookup_bool(s, name, &B) != CONFIG_TRUE) {
+	fprintf(stderr,
+		"'%s' keyword in '%s' section %d does not define boolean\n",
+		name, section, nr + 1);
+	status = ERR;
+    }
+
+    return status;
+}
+
 int check_float(const char *section, const config_setting_t * s,
 		const char *name, const int nr)
 {

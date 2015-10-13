@@ -132,8 +132,8 @@ int check_sources(config_t * cfg)
 		 * solid rod:
 		 *  - array 'origin' [x,y,z] / double
 		 *  - 'radius' / double
-		 *  - 'length' / double
 		 *  - array 'direction' [x,y,z] / double
+		 *  - 'length' / double
 		 *  - base_face_emits / [true|false]
 		 *  - top_face_emits / [true|false]
 		 *  - string 'reflectivity' (file name of reflectivity spectrum)
@@ -141,6 +141,10 @@ int check_sources(config_t * cfg)
 		 */
 		status += check_array("sources", this_s, "origin", i);
 		status += check_float("sources", this_s, "radius", i);
+		status +=
+		    check_bool("sources", this_s, "base_face_emits", i);
+		status +=
+		    check_bool("sources", this_s, "top_face_emits", i);
 		status +=
 		    check_string("sources", this_s, "reflectivity", i);
 		status += check_file("sources", this_s, "reflectivity", i);

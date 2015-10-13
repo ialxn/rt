@@ -10,6 +10,7 @@ CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstric
 
 SRCS= main.c \
       sources.c \
+      source_solid_rod.c \
       source_solid_sphere.c \
       source_sphere.c \
       source_spot.c \
@@ -26,6 +27,7 @@ SRCS= main.c \
       target_sphere.c \
       target_triangle.c \
       target_window.c \
+      virtual_target_solid_rod.c \
       virtual_target_solid_sphere.c \
       intercept.c \
       io_utils.c \
@@ -36,6 +38,7 @@ SRCS= main.c \
 
 OBJ= main.o \
      sources.o \
+     source_solid_rod.o \
      source_solid_sphere.o \
      source_sphere.o \
      source_spot.o \
@@ -52,6 +55,7 @@ OBJ= main.o \
      target_sphere.o \
      target_triangle.o \
      target_window.o \
+     virtual_target_solid_rod.o \
      virtual_target_solid_sphere.o \
      intercept.o \
      io_utils.o \
