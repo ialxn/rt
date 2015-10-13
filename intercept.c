@@ -297,11 +297,11 @@ double *intercept_cylinder(const ray_t * ray, const double *c,
      */
 
     t1 = my_ddot(ray->dir, a);	/* dot(dl,dc)/dot(dc,dc) */
-    a_plus_cb(e, ray->dir, -t1 * l, a);
+    a_plus_cb(e, ray->dir, -t1, a);
 
     diff(t3, ray->orig, c);	/* l0-c0 */
     t1 = my_ddot(t3, a);	/* dot((l0-c0),dc)/dot(dc,dc) */
-    a_plus_cb(f, t3, -t1 * l, a);
+    a_plus_cb(f, t3, -t1, a);
 
     /*
      * Coefficients of 2-nd order equation
