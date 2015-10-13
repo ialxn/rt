@@ -148,18 +148,9 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'in_ray' */
-	double l_N[3], N[3];
-	double hit_local[3];
+	double N[3];		/* normal vector at 'hit' */
 
-	/*
-	 * calculate normal vector 'N' @ 'hit':
-	 * - convert 'hit' to local coordinates
-	 * - calculate normal vector in local coordinates
-	 * - transform normal vector to global coordinates
-	 */
-	g2l(state->M, state->C, hit, hit_local);
-	cyl_surf_normal(hit_local, state->C, &state->M[6], state->r, l_N);
-	l2g_rot(state->M, l_N, N);
+	cyl_surf_normal(hit, state->C, &state->M[6], state->r, N);
 
 	if (!(state->flags & OUTSIDE))
 	    my_dscal(-1.0, N);	/* make normal point inwards */
