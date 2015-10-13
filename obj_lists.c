@@ -44,8 +44,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 	 */
 	config_setting_lookup_string(this_source, "type", &type);
 	if (!strcmp(type, "arc"))
-	    new_source =
-		source_alloc(source_arc, this_source, P_factor);
+	    new_source = source_alloc(source_arc, this_source, P_factor);
 	else if (!strcmp(type, "solid rod"))
 	    new_source =
 		source_alloc(source_solid_rod, this_source, P_factor);
