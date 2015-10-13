@@ -54,6 +54,7 @@ typedef struct source_t {
  * list of all defined sources found in individual files (source_*.c)
  */
 const source_type_t *source_arc;
+const source_type_t *source_solid_rod;
 const source_type_t *source_solid_sphere;
 const source_type_t *source_sphere;
 const source_type_t *source_spot;

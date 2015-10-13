@@ -17,6 +17,7 @@
  * list of all virtual targets (see individual files 'virtual_target_*.c')
  * each solid source need to define a corresponding virtual target. 
  */
+const target_type_t *virtual_target_solid_rod;
 const target_type_t *virtual_target_solid_sphere;
 
 
