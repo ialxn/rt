@@ -57,7 +57,20 @@ typedef struct vtsrod_state_t {
 } vtsrod_state_t;
 
 
-static double get_A_disk(config_setting_t * this_s, const char *kw, const double radius)
+static void init_M_from_z(config_setting_t * this, const char *kw,
+			  double M[9])
+{
+    read_vector(this, kw, &M[6]);
+
+    M[0] = 1.0;
+    M[1] = 0.0;
+    M[2] = 0.0;
+
+    orthonormalize(&M[0], &M[3], &M[6]);
+}
+
+static double get_A_disk(config_setting_t * this_s, const char *kw,
+			 const double radius)
 {
     int ans;
 
@@ -68,7 +81,9 @@ static double get_A_disk(config_setting_t * this_s, const char *kw, const double
 	return 0.0;
 }
 
-static void init_barriers(config_setting_t * this_s, double *barrier1, double *barrier2, const double radius, const double length)
+static void init_barriers(config_setting_t * this_s, double *barrier1,
+			  double *barrier2, const double radius,
+			  const double length)
 {
     double sum = 0.0;
     double A_wall, A_base, A_top;
@@ -117,6 +132,65 @@ static double *intercept_face(const ray_t * in_ray,
     return intercept;
 }
 
+static void new_ray(ray_t * ray, const double radius, const double length,
+		    const double barrier1, const double barrier2,
+		    const double origin[3], const double *M,
+		    gsl_spline * spectrum, const gsl_rng * r)
+{
+    double point[3];
+    double normal[3];
+    double phi, sin_phi, cos_phi;
+    double selector = gsl_rng_uniform(r);
+
+    phi = 2.0 * M_PI * gsl_rng_uniform(r);
+    sincos(phi, &sin_phi, &cos_phi);
+
+    if (selector < barrier1) {
+	/* ray originates from wall */
+	point[0] = radius * cos_phi;
+	point[1] = radius * sin_phi;
+	point[2] = length * gsl_rng_uniform(r);
+
+	normal[0] = point[0];
+	normal[1] = point[1];
+	normal[2] = 0.0;
+	normalize(normal);
+    } else if (barrier2 < selector) {
+	/* ray originates from top disk */
+	double t = sqrt(gsl_rng_uniform(r)) * radius;
+
+	point[0] = t * sin_phi;
+	point[1] = t * cos_phi;
+	point[2] = length;
+
+	normal[0] = 0.0;
+	normal[1] = 0.0;
+	normal[2] = 1.0;
+    } else {
+	/* ray originates from base disk */
+	double t = sqrt(gsl_rng_uniform(r)) * radius;
+
+	point[0] = t * sin_phi;
+	point[1] = t * cos_phi;
+	point[2] = 0.0;
+
+	normal[0] = 0.0;
+	normal[1] = 0.0;
+	normal[2] = -1.0;
+    }
+
+    l2g(M, origin, point, ray->orig);
+
+    /*
+     * choose random direction
+     */
+    get_uniform_random_vector_hemisphere(point, 1.0, normal, r);
+    l2g_rot(M, point, ray->dir);
+
+    ray->lambda = gsl_spline_eval(spectrum, gsl_rng_uniform(r), NULL);
+
+}
+
 
 static void srod_init_state(void *vstate, config_setting_t * this_s,
 			    const double P_factor)
@@ -135,13 +209,10 @@ static void srod_init_state(void *vstate, config_setting_t * this_s,
     config_setting_lookup_float(this_s, "radius", &state->radius);
     config_setting_lookup_float(this_s, "length", &state->length);
 
-    init_barriers(this_s, &state->barrier1, &state->barrier2, state->radius, state->length);
+    init_barriers(this_s, &state->barrier1, &state->barrier2,
+		  state->radius, state->length);
 
-    read_vector(this_s, "direction", &state->M[6]);
-    state->M[0] = 1.0;
-    state->M[1] = 0.0;
-    state->M[2] = 0.0;
-    orthonormalize(&state->M[0], &state->M[3], &state->M[6]);
+    init_M_from_z(this_s, "direction", state->M);
 
     /* initialize source spectrum */
     init_source_spectrum(this_s, "spectrum", &state->spectrum);
@@ -169,63 +240,15 @@ static ray_t *srod_emit_ray(void *vstate, const gsl_rng * r)
 					&state->n_rays);
 
     if (*rays_remain > 0) {	/* rays still available in group */
-	double point[3];
-	double normal[3];
-	double phi, sin_phi, cos_phi;
-	double selector = gsl_rng_uniform(r);
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
+	new_ray(ray, state->radius, state->length, state->barrier1,
+		state->barrier2, state->orig, state->M, state->spectrum,
+		r);
 
-	phi = 2.0 * M_PI * gsl_rng_uniform(r);
-	sincos(phi, &sin_phi, &cos_phi);
-
-	if (selector < state->barrier1) {
-	    /* ray originates from wall */
-	    point[0] = state->radius * cos_phi;
-	    point[1] = state->radius * sin_phi;
-	    point[2] = state->length * gsl_rng_uniform(r);
-
-	    normal[0] = point[0];
-	    normal[1] = point[1];
-	    normal[2] = 0.0;
-	    normalize(normal);
-	} else if (state->barrier2 < selector) {
-	    /* ray originates from top disk */
-	    double t = sqrt(gsl_rng_uniform(r)) * state->radius;
-
-	    point[0] = t * sin_phi;
-	    point[1] = t * cos_phi;
-	    point[2] = state->length;
-
-	    normal[0] = 0.0;
-	    normal[1] = 0.0;
-	    normal[2] = 1.0;
-	} else {
-	    /* ray originates from base disk */
-	    double t = sqrt(gsl_rng_uniform(r)) * state->radius;
-
-	    point[0] = t * sin_phi;
-	    point[1] = t * cos_phi;
-	    point[2] = 0.0;
-
-	    normal[0] = 0.0;
-	    normal[1] = 0.0;
-	    normal[2] = -1.0;
-	}
-
-	l2g(state->M, state->orig, point, ray->orig);
-
-	/*
-	 * choose random direction
-	 */
-	get_uniform_random_vector_hemisphere(point, 1.0, normal, r);
-	l2g_rot(state->M, point, ray->dir);
-
-	ray->lambda =
-	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
 	ray->n_refl = 0;
     }
 
@@ -267,13 +290,10 @@ static int vtsrod_init_state(void *vstate, config_setting_t * this_target,
     config_setting_lookup_float(this_target, "radius", &state->radius);
     config_setting_lookup_float(this_target, "length", &state->length);
 
-    init_barriers(this_target, &state->barrier1, &state->barrier2, state->radius, state->length);
+    init_barriers(this_target, &state->barrier1, &state->barrier2,
+		  state->radius, state->length);
 
-    read_vector(this_target, "direction", &state->M[6]);
-    state->M[0] = 1.0;
-    state->M[1] = 0.0;
-    state->M[2] = 0.0;
-    orthonormalize(&state->M[0], &state->M[3], &state->M[6]);
+    init_M_from_z(this_target, "direction", state->M);
 
     if (init_spectrum(this_target, "spectrum", &state->spectrum))
 	return ERR;
@@ -349,62 +369,9 @@ static ray_t *vtsrod_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * ray is absorbed. we emit the same power from a random point on the
 	 * source but with the emissionspectrum of this source.
 	 */
-	double point[3];
-	double normal[3];
-	double phi, sin_phi, cos_phi;
-	double selector = gsl_rng_uniform(r);
-
-	phi = 2.0 * M_PI * gsl_rng_uniform(r);
-	sincos(phi, &sin_phi, &cos_phi);
-
-	if (selector < state->barrier1) {
-	    /* ray originates from wall */
-	    point[0] = state->radius * cos_phi;
-	    point[1] = state->radius * sin_phi;
-	    point[2] = state->length * gsl_rng_uniform(r);
-
-	    normal[0] = point[0];
-	    normal[1] = point[1];
-	    normal[2] = 0.0;
-	    normalize(normal);
-
-	} else if (state->barrier2 < selector) {
-	    /* ray originates from top disk */
-	    double t = sqrt(gsl_rng_uniform(r)) * state->radius;
-
-	    point[0] = t * sin_phi;
-	    point[1] = t * cos_phi;
-	    point[2] = state->length;
-
-	    normal[0] = 0.0;
-	    normal[1] = 0.0;
-	    normal[2] = 1.0;
-
-	} else {
-	    /* ray originates from base disk */
-	    double t = sqrt(gsl_rng_uniform(r)) * state->radius;
-
-	    point[0] = t * sin_phi;
-	    point[1] = t * cos_phi;
-	    point[2] = 0.0;
-
-	    normal[0] = 0.0;
-	    normal[1] = 0.0;
-	    normal[2] = -1.0;
-
-	}
-
-	l2g(state->M, state->origin, point, ray->orig);
-
-	/*
-	 * choose random direction
-	 */
-	get_uniform_random_vector_hemisphere(point, 1.0, normal, r);
-	l2g_rot(state->M, point, ray->dir);
-
-	ray->lambda =
-	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
-
+	new_ray(ray, state->radius, state->length, state->barrier1,
+		state->barrier2, state->origin, state->M, state->spectrum,
+		r);
     } else {			/* reflect 'ray' */
 	double normal[3];
 	double tmp[3];
@@ -492,4 +459,3 @@ static const target_type_t vt_srod_t = {
 
 const source_type_t *source_solid_rod = &srod_t;
 const target_type_t *virtual_target_solid_rod = &vt_srod_t;
-
