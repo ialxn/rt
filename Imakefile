@@ -29,7 +29,6 @@ SRCS= main.c \
       target_triangle.c \
       target_window.c \
       virtual_target_solid_rod.c \
-      virtual_target_solid_sphere.c \
       intercept.c \
       io_utils.c \
       math_utils.c \
@@ -58,7 +57,6 @@ OBJ= main.o \
      target_triangle.o \
      target_window.o \
      virtual_target_solid_rod.o \
-     virtual_target_solid_sphere.o \
      intercept.o \
      io_utils.o \
      math_utils.o \
