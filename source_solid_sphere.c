@@ -47,7 +47,27 @@ typedef struct vtssp_state_t {
 } vtssp_state_t;
 
 
+static void random_ray_on_sphere(ray_t * ray, const double *origin,
+				 const double radius,
+				 const gsl_spline * spectrum,
+				 const gsl_rng * r)
+{
+    /*
+     * select random point on sphere with radius 'radius' and origin 'origin'
+     * and initialize 'ray->origin' with it.
+     */
+    double point[3];
 
+    get_uniform_random_vector(point, radius, r);
+
+    ray->orig[0] = origin[0] + point[0];
+    ray->orig[1] = origin[1] + point[1];
+    ray->orig[2] = origin[2] + point[2];
+
+    get_uniform_random_vector_hemisphere(ray->dir, 1.0, point, r);
+
+    ray->lambda = gsl_spline_eval(spectrum, gsl_rng_uniform(r), NULL);
+}
 
 static void ssp_init_state(void *vstate, config_setting_t * this_s,
 			   const double P_factor)
@@ -91,35 +111,13 @@ static ray_t *ssp_emit_ray(void *vstate, const gsl_rng * r)
 					&state->n_rays);
 
     if (*rays_remain > 0) {	/* rays still available in group */
-	double point[3];
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
 
 	ray = (ray_t *) malloc(sizeof(ray_t));
-
-	/*
-	 * select random point on sphere with radius 'state->radius'
-	 * and initialize 'ray->origin' with it.
-	 */
-	get_uniform_random_vector(point, state->radius, r);
-
-	ray->orig[0] = state->orig[0] + point[0];
-	ray->orig[1] = state->orig[1] + point[1];
-	ray->orig[2] = state->orig[2] + point[2];
-
-	/*
-	 * choose random direction
-	 * make shure ray does not enter sphere i.e.
-	 * 'point' dot 'ray->dir' is positive. 'point', the
-	 * vector from the origin of the sphere to the point
-	 * on the sphere's surface is parallel to the normal
-	 * vector (but not normalized, which is no problem here).
-	 */
-	get_uniform_random_vector_hemisphere(ray->dir, 1.0, point, r);
-
-	ray->lambda =
-	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+	random_ray_on_sphere(ray, state->orig, state->radius,
+			     state->spectrum, r);
 	ray->n_refl = 0;
     }
 
@@ -201,15 +199,8 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * ray is absorbed. we emit the same power from a random point on the
 	 * source but with the emissionspectrum of this source.
 	 */
-	get_uniform_random_vector(ray->orig, state->radius, r);
-	get_uniform_random_vector_hemisphere(ray->dir, 1.0, ray->orig, r);
-
-	ray->orig[0] += state->center[0];
-	ray->orig[1] += state->center[1];
-	ray->orig[2] += state->center[2];
-
-	ray->lambda =
-	    gsl_spline_eval(state->spectrum, gsl_rng_uniform(r), NULL);
+	random_ray_on_sphere(ray, state->center, state->radius,
+			     state->spectrum, r);
 
 	if (unlikely(ray->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	    fprintf(stderr,
@@ -259,4 +250,3 @@ static const target_type_t vt_ssp_t = {
 
 const source_type_t *source_solid_sphere = &ssp_t;
 const target_type_t *virtual_target_solid_sphere = &vt_ssp_t;
-
