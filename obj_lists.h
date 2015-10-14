@@ -16,7 +16,6 @@
 #include "list.h"
 #include "sources.h"
 #include "targets.h"
-#include "virtual_targets.h"
 
 typedef struct source_list_t {
     struct list_head list;
