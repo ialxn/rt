@@ -253,12 +253,12 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 \section{Targets}
 All targets may use the optional keyword {\tt no\_output} ({\tt [true|false]}) that controls whether absorbed rays are logged for this target. The (implied) default is {\tt false} i.e.\ output is produced. All interacting\footnote{Targets that can absorb, refract, reflect, or scatter rays in contrast to {\it screens} that only register rays passing through them.} targets need the keywords {\tt reflectivity} (filename of spectral reflectivity) and {\tt reflectivity\_model} (see Sec.~\ref{sec:refl_models}) defined.
 
-The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed\footnote{or registered rays for screens} ray) follow consisting of 4\footnote{5, for non-planar targets} single precicions floats and one unsigned character that represent x, y, z\footnote{missing for planar targets}, $\lambda$, power, $n_{\mathrm{refl}}$.
+The structure of all output files (one for each target unless {\tt no\_output=True} is set) is identical: First, an ASCII header (lines starting with {\tt \#}) with name and type of the target, follwed by the transformation matrix $M$ and the origin $O$ required to transform from local to global coordinates. Then binary data sets (one per absorbed\footnote{or registered rays for screens} ray) follow consisting of 3\footnote{4, for non-planar targets} single precicions floats and one unsigned character that represent x, y, z\footnote{missing for planar targets}, $\lambda$, $n_{\mathrm{refl}}$.
 
 
 \subsection{Screens}
 
-The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$.
+The binary part of the output for screens consists of three single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, $n_{\mathrm{refl}}$.
 
 \subsubsection{One-Sided Plane Screen}
 
@@ -294,7 +294,7 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 
 \subsection{Planar targets}
 
-The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$ with $x$ and $y$ given in the local system i.e.\ $z$ is always zero and not logged.
+The binary part of the output for screens consists of three single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$ with $x$ and $y$ given in the local system i.e.\ $z$ is always zero and not logged.
 
 
 \subsubsection{Annulus}
@@ -402,13 +402,13 @@ Defines a triangular reflecting surface. {\tt P1}, {\tt P2}, and {\tt P3} define
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \vspace{0.25cm}
-Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorptivity {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend.{\tt x} defines the local $x$ axis, the local $y$ axis is calculated from $y = a \times x$.
+Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The center of the first face is at {\tt C} while the second face is offset by {\tt d} in direction {\tt a}. The window material is characterized by the index of refraction {\tt idx\_refraction} and the spectral absorptivity {\tt absorptivity} \footnote{per length unit}. The reflectivity model {\tt reflectivity\_model} is applied at both faces. For the cylindical wall $a=1$ is assumend. {\tt x} defines the local $x$ axis, the local $y$ axis is calculated from $y = a \times x$.
 
 
 
 \subsection{Non-planar targets}
 
-The binary part of the output for screens consists of five single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, power,  $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{can be {\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
+The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, power,  $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{can be {\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
 
 \subsubsection{Cone}
 
