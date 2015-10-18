@@ -179,7 +179,8 @@ int check_file(const char *section, const config_setting_t * s,
     const char *S;
     FILE *f;
 
-    config_setting_lookup_string(s, name, &S);
+    if (config_setting_lookup_string(s, name, &S) == CONFIG_FALSE)
+	return ERR;
 
     if ((f = fopen(S, "r")) == NULL) {
 	fprintf(stderr,
