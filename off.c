@@ -155,7 +155,13 @@ static void write_ell_vertices(FILE * outf, const double s,
 
     for (i = 0; i < N_TRANS; i++) {
 	double l = z_min + i * delta_z;
-	double r = s * axes[0] * sqrt(1.0 - l * l / (axes[2] * axes[2]));
+	double arg = 1.0 - l * l / (axes[2] * axes[2]);
+	double r;
+
+	if (arg <= 0)
+	    r = 0;
+	else
+	    r = s * axes[0] * sqrt(arg);
 
 	write_ring_vertices(outf, l, r, origin, alpha, beta);
     }
