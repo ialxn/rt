@@ -295,8 +295,7 @@ static int vtsrod_init_state(void *vstate, config_setting_t * this_target,
 
     init_M_from_z(this_target, "direction", state->M);
 
-    if (init_spectrum(this_target, "spectrum", &state->spectrum))
-	return ERR;
+    init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
     if (init_spectrum(this_target, "reflectivity", &state->reflectivity))
 	return ERR;

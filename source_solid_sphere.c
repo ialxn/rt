@@ -157,8 +157,7 @@ static int vtssp_init_state(void *vstate, config_setting_t * this_target,
     read_vector(this_target, "origin", state->center);
     config_setting_lookup_float(this_target, "radius", &state->radius);
 
-    if (init_spectrum(this_target, "spectrum", &state->spectrum))
-	return ERR;
+    init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
     if (init_spectrum(this_target, "reflectivity", &state->reflectivity))
 	return ERR;
