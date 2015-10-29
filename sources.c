@@ -140,6 +140,38 @@ int check_sources(config_t * cfg)
 		status += check_float("sources", this_s, "length", i);
 		status += check_array("sources", this_s, "direction", i);
 	    } /* end 'arc' */
+	    else if (!strcmp(type, "solid cone")) {
+		/*
+		 * solid cone:
+		 *  - array 'origin' [x,y,z] / double
+		 *  - array 'z' [x,y,z] / double
+		 *  - 'R' / double
+		 *  - 'r' / double
+		 *  - 'h' / double
+		 *  - base_face_emits / [true|false]
+		 *  - top_face_emits / [true|false]
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("sources", this_s, "origin", i);
+		status += check_array("sources", this_s, "z", i);
+		status += check_float("sources", this_s, "R", i);
+		status += check_float("sources", this_s, "r", i);
+		status += check_float("sources", this_s, "h", i);
+		status +=
+		    check_bool("sources", this_s, "base_face_emits", i);
+		status +=
+		    check_bool("sources", this_s, "top_face_emits", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity", i);
+		status += check_file("sources", this_s, "reflectivity", i);
+		status +=
+		    check_string("sources", this_s, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("sources", this_s,
+					     "reflectivity_model", i);
+	    } /* end 'solid cone' */
 	    else if (!strcmp(type, "solid rod")) {
 		/*
 		 * solid rod:
