@@ -651,6 +651,55 @@ static void output_sources(const config_t * cfg)
 	    fclose(outf);
 
 	} /* end 'arc' */
+	else if (!strcmp(type, "solid cone")) {
+	    double origin[3];
+	    double z[3];
+	    double h;
+	    double R, r;
+	    double P[3];
+	    double alpha, beta;
+	    int ans;
+
+	    FILE *outf = open_off(name);
+
+	    read_vector(this_s, "origin", origin);
+	    read_vector(this_s, "z", z);
+	    config_setting_lookup_float(this_s, "R", &R);
+	    config_setting_lookup_float(this_s, "r", &r);
+	    config_setting_lookup_float(this_s, "h", &h);
+
+	    fprintf(outf, "OFF\n");
+	    fprintf(outf, "%d %d 0\n", 2 * N_ROT, N_ROT + 2);
+	    /* 2 faces with 1 patch each plus cylinder wall with 'N_ROT' patches */
+
+	    /*
+	     * determine alpha, beta for transformation from local to global system.
+	     * discard 'P'
+	     */
+	    g2l_off_rot(z, P, &alpha, &beta);
+
+	    write_ring_vertices(outf, 0.0, R, origin, alpha, beta);
+	    write_ring_vertices(outf, h, r, origin, alpha, beta);
+
+	    config_setting_lookup_bool(this_s, "base_face_emits", &ans);
+	    if (!ans) {
+		WRITE_W_FACE(outf, 0, R_ABS, G_ABS, B_ABS);
+	    } else {
+		WRITE_W_FACE(outf, 0, R_SRC, G_SRC, B_SRC);
+	    }
+
+	    config_setting_lookup_bool(this_s, "top_face_emits", &ans);
+	    if (!ans) {
+		WRITE_W_FACE(outf, N_ROT, R_ABS, G_ABS, B_ABS);
+	    } else {
+		WRITE_W_FACE(outf, N_ROT, R_SRC, G_SRC, B_SRC);
+	    }
+
+	    WRITE_C_WALL(outf, 0, R_SRC, G_SRC, B_SRC);
+
+	    fclose(outf);
+
+	} /* end 'solid cone' */
 	else if (!strcmp(type, "solid rod")) {
 	    double origin[3];
 	    double dir[3];
