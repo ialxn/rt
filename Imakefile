@@ -11,6 +11,7 @@ CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstric
 SRCS= main.c \
       sources.c \
       source_arc.c \
+      source_solid_cone.c \
       source_solid_rod.c \
       source_solid_sphere.c \
       source_sphere.c \
@@ -38,6 +39,7 @@ SRCS= main.c \
 OBJ= main.o \
      sources.o \
      source_arc.o \
+     source_solid_cone.o \
      source_solid_rod.o \
      source_solid_sphere.o \
      source_sphere.o \
