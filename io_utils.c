@@ -8,6 +8,7 @@
  *
  */
 
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -254,6 +255,18 @@ void init_M_from_z(config_setting_t * this, const char *kw, double M[9])
     M[2] = 0.0;
 
     orthonormalize(&M[0], &M[3], &M[6]);
+}
+
+double get_A_disk(config_setting_t * this_s, const char *kw,
+		  const double radius)
+{
+    int ans;
+
+    config_setting_lookup_bool(this_s, kw, &ans);
+    if (ans)			/* surface emits */
+	return M_PI * radius * radius;
+    else			/* surface does not emit */
+	return 0.0;
 }
 
 

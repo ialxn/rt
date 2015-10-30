@@ -57,18 +57,6 @@ typedef struct vtsrod_state_t {
 } vtsrod_state_t;
 
 
-static double get_A_disk(config_setting_t * this_s, const char *kw,
-			 const double radius)
-{
-    int ans;
-
-    config_setting_lookup_bool(this_s, kw, &ans);
-    if (ans)			/* surface emits */
-	return M_PI * radius * radius;
-    else			/* surface does not emit */
-	return 0.0;
-}
-
 static void init_barriers(config_setting_t * this_s, double *barrier1,
 			  double *barrier2, const double radius,
 			  const double length)

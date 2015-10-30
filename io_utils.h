@@ -52,6 +52,8 @@ extern void read_vector_normalize(const config_setting_t * s,
 				  const char *name, double *const vec);
 extern void init_M_from_z(config_setting_t * this, const char *kw,
 			  double M[9]);
+extern double get_A_disk(config_setting_t * this_s, const char *kw,
+			 const double radius);
 extern int read_data(FILE * f, double **x, double **y, size_t * n);
 extern double get_P_factor(FILE * f);
 extern int skip_N_comments(FILE * f, const int N);
