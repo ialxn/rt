@@ -203,9 +203,37 @@ Defines an uniform spherical source of radius {\tt radius} located at {\tt origi
 
 Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NAME"}) and a reflectivity model ({\tt reflectivity\_model="MODEL"}\footnote{see Sec.~\ref{sec:refl_models}}) defined. Rays that hit these sources can be reflected or absorbed. Absorbed ray are re-emitted again from this source as a random ray with the spectral characteristic of this source independently from their initial origin. Note, that also re-emission of a ray is counted as a reflection. Thus the number of reflection corresponds to the number of reflections and re-emission a ray experiences on his way from the \emph{original} sources until it is either absorbed or leaves the system.
 
+\subsubsection{Solid Cone}
+
+\noindent {\tt type="solid cone";}
+
+\noindent {\tt name="NAME";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt z=[X.x, Y.y, Z.z];}
+
+\noindent {\tt R=R.r;}
+
+\noindent {\tt r=R.r;}
+
+\noindent {\tt h=H.h;}
+
+\noindent {\tt base\_face\_emits=[true|false];}
+
+\noindent {\tt top\_face\_emits=[true|false];}
+
+\noindent {\tt power=P.p;}
+
+\noindent {\tt spectrum="FILE\_NAME";}
+
+
+\vspace{0.25cm}
+Defines a solid cone of height {\tt h} with its axis defined by {\tt z}. The center of its base face with radius {\tt R} is located at {\tt origin}. The radius of the top face is {\tt r}. Depending on the settings for {\tt base\_face\_emits} and {\tt base\_face\_emits}, rays start at a random position on the conical wall only or also on one or two of its covering faces. Both, origin and direction of the rays are uniformly distributed. Faces that do not emit may be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
+
 \subsubsection{Solid Rod}
 
-\noindent {\tt type="solid\_rod";}
+\noindent {\tt type="solid rod";}
 
 \noindent {\tt name="NAME";}
 
@@ -231,7 +259,7 @@ Defines a solid cylinder of radius {\tt radius} and length {\tt length} with the
 
 \subsubsection{Solid Sphere}
 
-\noindent {\tt type="solid\_sphere";}
+\noindent {\tt type="solid sphere";}
 
 \noindent {\tt name="NAME";}
 
