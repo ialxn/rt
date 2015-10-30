@@ -245,6 +245,18 @@ void read_vector_normalize(const config_setting_t * s, const char *name,
     normalize(vec);
 }
 
+void init_M_from_z(config_setting_t * this, const char *kw, double M[9])
+{
+    read_vector(this, kw, &M[6]);
+
+    M[0] = 1.0;
+    M[1] = 0.0;
+    M[2] = 0.0;
+
+    orthonormalize(&M[0], &M[3], &M[6]);
+}
+
+
 static int inc_buffers(size_t * n_alloc, double **x, double **y)
 {
     double *t;

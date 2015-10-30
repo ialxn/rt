@@ -57,18 +57,6 @@ typedef struct vtsrod_state_t {
 } vtsrod_state_t;
 
 
-static void init_M_from_z(config_setting_t * this, const char *kw,
-			  double M[9])
-{
-    read_vector(this, kw, &M[6]);
-
-    M[0] = 1.0;
-    M[1] = 0.0;
-    M[2] = 0.0;
-
-    orthonormalize(&M[0], &M[3], &M[6]);
-}
-
 static double get_A_disk(config_setting_t * this_s, const char *kw,
 			 const double radius)
 {
