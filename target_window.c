@@ -166,30 +166,6 @@ static void window_free_state(void *vstate)
     gsl_spline_free(state->dispersion);
 }
 
-static double *intercept_face(const ray_t * in_ray,
-			      const window_state_t * state,
-			      const double *center)
-{
-    double *intercept;
-    double I[3];
-    int dummy_i;
-
-    if ((intercept =
-	 intercept_plane(in_ray, &state->M[6], center,
-			 &dummy_i)) != NULL) {
-
-	g2l(state->M, center, intercept, I);
-
-	if ((I[0] * I[0] + I[1] * I[1]) > (state->r * state->r)) {
-	    /* hit not within boundaries */
-	    free(intercept);
-	    intercept = NULL;	/* mark as not valid */
-	}
-    }
-
-    return intercept;
-}
-
 static double *window_get_intercept(void *vstate, ray_t * ray)
 {
 /*
@@ -218,10 +194,14 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
      * if state->a is anti-parallel to ray->dir
      */
     if (my_ddot(&state->M[6], ray->dir) > 0)
-	intercept = intercept_face(ray, state, state->C);
+	intercept =
+	    intercept_disk(ray, state->C, state->M, state->r * state->r,
+			   &surf_hit);
     else {
 	a_plus_cb(center_face2, state->C, state->d, &state->M[6]);
-	intercept = intercept_face(ray, state, center_face2);
+	intercept =
+	    intercept_disk(ray, center_face2, state->M,
+			   state->r * state->r, &surf_hit);
     }
 
     if (intercept)		/* intecept found with face, no need to check wall */
@@ -349,6 +329,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	double *intercept;
 	double center_other_face[3];
 	double normal_other_face[3];
+	int dummy;
 	/*
 	 * calculate center of other face and calculate intercept
 	 * with ray.
@@ -365,7 +346,8 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	}
 
 	if ((intercept =
-	     intercept_face(ray, state, center_other_face)) != NULL) {
+	     intercept_disk(ray, center_other_face, state->M,
+			    state->r * state->r, &dummy)) != NULL) {
 	    /*
 	     * ray hits other face.
 	     * no need to check wall but check if ray is absorbed between the two faces

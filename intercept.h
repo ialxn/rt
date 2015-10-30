@@ -55,6 +55,9 @@ double *intercept_cone(const ray_t * ray, const double *M,
 extern double *intercept_cylinder(const ray_t * ray, const double *c,
 				  const double *a, const double r,
 				  const double l, int *hits_outside);
+extern double *intercept_disk(const ray_t * ray, const double *origin,
+			      const double *M, const double R2,
+			      int *hits_front);
 extern double *intercept_ellipsoid(const ray_t * ray, const double *M,
 				   const double center[3],
 				   const double axes[3],

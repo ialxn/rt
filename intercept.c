@@ -341,6 +341,38 @@ double *intercept_cylinder(const ray_t * ray, const double *c,
     return intercept;
 }
 
+double *intercept_disk(const ray_t * ray, const double *origin,
+		       const double *M, const double R2, int *hits_front)
+{
+    double r2_intercept;
+    double l_intercept[3];
+    double *intercept;
+
+    intercept = intercept_plane(ray, &M[6], origin, hits_front);
+
+    if (!intercept)		/* ray does not hit target */
+	return NULL;
+
+    /* convert to local coordinates, origin is 'state->point' */
+    g2l(M, origin, intercept, l_intercept);
+
+    /*
+     * r2_intercep is squared distance from center of disk to intercept
+     * in the plane of the disk. we are in local system.
+     * compare r^2 to avoid sqrt()
+     */
+    r2_intercept =
+	l_intercept[0] * l_intercept[0] + l_intercept[1] * l_intercept[1];
+    if (r2_intercept > R2) {
+
+	/* hit not within boundaries */
+	free(intercept);
+	return NULL;
+
+    }
+    return intercept;
+}
+
 double *intercept_ellipsoid(const ray_t * ray, const double *M,
 			    const double center[3], const double axes[3],
 			    const double z_min, const double z_max,

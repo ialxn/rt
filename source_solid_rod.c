@@ -82,32 +82,6 @@ static void init_barriers(config_setting_t * this_s, double *barrier1,
     *barrier2 = (A_wall + A_base) / sum;
 }
 
-static double *intercept_face(const ray_t * in_ray,
-			      const vtsrod_state_t * state,
-			      const double *center)
-{
-    double *intercept;
-    int dummy_i;
-
-    if ((intercept =
-	 intercept_plane(in_ray, &state->M[6], center,
-			 &dummy_i)) != NULL) {
-	double l_intercept[3];
-
-	g2l(state->M, center, intercept, l_intercept);
-
-	if ((l_intercept[0] * l_intercept[0] +
-	     l_intercept[1] * l_intercept[1]) >
-	    (state->radius * state->radius)) {
-	    /* hit not within boundaries */
-	    free(intercept);
-	    intercept = NULL;	/* mark as not valid */
-	}
-    }
-
-    return intercept;
-}
-
 static void new_ray(ray_t * ray, const double radius, const double length,
 		    const double barrier1, const double barrier2,
 		    const double origin[3], const double *M,
@@ -318,13 +292,17 @@ static double *vtsrod_get_intercept(void *vstate, ray_t * ray)
 	free(intercept);
 
     if (my_ddot(&state->M[6], ray->dir) > 0)
-	intercept = intercept_face(ray, state, state->origin);
+	intercept =
+	    intercept_disk(ray, state->origin, state->M,
+			   state->radius * state->radius, &side);
     else {
 	double center_face2[3];
 
 	a_plus_cb(center_face2, state->origin, state->length,
 		  &state->M[6]);
-	intercept = intercept_face(ray, state, center_face2);
+	intercept =
+	    intercept_disk(ray, center_face2, state->M,
+			   state->radius * state->radius, &side);
     }
 
     return intercept;		/* might be NULL */

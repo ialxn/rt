@@ -84,8 +84,6 @@ static double *disk_get_intercept(void *vstate, ray_t * ray)
     disk_state_t *state = (disk_state_t *) vstate;
 
     double *intercept;
-    double l_intercept[3];
-    double r2_intercept;
 
     int hits_front;
 
@@ -97,35 +95,14 @@ static double *disk_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_plane(ray, &state->M[6], state->point, &hits_front);
+	intercept_disk(ray, state->point, state->M, state->r2,
+		       &hits_front);
 
-    if (!intercept)		/* ray does not hit target */
-	return NULL;
+    if (intercept && !hits_front)	/* hits rear side, absorbed */
+	data->flag |= ABSORBED;
 
-    /* convert to local coordinates, origin is 'state->point' */
-    g2l(state->M, state->point, intercept, l_intercept);
+    return intercept;
 
-    /*
-     * r2_intercep is squared distance from center of disk to intercept
-     * in the plane of the disk. we are in local system.
-     * compare r^2 to avoid sqrt()
-     */
-    r2_intercept =
-	l_intercept[0] * l_intercept[0] + l_intercept[1] * l_intercept[1];
-    if (r2_intercept > state->r2) {
-
-	/* hit not within boundaries */
-	free(intercept);
-	return NULL;
-
-    } else {			/* hits within disk radius 'r' */
-
-	if (!hits_front)	/* hits rear side, absorbed */
-	    data->flag |= ABSORBED;
-
-	return intercept;
-
-    }
 }
 
 static ray_t *disk_get_out_ray(void *vstate, ray_t * ray, double *hit,
