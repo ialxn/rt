@@ -700,7 +700,7 @@ static void output_sources(const config_t * cfg)
 	    fclose(outf);
 
 	} /* end 'solid cone' */
-	else if (!strcmp(type, "solid rod")) {
+	else if (!strcmp(type, "solid cylinder")) {
 	    double origin[3];
 	    double dir[3];
 	    double length;
@@ -747,7 +747,7 @@ static void output_sources(const config_t * cfg)
 
 	    fclose(outf);
 
-	} /* end 'solid rod' */
+	} /* end 'solid cylinder' */
 	else if (!strcmp(type, "sphere") || !strcmp(type, "solid sphere")) {
 	    double O[3];
 	    double radius;

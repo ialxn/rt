@@ -55,7 +55,7 @@ typedef struct source_t {
  */
 const source_type_t *source_arc;
 const source_type_t *source_solid_cone;
-const source_type_t *source_solid_rod;
+const source_type_t *source_solid_cylinder;
 const source_type_t *source_solid_sphere;
 const source_type_t *source_sphere;
 const source_type_t *source_spot;

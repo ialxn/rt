@@ -172,9 +172,9 @@ int check_sources(config_t * cfg)
 		    check_reflectivity_model("sources", this_s,
 					     "reflectivity_model", i);
 	    } /* end 'solid cone' */
-	    else if (!strcmp(type, "solid rod")) {
+	    else if (!strcmp(type, "solid cylinder")) {
 		/*
-		 * solid rod:
+		 * solid cylinder:
 		 *  - array 'origin' [x,y,z] / double
 		 *  - 'radius' / double
 		 *  - array 'direction' [x,y,z] / double
@@ -199,7 +199,7 @@ int check_sources(config_t * cfg)
 		status +=
 		    check_reflectivity_model("sources", this_s,
 					     "reflectivity_model", i);
-	    } /* end 'solid rod' */
+	    } /* end 'solid cylinder' */
 	    else if (!strcmp(type, "solid_sphere")) {
 		/*
 		 * solid sphere:

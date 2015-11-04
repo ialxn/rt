@@ -1,4 +1,4 @@
-/*	source_solid_rod.c
+/*	source_solid_cylinder.c
  *
  * Copyright (C) 2015 Ivo Alxneit
  *
@@ -27,7 +27,7 @@
 #include "sources.h"
 
 
-typedef struct srod_state_t {
+typedef struct scylinder_state_t {
     char *name;			/* name (identifier) of uniform point source */
     double orig[3];		/* origin (center of base face) */
     double radius;		/* radius of cylinder */
@@ -40,9 +40,9 @@ typedef struct srod_state_t {
     gsl_spline *spectrum;	/* spline holding cdf of source spectrum */
     pthread_mutex_t mutex_n_rays;	/* protect n_rays */
     pthread_key_t rays_remain_key;	/* no of ray remain in group (PTD) */
-} srod_state_t;
+} scylinder_state_t;
 
-typedef struct vtsrod_state_t {
+typedef struct vtscylinder_state_t {
     double origin[3];		/* origin of cylinder */
     double radius;		/* radius of cylinder */
     double length;		/* length of cylinder */
@@ -54,7 +54,7 @@ typedef struct vtsrod_state_t {
     refl_func_pointer_t refl_func;	/* reflection model */
     void *refl_func_pars;	/* model specific parameters */
     pthread_key_t PTDT_key;	/* access to per thread flags */
-} vtsrod_state_t;
+} vtscylinder_state_t;
 
 
 static void init_barriers(config_setting_t * this_s, double *barrier1,
@@ -142,10 +142,10 @@ static void new_ray(ray_t * ray, const double radius, const double length,
 }
 
 
-static void srod_init_state(void *vstate, config_setting_t * this_s,
-			    const double P_factor)
+static void scylinder_init_state(void *vstate, config_setting_t * this_s,
+				 const double P_factor)
 {
-    srod_state_t *state = (srod_state_t *) vstate;
+    scylinder_state_t *state = (scylinder_state_t *) vstate;
     const char *S;
 
     config_setting_lookup_string(this_s, "name", &S);
@@ -170,17 +170,17 @@ static void srod_init_state(void *vstate, config_setting_t * this_s,
     pthread_key_create(&state->rays_remain_key, free);
 }
 
-static void srod_free_state(void *vstate)
+static void scylinder_free_state(void *vstate)
 {
-    srod_state_t *state = (srod_state_t *) vstate;
+    scylinder_state_t *state = (scylinder_state_t *) vstate;
 
     free(state->name);
     gsl_spline_free(state->spectrum);
 }
 
-static ray_t *srod_emit_ray(void *vstate, const gsl_rng * r)
+static ray_t *scylinder_emit_ray(void *vstate, const gsl_rng * r)
 {
-    srod_state_t *state = (srod_state_t *) vstate;
+    scylinder_state_t *state = (scylinder_state_t *) vstate;
     ray_t *ray = NULL;
     int64_t *rays_remain = pthread_getspecific(state->rays_remain_key);
 
@@ -205,36 +205,38 @@ static ray_t *srod_emit_ray(void *vstate, const gsl_rng * r)
     return ray;
 }
 
-static const char *srod_get_source_name(void *vstate)
+static const char *scylinder_get_source_name(void *vstate)
 {
-    return ((srod_state_t *) vstate)->name;
+    return ((scylinder_state_t *) vstate)->name;
 }
 
-static int64_t srod_get_source_n_rays(void *vstate)
+static int64_t scylinder_get_source_n_rays(void *vstate)
 {
-    srod_state_t *state = (srod_state_t *) vstate;
+    scylinder_state_t *state = (scylinder_state_t *) vstate;
 
     return per_thread_get_source_n_rays(&state->mutex_n_rays,
 					&state->n_rays);
 }
 
-static double srod_get_source_power(void *vstate)
+static double scylinder_get_source_power(void *vstate)
 {
-    return ((srod_state_t *) vstate)->power;
+    return ((scylinder_state_t *) vstate)->power;
 }
 
-static void srod_init_rays_remain(void *vstate)
+static void scylinder_init_rays_remain(void *vstate)
 {
-    per_thread_init_rays_remain(((srod_state_t *)
+    per_thread_init_rays_remain(((scylinder_state_t *)
 				 vstate)->rays_remain_key);
 }
 
 
-static int vtsrod_init_state(void *vstate, config_setting_t * this_target,
-			     const int file_mode, const int keep_closed,
-			     const double P_factor)
+static int vtscylinder_init_state(void *vstate,
+				  config_setting_t * this_target,
+				  const int file_mode,
+				  const int keep_closed,
+				  const double P_factor)
 {
-    vtsrod_state_t *state = (vtsrod_state_t *) vstate;
+    vtscylinder_state_t *state = (vtscylinder_state_t *) vstate;
 
     read_vector(this_target, "origin", state->origin);
     config_setting_lookup_float(this_target, "radius", &state->radius);
@@ -258,9 +260,9 @@ static int vtsrod_init_state(void *vstate, config_setting_t * this_target,
     return NO_ERR;
 }
 
-static void vtsrod_free_state(void *vstate)
+static void vtscylinder_free_state(void *vstate)
 {
-    vtsrod_state_t *state = (vtsrod_state_t *) vstate;
+    vtscylinder_state_t *state = (vtscylinder_state_t *) vstate;
 
     gsl_spline_free(state->spectrum);
     gsl_spline_free(state->reflectivity);
@@ -269,9 +271,9 @@ static void vtsrod_free_state(void *vstate)
 	free((double *) state->refl_func_pars);
 }
 
-static double *vtsrod_get_intercept(void *vstate, ray_t * ray)
+static double *vtscylinder_get_intercept(void *vstate, ray_t * ray)
 {
-    vtsrod_state_t *state = (vtsrod_state_t *) vstate;
+    vtscylinder_state_t *state = (vtscylinder_state_t *) vstate;
     double *intercept;
     int side;
 
@@ -308,10 +310,10 @@ static double *vtsrod_get_intercept(void *vstate, ray_t * ray)
     return intercept;		/* might be NULL */
 }
 
-static ray_t *vtsrod_get_out_ray(void *vstate, ray_t * ray, double *hit,
-				 const gsl_rng * r)
+static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
+				      double *hit, const gsl_rng * r)
 {
-    vtsrod_state_t *state = (vtsrod_state_t *) vstate;
+    vtscylinder_state_t *state = (vtscylinder_state_t *) vstate;
 
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
@@ -380,35 +382,35 @@ static ray_t *vtsrod_get_out_ray(void *vstate, ray_t * ray, double *hit,
     return ray;
 }
 
-static void vtsrod_init_PTDT(void *vstate)
+static void vtscylinder_init_PTDT(void *vstate)
 {
-    per_thread_init(((vtsrod_state_t *) vstate)->PTDT_key, 0);
+    per_thread_init(((vtscylinder_state_t *) vstate)->PTDT_key, 0);
 }
 
 
-static const source_type_t srod_t = {
-    "solid rod",
-    sizeof(struct srod_state_t),
-    &srod_init_state,
-    &srod_free_state,
-    &srod_emit_ray,
-    &srod_get_source_name,
-    &srod_get_source_n_rays,
-    &srod_get_source_power,
-    &srod_init_rays_remain
+static const source_type_t scylinder_t = {
+    "solid cylinder",
+    sizeof(struct scylinder_state_t),
+    &scylinder_init_state,
+    &scylinder_free_state,
+    &scylinder_emit_ray,
+    &scylinder_get_source_name,
+    &scylinder_get_source_n_rays,
+    &scylinder_get_source_power,
+    &scylinder_init_rays_remain
 };
 
-static const target_type_t vt_srod_t = {
+static const target_type_t vt_scylinder_t = {
     NULL,
-    sizeof(struct vtsrod_state_t),
-    &vtsrod_init_state,
-    &vtsrod_free_state,
-    &vtsrod_get_intercept,
-    &vtsrod_get_out_ray,
-    &vtsrod_init_PTDT,
+    sizeof(struct vtscylinder_state_t),
+    &vtscylinder_init_state,
+    &vtscylinder_free_state,
+    &vtscylinder_get_intercept,
+    &vtscylinder_get_out_ray,
+    &vtscylinder_init_PTDT,
     NULL
 };
 
 
-const source_type_t *source_solid_rod = &srod_t;
-const target_type_t *virtual_target_solid_rod = &vt_srod_t;
+const source_type_t *source_solid_cylinder = &scylinder_t;
+const target_type_t *virtual_target_solid_cylinder = &vt_scylinder_t;
