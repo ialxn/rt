@@ -105,9 +105,13 @@ static void new_ray(ray_t * ray, const double Radius, const double radius,
     if (selector < barrier1) {
 	/* ray originates from wall */
 	double z, h_z;
+	const double cutoff = radius / Radius;
 
-	z = radius + (Radius - radius) * sqrt(gsl_rng_uniform(r));
-	h_z = z * H / Radius;
+	do {
+	    z = sqrt(gsl_rng_uniform(r));
+	} while (z < cutoff);
+
+	h_z = z * H;
 
 	point[0] = z * cos_phi;
 	point[1] = z * sin_phi;
