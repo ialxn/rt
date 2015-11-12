@@ -55,9 +55,7 @@ static int disk_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize reflectivity spectrum */
-    if (init_spectrum(this_target, "reflectivity", &state->refl_spectrum))
-	return ERR;
-
+    init_spectrum(this_target, "reflectivity", &state->refl_spectrum);
     init_refl_model(this_target, &state->refl_func,
 		    &state->refl_func_pars);
 

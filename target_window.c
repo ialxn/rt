@@ -132,18 +132,10 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
     }
 
     /* initialize absorptivity spectrum */
-    if (init_spectrum(this_target, "absorptivity", &state->abs_spectrum)) {
-	state->dispersion = NULL;
-	return ERR;
-    }
+    init_spectrum(this_target, "absorptivity", &state->abs_spectrum);
 
     /* initialize dispersion curve */
-    if (init_spectrum(this_target, "idx_refraction", &state->dispersion)) {
-	gsl_spline_free(state->abs_spectrum);
-	state->abs_spectrum = NULL;
-	return ERR;
-    }
-
+    init_spectrum(this_target, "idx_refraction", &state->dispersion);
     init_refl_model(this_target, &state->refl_func,
 		    &state->refl_func_pars);
 

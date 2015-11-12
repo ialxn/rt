@@ -249,9 +249,7 @@ static int vtscylinder_init_state(void *vstate,
 
     init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
-    if (init_spectrum(this_target, "reflectivity", &state->reflectivity))
-	return ERR;
-
+    init_spectrum(this_target, "reflectivity", &state->reflectivity);
     init_refl_model(this_target, &state->refl_func,
 		    &state->refl_func_pars);
 

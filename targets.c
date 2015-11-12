@@ -529,8 +529,8 @@ int init_output(const char *target_type, config_setting_t * this_target,
     return NO_ERR;
 }
 
-int init_spectrum(config_setting_t * this_target, const char *kw,
-		  gsl_spline ** spectrum)
+void init_spectrum(config_setting_t * this_target, const char *kw,
+		   gsl_spline ** spectrum)
 {
     FILE *data;
     double *lambda;
@@ -539,21 +539,8 @@ int init_spectrum(config_setting_t * this_target, const char *kw,
     const char *f_name;
 
     config_setting_lookup_string(this_target, kw, &f_name);
-
-    if ((data = fopen(f_name, "r")) == NULL) {
-	fprintf(stderr, "Error %s (errno=%d) opening spectrum %s\n",
-		strerror(errno), errno, f_name);
-	*spectrum = NULL;
-	return ERR;
-    }
-
-    if (read_data(data, &lambda, &values, &n_lambda) == ERR) {
-	fprintf(stderr, "Error while reading data (%d items read)\n",
-		n_lambda);
-	fclose(data);
-	*spectrum = NULL;
-	return ERR;
-    }
+    data = fopen(f_name, "r");
+    read_data(data, &lambda, &values, &n_lambda);
     fclose(data);
 
     *spectrum = gsl_spline_alloc(gsl_interp_linear, n_lambda);
@@ -561,8 +548,6 @@ int init_spectrum(config_setting_t * this_target, const char *kw,
 
     free(lambda);
     free(values);
-
-    return NO_ERR;
 }
 
 void init_refl_model(const config_setting_t * s,
