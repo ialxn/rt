@@ -200,7 +200,7 @@ int check_sources(config_t * cfg)
 		    check_reflectivity_model("sources", this_s,
 					     "reflectivity_model", i);
 	    } /* end 'solid cylinder' */
-	    else if (!strcmp(type, "solid_sphere")) {
+	    else if (!strcmp(type, "solid sphere")) {
 		/*
 		 * solid sphere:
 		 *  - array 'origin' [x,y,z] / double
