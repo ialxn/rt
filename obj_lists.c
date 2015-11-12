@@ -18,6 +18,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 			    const double P_factor)
 {
     int i;
+    int n_del = 0;
     source_list_t *s_list;
     const config_setting_t *sources = config_lookup(cfg, "sources");
 
@@ -65,8 +66,9 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 			     P_factor);
 	else {
 	    fprintf(stderr,
-		    "Unknown source type (%s) found. Ignoring source %s\n",
+		    "    unknown source type (%s) found. Ignoring source %s\n",
 		    type, name);
+	    ++n_del;
 	    continue;
 	}
 
@@ -75,6 +77,7 @@ source_list_t *init_sources(config_t * cfg, int *n_sources,
 	list_add_tail(&new_entry->list, &s_list->list);
 
     }
+    (*n_sources) -= n_del;
     return s_list;
 }
 
@@ -85,7 +88,7 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 {
 
     int i;
-    int n_targets_deleted = 0;
+    int n_del = 0;
     const config_setting_t *targets = config_lookup(cfg, "targets");
 
     *n_targets = config_setting_length(targets);
@@ -158,21 +161,17 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 			     keep_closed, P_factor);
 	else {
 	    fprintf(stderr,
-		    "Unknown target type (%s) found. Ignoring target %s\n",
+		    "    unknown target type (%s) found. Ignoring target %s\n",
 		    type, name);
+	    ++n_del;
 	    continue;
 	}
 
-	if (new_target) {
-	    new_entry = (target_list_t *) malloc(sizeof(target_list_t));
-	    new_entry->t = new_target;
-	    list_add_tail(&new_entry->list, &t_list->list);
-	} else {		/* target_alloc did fail */
-	    ++n_targets_deleted;
-	    fprintf(stderr, "target %s deleted\n", name);
-	}
+	new_entry = (target_list_t *) malloc(sizeof(target_list_t));
+	new_entry->t = new_target;
+	list_add_tail(&new_entry->list, &t_list->list);
     }
-    *n_targets -= n_targets_deleted;
+    (*n_targets) -= n_del;
 }
 
 
