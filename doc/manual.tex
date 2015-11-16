@@ -637,7 +637,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt get\_flux}}
-{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ $\lambda$ $n_{\mathrm{refl}}$ otherwise.
+{\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ $\lambda$ $n_{\mathrm{refl}}$ otherwise and only considers the wavelength interval the wavelength interval $ \lambda_\mathrm{min} \le \lambda \le \lambda_\mathrm{min}$.
 
 {\bf Syntax:} {\tt get\_flux} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -648,6 +648,8 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \setlength{\rightmargin}{0.5cm}}
 
 \item[{\tt [--global|-g]}] report flux distribution in global coordinate system [local].
+\item[{\tt [--minl|-l]}] minimum wavelength [0.0].
+\item[{\tt [--maxl|-L]}] maximum wavelength [1E308].
 \item[{\tt [--help|-h]}] prints a help message.
 \item[{\tt [--Version|-V]}] Prints the version number.
 
