@@ -551,7 +551,7 @@ int main(int argc, char **argv)
 		    seed);
 	}
 
-	fprintf(stdout, "    One absorbed ray represents %f W\n",
+	fprintf(stdout, "    one absorbed ray represents %f W\n",
 		P_factor);
 
 	if (n_threads > 1) {
