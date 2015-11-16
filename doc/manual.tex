@@ -612,7 +612,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt flux\_2D}}
-{\tt flux\_2D} outputs the distribution of the absorbed flux (2D histogram) of planar targets. Statistical data including the number of rays missed is reported in the header.
+{\tt flux\_2D} outputs the distribution of the absorbed flux in the wavelength interval $ \lambda_\mathrm{min} \le \lambda \le \lambda_\mathrm{min}$ (2D histogram) of planar targets. Statistical data including the number of rays missed is reported in the header.
 
 {\bf Syntax:} {\tt flux\_2D} [options] {\tt <} input {\tt >} output 2 {\tt >} errors
 \vspace{1em}
@@ -625,6 +625,8 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \item[{\tt [--nx|-a]}] Number of bins in x direction used [10].
 \item[{\tt [--ny|-b]}] Number of bins in y direction used [10].
 \item[{\tt [--global|-g]}] report flux distribution in global coordinate system [local].
+\item[{\tt [--minl|-l]}] Minimum wavelength [0.0].
+\item[{\tt [--maxl|-L]}] Maximum wavelength [1E308].
 \item[{\tt [--minx|-x]}] Minimum x value of histogram [-10.0].
 \item[{\tt [--maxx|-X]}] Maximum x value of histogram [10.0].
 \item[{\tt [--miny|-y]}] Minimum y value of histogram [-10.0].
