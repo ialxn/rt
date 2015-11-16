@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <gsl/gsl_math.h>
 #include <gsl/gsl_histogram2d.h>
 
 #include "io_utils.h"
@@ -67,8 +68,9 @@ static gsl_histogram2d *init_hist(const double xmax, const double xmin,
     return h;
 }
 
-static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
-		     double *p_inc, int *n_missed, double *p_missed,
+static int read_hist(FILE * f_in, gsl_histogram2d * h, const double l_min,
+		     const double l_max, int *n_inc, double *p_inc,
+		     int *n_missed, double *p_missed,
 		     const int coordinates, double M[], double origin[])
 {
     float t[MAX_FLOAT_ITEMS];
@@ -87,7 +89,7 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	read_transformation(f_in, M, origin);
 
     /*
-     * read data. (x,y,power,lambda)
+     * read data. (x,y,lambda)
      */
     n_float_items_read =
 	fread(t, sizeof(float), MAX_FLOAT_ITEMS - 1, f_in);
@@ -111,13 +113,21 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 	    return (ERR);
 	}
 
-	if (gsl_histogram2d_accumulate(h, t[0], t[1], P_factor)) {
-	    /* data lies outside of range of histogram */
+	if ((t[2] >= l_min) && (t[2] <= l_max)) {
+	    /*
+	     * lambda is within selected intervall
+	     */
+	    if (gsl_histogram2d_accumulate(h, t[0], t[1], P_factor)) {
+		/* data lies outside of range of histogram */
+		(*n_missed)++;
+		*p_missed += P_factor;
+	    } else {
+		(*n_inc)++;
+		*p_inc += P_factor;
+	    }
+	} else {		/* lambda outside interval */
 	    (*n_missed)++;
 	    *p_missed += P_factor;
-	} else {
-	    (*n_inc)++;
-	    *p_inc += P_factor;
 	}
 
 	n_float_items_read =
@@ -129,10 +139,12 @@ static int read_hist(FILE * f_in, gsl_histogram2d * h, int *n_inc,
 
 }
 
-static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
-			const double p_inc, const int n_missed,
-			const double p_missed, const int coordinates,
-			const double M[], const double origin[])
+static void output_hist(FILE * f_out, gsl_histogram2d * h,
+			const double l_min, const double l_max,
+			const int n_inc, const double p_inc,
+			const int n_missed, const double p_missed,
+			const int coordinates, const double M[],
+			const double origin[])
 {
     size_t i, j;
     size_t nx, ny;
@@ -152,18 +164,20 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h, const int n_inc,
     gsl_histogram2d_scale(h, 1.0 / A);
 
     fprintf(f_out, "#   histogram definition (local system)\n");
-    fprintf(f_out, "#      minimum x-value: % e\n",
+    fprintf(f_out, "#      wavelength interval: % e <= lambda <= % e\n",
+	    l_min, l_max);
+    fprintf(f_out, "#          minimum x-value: % e\n",
 	    gsl_histogram2d_xmin(h));
-    fprintf(f_out, "#      maximum x-value: % e\n",
+    fprintf(f_out, "#          maximum x-value: % e\n",
 	    gsl_histogram2d_xmax(h));
     nx = gsl_histogram2d_nx(h);
-    fprintf(f_out, "#     number of x-bins: %d\n", nx);
-    fprintf(f_out, "#      minimum y-value: % e\n",
+    fprintf(f_out, "#         number of x-bins: %d\n", nx);
+    fprintf(f_out, "#          minimum y-value: % e\n",
 	    gsl_histogram2d_ymin(h));
-    fprintf(f_out, "#      maximum y-value: % e\n",
+    fprintf(f_out, "#          maximum y-value: % e\n",
 	    gsl_histogram2d_ymax(h));
     ny = gsl_histogram2d_ny(h);
-    fprintf(f_out, "#     number of y-bins: %d\n", ny);
+    fprintf(f_out, "#         number of y-bins: %d\n", ny);
 
     fprintf(f_out, "#\n#   histogram statistics\n");
     fprintf(f_out, "#        number of data point not included: %d\n",
@@ -262,6 +276,10 @@ static void help(void)
 	    "       --global, -g      report flux distribution in global\n");
     fprintf(stdout,
 	    "                         coordinate system [local]\n");
+    fprintf(stdout,
+	    "       --minl, -l        Minimum wavelength  [0.0]\n");
+    fprintf(stdout,
+	    "       --maxl, -L        Maximum wavelength  [1E308]\n");
     fprintf(stdout, "       --minx, -x        Minimum x value  [-10.0]\n");
     fprintf(stdout, "       --maxx, -X        Maximum x value  [10.0]\n");
     fprintf(stdout, "       --miny, -y        Minimum y value  [-10.0]\n");
@@ -273,6 +291,8 @@ static void help(void)
 
 int main(int argc, char **argv)
 {
+    double lambda_max = GSL_DBL_MAX;
+    double lambda_min = 0.0;
     double x_max = 10.0;
     double x_min = -10.0;
     size_t x_bins = 10;
@@ -294,6 +314,8 @@ int main(int argc, char **argv)
 	int c;
 	int option_index = 0;
 	static struct option long_options[] = {
+	    {"minl", required_argument, 0, 'l'},
+	    {"maxl", required_argument, 0, 'L'},
 	    {"minx", required_argument, 0, 'x'},
 	    {"maxx", required_argument, 0, 'X'},
 	    {"miny", required_argument, 0, 'y'},
@@ -306,7 +328,7 @@ int main(int argc, char **argv)
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "a:b:gx:X:y:Y:Vh", long_options,
+	c = getopt_long(argc, argv, "a:b:gl:L:x:X:y:Y:Vh", long_options,
 			&option_index);
 
 	if (c == -1)
@@ -324,6 +346,14 @@ int main(int argc, char **argv)
 
 	case 'g':
 	    coordinates = GLOBAL;
+	    break;
+
+	case 'l':
+	    lambda_min = atof(optarg);
+	    break;
+
+	case 'L':
+	    lambda_max = atof(optarg);
 	    break;
 
 	case 'x':
@@ -374,10 +404,10 @@ int main(int argc, char **argv)
     h = init_hist(x_max, x_min, x_bins, y_max, y_min, y_bins);
 
     if (!read_hist
-	(stdin, h, &n_inc, &p_inc, &n_missed, &p_missed, coordinates, M,
-	 origin))
-	output_hist(stdout, h, n_inc, p_inc, n_missed, p_missed,
-		    coordinates, M, origin);
+	(stdin, h, lambda_min, lambda_max, &n_inc, &p_inc, &n_missed,
+	 &p_missed, coordinates, M, origin))
+	output_hist(stdout, h, lambda_min, lambda_max, n_inc, p_inc,
+		    n_missed, p_missed, coordinates, M, origin);
 
     gsl_histogram2d_free(h);
     exit(EXIT_SUCCESS);
