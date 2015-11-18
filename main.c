@@ -19,6 +19,7 @@
 
 #include <gsl/gsl_rng.h>
 
+#include "likely.h"
 #include "obj_lists.h"
 #include "off.h"
 
@@ -170,7 +171,7 @@ static void *run_simulation(void *args)
 	int this_source_n_log = n_log;
 	FILE *log_file;
 
-	if (n_log) {		/* log ray path enabled */
+	if (unlikely(n_log)) {	/* log ray path enabled */
 	    char fname[256];
 
 	    if (log_OFF) {
@@ -190,7 +191,7 @@ static void *run_simulation(void *args)
 	     * loop until 'current_source' is exhausted indicated
 	     * by 'new_ray()' returning 'NULL'.
 	     */
-	    if (n_log)		/* log ray path enabled */
+	    if (unlikely(n_log))	/* log ray path enabled */
 		if (!this_source_n_log) {
 		    /*
 		     * sufficient ray logged, stop this source
@@ -275,7 +276,7 @@ if(FLAG) \
 else \
     fprintf(FILE,"%e\t%e\t%e\t%e\t%e\t%e\n",O[0],O[1],O[2],P[0],P[1],P[2]); \
 } while(0);
-		    if (n_log)	/* log ray path enabled */
+		    if (unlikely(n_log))	/* log ray path enabled */
 			LOG_RAY(log_OFF, log_file, ray->orig, closest_icpt,
 				0, 0, 0);
 
@@ -290,7 +291,7 @@ else \
 		     * trigger emmision of new ray from current source
 		     * by assigning NULL to 'ray'
 		     */
-		    if (n_log) {	/* log ray path enabled */
+		    if (unlikely(n_log)) {	/* log ray path enabled */
 			double end[3];
 
 			a_plus_cb(end, ray->orig, 1.0, ray->dir);
@@ -308,7 +309,7 @@ else \
 		}
 	    }			/* 'ray' absorbed or lost */
 
-	    if (n_log) {	/* log ray path enabled */
+	    if (unlikely(n_log)) {	/* log ray path enabled */
 		this_source_n_log--;
 		if (!log_OFF)
 		    fprintf(log_file, "\n");
@@ -316,7 +317,7 @@ else \
 
 	}			/* 'current_source' is exhausted */
 
-	if (n_log) {		/* log ray path enabled */
+	if (unlikely(n_log)) {	/* log ray path enabled */
 	    fclose(log_file);
 	    this_source++;
 	}
