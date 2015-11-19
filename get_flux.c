@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <gsl/gsl_histogram.h>
+#include <gsl/gsl_math.h>
 
 #include "math_utils.h"
 #include "io_utils.h"
@@ -35,6 +35,8 @@ static void help(void)
 
 int main(int argc, char **argv)
 {
+    double lambda_max = GSL_DBL_MAX;
+    double lambda_min = 0.0;
     float t[MAX_FLOAT_ITEMS];
     unsigned char tmp_8;
     size_t idx_l;
@@ -48,12 +50,15 @@ int main(int argc, char **argv)
 	int option_index = 0;
 	static struct option long_options[] = {
 	    {"global", no_argument, 0, 'g'},
+	    {"minl", required_argument, 0, 'l'},
+	    {"maxl", required_argument, 0, 'L'},
 	    {"Version", no_argument, 0, 'V'},
 	    {"help", no_argument, 0, 'h'},
 	    {0, 0, 0, 0}
 	};
 
-	c = getopt_long(argc, argv, "gVh", long_options, &option_index);
+	c = getopt_long(argc, argv, "gl:L:Vh", long_options,
+			&option_index);
 
 	if (c == -1)
 	    break;
@@ -62,6 +67,14 @@ int main(int argc, char **argv)
 
 	case 'g':
 	    coordinates = GLOBAL;
+	    break;
+
+	case 'l':
+	    lambda_min = atof(optarg);
+	    break;
+
+	case 'L':
+	    lambda_max = atof(optarg);
 	    break;
 
 	case 'V':
@@ -122,33 +135,38 @@ int main(int argc, char **argv)
 	    exit(EXIT_FAILURE);
 	}
 
-	if (idx_l == MAX_FLOAT_ITEMS) {	/* non-planar target */
-	    if (coordinates == GLOBAL) {
-		l_xyz[0] = t[0];
-		l_xyz[1] = t[1];
-		l_xyz[2] = t[2];
+	if ((t[idx_l - 1] >= lambda_min) && (t[idx_l - 1] <= lambda_max)) {
+	    /*
+	     * lambda is within selected interval
+	     */
+	    if (idx_l == MAX_FLOAT_ITEMS) {	/* non-planar target */
+		if (coordinates == GLOBAL) {
+		    l_xyz[0] = t[0];
+		    l_xyz[1] = t[1];
+		    l_xyz[2] = t[2];
 
-		l2g(M, origin, l_xyz, g_xyz);
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0], g_xyz[1],
-			g_xyz[2], t[idx_l], tmp_8);
+		    l2g(M, origin, l_xyz, g_xyz);
+		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
+			    g_xyz[1], g_xyz[2], t[idx_l], tmp_8);
 
-	    } else
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1], t[2],
-			t[idx_l], tmp_8);
+		} else
+		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
+			    t[2], t[idx_l], tmp_8);
 
-	} else {		/* planar target */
-	    if (coordinates == GLOBAL) {
-		l_xyz[0] = t[0];
-		l_xyz[1] = t[1];
-		l_xyz[2] = 0.0;
+	    } else {		/* planar target */
+		if (coordinates == GLOBAL) {
+		    l_xyz[0] = t[0];
+		    l_xyz[1] = t[1];
+		    l_xyz[2] = 0.0;
 
-		l2g(M, origin, l_xyz, g_xyz);
-		fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0], g_xyz[1],
-			g_xyz[2], t[idx_l - 1], tmp_8);
+		    l2g(M, origin, l_xyz, g_xyz);
+		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
+			    g_xyz[1], g_xyz[2], t[idx_l - 1], tmp_8);
 
-	    } else
-		fprintf(stdout, "%e\t%e\t%e\t%u\n", t[0], t[1],
-			t[idx_l - 1], tmp_8);
+		} else
+		    fprintf(stdout, "%e\t%e\t%e\t%u\n", t[0], t[1],
+			    t[idx_l - 1], tmp_8);
+	    }
 	}
 
 	n_float_items_read = fread(t, sizeof(float), idx_l, stdin);
