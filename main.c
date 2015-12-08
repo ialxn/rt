@@ -122,7 +122,7 @@ static void print2_once(source_t * current_source)
 	p++;
     }
 
-    fprintf(stdout, "        %s (%s) started\n",
+    fprintf(stdout, "\n        %s (%s) started\n",
 	    get_source_name(current_source),
 	    get_source_type(current_source));
     fprintf(stdout, "            %" PRId64 " rays to trace\n",
@@ -590,7 +590,7 @@ int main(int argc, char **argv)
 	    free(retval);
 	}
 
-	fprintf(stdout, "  total number of rays traced: %" PRId64 "\n",
+	fprintf(stdout, "\n  total number of rays traced: %" PRId64 "\n",
 		n_total);
 	fprintf(stdout, "   total power of all sources: %e\n",
 		(double) n_total * P_factor);
