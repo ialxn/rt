@@ -22,7 +22,7 @@
 #define LINE_LEN 256
 #define BSIZE 256
 #define HEADER_LINES 16		/* number of header lines after 'get_id()' */
-#define REST_HEADER_LINES 13	/* number of header lines after 'P_factor' */
+#define REST_HEADER_LINES 14	/* number of header lines after 'P_factor' */
 #define MAX_FLOAT_ITEMS 4	/* maximum number of items per data set
 				   (x,y,z,lambda) */
 
