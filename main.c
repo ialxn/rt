@@ -19,6 +19,7 @@
 
 #include <gsl/gsl_rng.h>
 
+#include "io_utils.h"
 #include "likely.h"
 #include "obj_lists.h"
 #include "off.h"
@@ -356,6 +357,32 @@ static void help(void)
     fprintf(stdout, "\n");
 }
 
+static int check_globals(config_t * cfg)
+{
+    int status = NO_ERR;
+    int64_t i;
+    double p;
+
+    if (config_lookup(cfg, "seed") == NULL) {
+	fprintf(stderr, "missing 'seed' keyword\n");
+	status += ERR;
+    } else if (config_lookup_int64(cfg, "seed", &i) == CONFIG_FALSE) {
+	fprintf(stderr, "keyword 'seed' does not represent a int64\n");
+	status += ERR;
+    }
+
+    if (config_lookup(cfg, "P_factor") == NULL) {
+	fprintf(stderr, "missing 'P_factor' keyword\n");
+	status += ERR;
+    } else if (config_lookup_float(cfg, "P_factor", &p) == CONFIG_FALSE) {
+	fprintf(stderr,
+		"keyword 'P_factor' does not represent a double\n");
+	status += ERR;
+    }
+
+    return status;
+}
+
 static int parse_input(config_t * cfg)
 {
     config_init(cfg);
@@ -382,10 +409,15 @@ static int parse_input(config_t * cfg)
     }
 
     /*
+     * check global keywords.
      * check that sources and targets are correctly specified.
      * additional (unknown) configuration options are silently
      * ignored.
      */
+    if (check_globals(cfg)) {
+	config_destroy(cfg);
+	return EXIT_FAILURE;
+    }
     if (check_sources(cfg)) {
 	config_destroy(cfg);
 	return EXIT_FAILURE;
