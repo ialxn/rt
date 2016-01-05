@@ -147,11 +147,11 @@ int main(int argc, char **argv)
 
 		    l2g(M, origin, l_xyz, g_xyz);
 		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
-			    g_xyz[1], g_xyz[2], t[idx_l], tmp_8);
+			    g_xyz[1], g_xyz[2], t[idx_l - 1], tmp_8);
 
 		} else
 		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
-			    t[2], t[idx_l], tmp_8);
+			    t[2], t[idx_l - 1], tmp_8);
 
 	    } else {		/* planar target */
 		if (coordinates == GLOBAL) {
