@@ -1,6 +1,6 @@
 /*	likely.h
  *
- * Copyright (C) 2015 Ivo Alxneit
+ * Copyright (C) 2015,2016 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
