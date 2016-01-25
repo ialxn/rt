@@ -208,11 +208,11 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.type == 'cylinder':
+    if args.type == 'cylinder':	###### CYLINDER ######
         (flux, R) = bin_cylinder(args.nZ, args.Zlimits, args.nTheta)
         (x, y, z) = grid_cylinder(R, args.nZ, args.Zlimits, args.nTheta)
 
-    if args.type == 'cone':
+    elif args.type == 'cone': ######## CONE ##########
         if args.rlimits is None:
             print("ERROR: please specify minimum and maximum of cone radius",
                   file=sys.stderr)
@@ -221,7 +221,7 @@ if __name__ == '__main__':
         flux = bin_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
         (x, y, z) = grid_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
 
-    if args.type == 'sphere':
+    elif args.type == 'sphere':	###### SPHERE ########
         (flux, R) = bin_sphere(args.nZ, args.Zlimits, args.nTheta)
         (x, y, z) = grid_sphere(R, args.nZ, args.Zlimits, args.nTheta)
 
