@@ -177,7 +177,7 @@ static void write_par_vertices(FILE * outf, const double s,
 
     for (i = 0; i < N_TRANS; i++) {
 	double l = z_min + i * delta_z;
-	double r = s * sqrt(4.0 * foc * l);;
+	double r = s * sqrt(4.0 * foc * l);
 
 	write_ring_vertices(outf, l, r, origin, alpha, beta);
     }
@@ -1191,5 +1191,5 @@ void l2g_off_rot(const double *L, double *G, const double alpha,
 
     G[0] = x * cb - L[1] * sb;
     G[1] = -x * sb - L[1] * cb;
-    G[2] = L[0] * sa + L[2] * ca;;
+    G[2] = L[0] * sa + L[2] * ca;
 }
