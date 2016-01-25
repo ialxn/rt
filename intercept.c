@@ -547,7 +547,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 }
 
 double *intercept_sphere(const ray_t * ray, const double *M,
-			 const double *center, const double radius,
+			 const double *center, const double R2,
 			 const double z_min, const double z_max,
 			 int *hits_outside)
 {
@@ -585,7 +585,7 @@ double *intercept_sphere(const ray_t * ray, const double *M,
 	diff(OminusC, ray->orig, center);
 
 	B = 2.0 * my_ddot(OminusC, ray->dir);
-	C = my_ddot(OminusC, OminusC) - radius * radius;
+	C = my_ddot(OminusC, OminusC) - R2;
 
 	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
 	intercept = find_first_soln(n_solns, x_small, x_large, ray);
@@ -599,7 +599,7 @@ double *intercept_sphere(const ray_t * ray, const double *M,
 	g2l_rot(M, ray->dir, r_N);
 
 	B = 2.0 * my_ddot(r_O, r_N);
-	C = my_ddot(r_O, r_O) - radius * radius;
+	C = my_ddot(r_O, r_O) - R2;
 
 	n_solns = gsl_poly_solve_quadratic(1.0, B, C, &x_small, &x_large);
 	if (!find_first_soln_restricted

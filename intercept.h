@@ -72,7 +72,7 @@ extern double *intercept_plane(const ray_t * ray,
 			       const double *plane_normal,
 			       const double *plane_point, int *hits_front);
 extern double *intercept_sphere(const ray_t * ray, const double *M,
-				const double *center, const double radius,
+				const double *center, const double R2,
 				const double z_min, const double z_max,
 				int *hits_outside);
 

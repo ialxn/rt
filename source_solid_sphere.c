@@ -39,7 +39,8 @@ typedef struct ssp_state_t {
 
 typedef struct vtssp_state_t {
     double center[3];		/* center coordinate of sphere */
-    double radius;		/* radius^2 of disk */
+    double radius;		/* radius of sphere */
+    double radius2;		/* radius^2 of sphere */
     gsl_spline *spectrum;	/* interpolated emission spectrum */
     gsl_spline *reflectivity;	/* interpolated reflectivity spectrum */
     refl_func_pointer_t refl_func;	/* reflection model */
@@ -156,6 +157,7 @@ static int vtssp_init_state(void *vstate, config_setting_t * this_target,
 
     read_vector(this_target, "origin", state->center);
     config_setting_lookup_float(this_target, "radius", &state->radius);
+    state->radius2 = state->radius * state->radius;
 
     init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
@@ -181,8 +183,8 @@ static double *vtssp_get_intercept(void *vstate, ray_t * ray)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;
 
-    return intercept_sphere(ray, NULL, state->center, state->radius, 0.0,
-			    0.0, NULL);
+    return intercept_sphere(ray, NULL, state->center,
+			    state->radius2, 0.0, 0.0, NULL);
 }
 
 static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,

@@ -19,7 +19,7 @@
 
 typedef struct sph_state_t {
     double origin[3];		/* center coordinate of sphere */
-    double radius;		/* radius^2 of disk */
+    double radius2;		/* radius^2 of sphere */
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
@@ -42,7 +42,8 @@ static int sph_init_state(void *vstate, config_setting_t * this_target,
 
     state->M = init_M(this_target, "x", "z");
 
-    config_setting_lookup_float(this_target, "radius", &state->radius);
+    config_setting_lookup_float(this_target, "radius", &state->radius2);
+    state->radius2 *= state->radius2;
 
     config_setting_lookup_float(this_target, "z_min", &state->z_min);
     config_setting_lookup_float(this_target, "z_max", &state->z_max);
@@ -103,7 +104,7 @@ static double *sph_get_intercept(void *vstate, ray_t * ray)
     }
 
     intercept =
-	intercept_sphere(ray, state->M, state->origin, state->radius,
+	intercept_sphere(ray, state->M, state->origin, state->radius2,
 			 state->z_min, state->z_max, &hits_outside);
 
     if (!intercept)		/* ray does not hit target */
