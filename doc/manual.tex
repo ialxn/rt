@@ -636,6 +636,28 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 
 \end{list}
 
+\subsection{{\tt flux\_3D.py}}
+{\tt flux\_3D} outputs the distribution of the absorbed flux for non-planar targets (at present: {\tt cone}, {\tt cylinder}, and {\tt sphere}).
+
+{\bf Syntax:} {\tt flux\_3D.py} [options] {\tt <} input
+\vspace{1em}
+\begin{list}{}
+{\setlength{\leftmargin}{3.5cm}
+\setlength{\labelwidth}{3.2cm}
+\setlength{\labelsep}{0.25cm}
+\setlength{\rightmargin}{0.5cm}}
+
+\item[{\tt [--nZ|-z]}] Number of bins in z direction used [10].
+\item[{\tt [--nTheta|-a]}] Number of bins in $\Theta$ direction used [36].
+\item[{\tt [--Zlimits|-Z]}] {\tt z\_min} and {\tt z\_max} of body (same as in config file).
+\item[{\tt [--FLuxlimits|-F]}] Minimum and Maximum of flux scale.
+\item[{\tt [--type|-t]}] Type of body ['cone'$\mid$'cylinder'$\mid$'sphere'].
+\item[{\tt [--rlimits|-r]}] Radius at base and at top of cone.
+\item[{\tt [--Pfactor|-P]}] Scaling factor of flux values (from config file).
+\item[{\tt [--help|-h]}] prints a help message.
+
+\end{list}
+
 \subsection{{\tt get\_flux}}
 {\tt get\_flux} extracts the binary output datafiles producted by {\tt rt} and lists the data. It outputs\footnote{tab separated} $x$ $y$ $\lambda$ $n_{\mathrm{refl}}$ for planar targets or $x$ $y$ $z$ $\lambda$ $n_{\mathrm{refl}}$ otherwise and only considers the wavelength interval the wavelength interval $ \lambda_\mathrm{min} \le \lambda \le \lambda_\mathrm{min}$.
 
