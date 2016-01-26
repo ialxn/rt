@@ -154,6 +154,16 @@ def grid_sphere(R, nZ, H, nTheta):
     return xi, yi, zi
 
 
+def axisEqual3D(ax):
+    exts = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
+    sz = exts[:, 1] - exts[:, 0]
+    centers = np.mean(exts, axis=1)
+    maxsize = max(abs(sz))
+    r = maxsize/2
+    for ctr, dim in zip(centers, 'xyz'):
+        getattr(ax, 'set_{}lim'.format(dim))(ctr - r, ctr + r)
+
+
 def plot_4D(flux, Limits, x, y, z):
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm, colors
@@ -178,6 +188,9 @@ def plot_4D(flux, Limits, x, y, z):
                            facecolors=flux_colors,
                            linewidth=0, antialiased=False,
                            shade=False)
+
+    axisEqual3D(ax)
+
     cbar = fig.colorbar(s_m)
     cbar.set_label('Flux')
 
