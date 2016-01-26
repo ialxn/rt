@@ -9,9 +9,6 @@
 # WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
-
-
-
 import numpy as np
 import sys
 
@@ -52,7 +49,7 @@ def bin_cone(n_z, H, n_theta, r):
                        r[0] + Dz * R / (2 * H[1]) - n_z * Dz * R / H[1],
                        n_z)
 
-    area = R_xy * Dtheta * dl
+    area = np.abs(R_xy * Dtheta * dl)
     binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
 
     return binned
@@ -74,7 +71,7 @@ def bin_cylinder(n_z, H, n_theta):
     Dtheta = 2 * np.pi / (n_theta + 1)
     R = np.sqrt(x[0]**2 + y[0]**2)
 
-    area = np.asarray([ R * Dtheta * Dz for i in range(n_z) ])
+    area = np.abs(np.asarray([ R * Dtheta * Dz for i in range(n_z) ]))
     binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
 
     return binned, R
@@ -99,7 +96,7 @@ def bin_sphere(n_z, H, n_theta):
     Dphi = np.arccos(h[1:]) - phi1
     R_xy = R * np.sin(phi1)
 
-    area = R**2 * Dphi * Dtheta
+    area = np.abs(R**2 * Dphi * Dtheta)
     binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
 
     return binned, R_xy
