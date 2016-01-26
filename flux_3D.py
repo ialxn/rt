@@ -160,7 +160,7 @@ def plot_4D(flux, Limits, x, y, z):
     import matplotlib.pyplot as plt
 
     fig = plt.figure()
-    ax = fig.gca(projection='3d')
+    ax = fig.add_subplot(111, projection='3d')
     ax.set_xlabel('x')
     ax.set_ylabel('y')
     ax.set_zlabel('z')
