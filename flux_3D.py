@@ -221,7 +221,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    if args.type == 'cylinder':	###### CYLINDER ######
+    if args.type == 'cylinder': ###### CYLINDER ######
         (flux, R) = bin_cylinder(args.nZ, args.Zlimits, args.nTheta)
         (x, y, z) = grid_cylinder(R, args.nZ, args.Zlimits, args.nTheta)
 
@@ -234,7 +234,7 @@ if __name__ == '__main__':
         flux = bin_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
         (x, y, z) = grid_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
 
-    elif args.type == 'sphere':	###### SPHERE ########
+    elif args.type == 'sphere': ###### SPHERE ########
         (flux, R) = bin_sphere(args.nZ, args.Zlimits, args.nTheta)
         (x, y, z) = grid_sphere(R, args.nZ, args.Zlimits, args.nTheta)
 
