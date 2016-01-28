@@ -166,7 +166,7 @@ def plot_4D(flux, Limits, x, y, z):
     cbar = fig.colorbar(s_m)
     cbar.set_label('Flux')
 
-    plt.show()
+    return plt
 
 if __name__ == '__main__':
     from argparse import ArgumentParser
@@ -211,4 +211,6 @@ if __name__ == '__main__':
         (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
 
     flux *= args.Pfactor
-    plot_4D(flux, args.Fluxlimits, x, y, z)
+    plt = plot_4D(flux, args.Fluxlimits, x, y, z)
+
+    plt.show()
