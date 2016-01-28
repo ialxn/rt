@@ -15,6 +15,9 @@ import sys
 
 def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
     """Bin x,y,z data
+    
+    Using numpy.histogram2d() does not provide any speed benefit but we
+    loose the possibility to track the number of missed tuples.
 
     Args:
         x, y, z: Carthesian coordinates
