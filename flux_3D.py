@@ -11,11 +11,12 @@
 #
 import numpy as np
 import sys
+import matplotlib.pyplot as plt
 
 
 def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
     """Bin x,y,z data
-    
+
     Using numpy.histogram2d() does not provide any speed benefit but we
     loose the possibility to track the number of missed tuples.
 
@@ -206,7 +207,6 @@ def plot_4D(flux, Limits, x, y, z):
     """
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm, colors
-    import matplotlib.pyplot as plt
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -238,6 +238,8 @@ def plot_4D(flux, Limits, x, y, z):
 if __name__ == '__main__':
     from argparse import ArgumentParser
 
+    supported = ','.join(plt.figure().canvas.get_supported_filetypes())
+
     parser = ArgumentParser(description='Plot data returned from "get_flux".')
     parser.add_argument('-z', '--nZ', metavar='N', type=int, default=10,
                         help='Number of intervals in z-direction')
@@ -257,6 +259,8 @@ if __name__ == '__main__':
     parser.add_argument('-P', '--Pfactor', metavar='P', type=float,
                         default=1.0,
                         help='Scaling factor for flux "P_factor"')
+    parser.add_argument('-o', '--output', metavar='FILE', type=str,
+                        help='Output to file. Supported formats: ' + supported)
 
     args = parser.parse_args()
 
@@ -280,4 +284,12 @@ if __name__ == '__main__':
     flux *= args.Pfactor
     plt = plot_4D(flux, args.Fluxlimits, x, y, z)
 
-    plt.show()
+    if args.output is None:
+        plt.show()
+    else:
+        try:
+            plt.savefig(args.output)
+        except ValueError:
+            print('Cannot save figure ({})'.format(args.output))
+            print('Supported formats: {}'.format(supported))
+            plt.show()
