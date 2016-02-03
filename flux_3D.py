@@ -16,7 +16,7 @@ import sys
 def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
     binned = np.zeros((nZ, nTheta + 1))
     for (X, Y, Z) in zip(x, y, z):
-        theta = np.pi + np.arctan2(Y, X)   # theta 0 ..2pi
+        theta = np.pi + np.arctan2(Y, X)   # theta 0..2pi to avoid negative j
         i = int(np.trunc((Z - H[0]) / dZ))
         j = int(np.trunc(theta / dTheta))
         # precautions for round off errors
