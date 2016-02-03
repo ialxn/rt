@@ -53,7 +53,7 @@ def bin_cone(n_z, H, n_theta, r):
     area = np.abs(R_xy * Dtheta * dl)
     binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta, H)
 
-    return binned
+    return binned, R_xy
 
 
 def bin_cylinder(n_z, H, n_theta):
@@ -70,9 +70,10 @@ def bin_cylinder(n_z, H, n_theta):
 
     Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
-    R = np.sqrt(x[0]**2 + y[0]**2)
+    r = np.sqrt(x[0]**2 + y[0]**2)
+    R = np.asarray([r for i in range(n_z)])
 
-    area = np.abs(np.asarray([ R * Dtheta * Dz for i in range(n_z) ]))
+    area = np.abs(R * Dtheta * Dz)
     binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R
@@ -114,41 +115,13 @@ def R2xy(R, theta):
     return x, y
 
 
-def grid_cone(nZ, H, nTheta, r):
-    z = np.linspace(H[0], H[1], nZ)
-    L = H[1] - H[0]
-    Dz = L / nZ
-    R = r[0] - r[1]
-    theta = np.linspace(0, 2 * np.pi, nTheta + 1)
-
-    radius = np.linspace(r[0] + Dz * R / (2 * L),
-                         r[0] + Dz * R / (2 * L) - nZ * Dz * R / L,
-                         nZ)
-    Ri = np.transpose(np.asarray([radius for i in range(nTheta + 1)]))
-
-    thetai, zi = np.meshgrid(theta, z)
-    xi, yi = R2xy(Ri, thetai)
-
-    return xi, yi, zi
-
-
-def grid_cylinder(R, nZ, H, nTheta):
-    z = np.linspace(H[0], H[1], nZ)
-    theta = np.linspace(0, 2 * np.pi, nTheta + 1)
-
-    (thetai, zi) = np.meshgrid(theta, z)
-    (xi, yi) = R2xy(R, thetai)
-
-    return xi, yi, zi
-
-
-def grid_sphere(R, nZ, H, nTheta):
+def grid(R, nZ, H, nTheta):
     z = np.linspace(H[0], H[1], nZ)
     theta = np.linspace(0, 2 * np.pi, nTheta + 1)
     Ri = np.transpose(np.asarray([R for i in range(nTheta + 1)]))
 
-    (thetai, zi) = np.meshgrid(theta, z)
-    (xi, yi) = R2xy(Ri, thetai)
+    thetai, zi = np.meshgrid(theta, z)
+    xi, yi = R2xy(Ri, thetai)
 
     return xi, yi, zi
 
@@ -222,7 +195,7 @@ if __name__ == '__main__':
 
     if args.type == 'cylinder': ###### CYLINDER ######
         (flux, R) = bin_cylinder(args.nZ, args.Zlimits, args.nTheta)
-        (x, y, z) = grid_cylinder(R, args.nZ, args.Zlimits, args.nTheta)
+        (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
 
     elif args.type == 'cone': ######## CONE ##########
         if args.rlimits is None:
@@ -230,12 +203,12 @@ if __name__ == '__main__':
                   file=sys.stderr)
             exit()
 
-        flux = bin_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
-        (x, y, z) = grid_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
+        (flux, R) = bin_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
+        (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
 
     elif args.type == 'sphere': ###### SPHERE ########
         (flux, R) = bin_sphere(args.nZ, args.Zlimits, args.nTheta)
-        (x, y, z) = grid_sphere(R, args.nZ, args.Zlimits, args.nTheta)
+        (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
 
     flux *= args.Pfactor
     plot_4D(flux, args.Fluxlimits, x, y, z)
