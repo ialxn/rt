@@ -13,11 +13,11 @@ import numpy as np
 import sys
 
 
-def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dTheta):
+def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
     binned = np.zeros((nZ, nTheta + 1))
     for (X, Y, Z) in zip(x, y, z):
         theta = np.pi + np.arctan2(Y, X)   # theta 0 ..2pi
-        i = int(np.trunc(Z / dZ))
+        i = int(np.trunc((Z - H[0]) / dZ))
         j = int(np.trunc(theta / dTheta))
         # precautions for round off errors
         if i >= nZ:
@@ -41,16 +41,17 @@ def bin_cone(n_z, H, n_theta, r):
     """
     (x, y, z) = np.loadtxt(sys.stdin, usecols=(0,1,2), unpack=True)
 
-    Dz = H[1] / n_z    # intervall in z direction
+    L = H[1] - H[0]
+    Dz = L / n_z    # intervall in z direction
     Dtheta = 2 * np.pi / (n_theta+1)
     R = r[0] - r[1]
-    dl = np.sqrt(H[1]**2 + R**2)   # length of line on surface of cone
-    R_xy = np.linspace(r[0] + Dz * R / (2 * H[1]),
-                       r[0] + Dz * R / (2 * H[1]) - n_z * Dz * R / H[1],
+    dl = np.sqrt(L**2 + R**2)   # length of line on surface of cone
+    R_xy = np.linspace(r[0] + Dz * R / (2 * L),
+                       r[0] + Dz * R / (2 * L) - n_z * Dz * R / L,
                        n_z)
 
     area = np.abs(R_xy * Dtheta * dl)
-    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
+    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned
 
@@ -67,12 +68,12 @@ def bin_cylinder(n_z, H, n_theta):
     """
     (x, y, z) = np.loadtxt(sys.stdin, usecols=(0,1,2), unpack=True)
 
-    Dz = H[1] / n_z
+    Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
     R = np.sqrt(x[0]**2 + y[0]**2)
 
     area = np.abs(np.asarray([ R * Dtheta * Dz for i in range(n_z) ]))
-    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
+    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R
 
@@ -88,16 +89,16 @@ def bin_sphere(n_z, H, n_theta):
     """
     (x, y, z) = np.loadtxt(sys.stdin, usecols=(0,1,2), unpack=True)
 
-    Dz = (H[1]-H[0]) / n_z
+    Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
     R = np.sqrt(x[0]**2 + y[0]**2 + z[0]**2)
-    h = np.linspace(H[0], H[0] + (n_z) * Dz, n_z + 1) / R
+    h = np.linspace(H[0], H[1], n_z + 1) / R
     phi1 = np.arccos(h[:n_z])
     Dphi = np.arccos(h[1:]) - phi1
     R_xy = R * np.sin(phi1)
 
     area = np.abs(R**2 * Dphi * Dtheta)
-    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta)
+    binned = bin(x, y, z, 1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R_xy
 
@@ -114,13 +115,14 @@ def R2xy(R, theta):
 
 
 def grid_cone(nZ, H, nTheta, r):
-    z = np.linspace(0, H[1], nZ)
-    Dz = H[1] / nZ
+    z = np.linspace(H[0], H[1], nZ)
+    L = H[1] - H[0]
+    Dz = L / nZ
     R = r[0] - r[1]
     theta = np.linspace(0, 2 * np.pi, nTheta + 1)
 
-    radius = np.linspace(r[0] + Dz * R / (2 * H[1]),
-                         r[0] + Dz * R / (2 * H[1]) - nZ * Dz * R / H[1],
+    radius = np.linspace(r[0] + Dz * R / (2 * L),
+                         r[0] + Dz * R / (2 * L) - nZ * Dz * R / L,
                          nZ)
     Ri = np.transpose(np.asarray([radius for i in range(nTheta + 1)]))
 
@@ -131,7 +133,7 @@ def grid_cone(nZ, H, nTheta, r):
 
 
 def grid_cylinder(R, nZ, H, nTheta):
-    z = np.linspace(0, H[1], nZ)
+    z = np.linspace(H[0], H[1], nZ)
     theta = np.linspace(0, 2 * np.pi, nTheta + 1)
 
     (thetai, zi) = np.meshgrid(theta, z)
