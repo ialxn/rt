@@ -160,7 +160,7 @@ def grid(R, nZ, H, nTheta):
         x, y, z: Carthesian coordinates on grid nz x ntheta+1)
     """
     z = np.linspace(H[0], H[1], nZ)
-    theta = np.linspace(0, 2 * np.pi, nTheta + 1)
+    theta = np.linspace(-np.pi, np.pi, nTheta + 1)
     Ri = np.transpose(np.asarray([R for i in range(nTheta + 1)]))
 
     thetai, zi = np.meshgrid(theta, z)
