@@ -34,16 +34,21 @@ def bin(df, P_per_area, nZ, nTheta, dZ, dTheta, H):
         binned (nZ * nTheta+1): binned flux data
     """
     binned = np.zeros((nZ, nTheta + 1))
-    for (X, Y, Z) in zip(x, y, z):
+    s = 0
+    for (X, Y, Z) in zip(df.x, df.y, df.z):
         theta = np.pi + np.arctan2(Y, X)   # theta 0..2pi to avoid negative j
         i = int(np.trunc((Z - H[0]) / dZ))
         j = int(np.trunc(theta / dTheta))
         # precautions for round off errors
         if i >= nZ:
-            i = i - 1
+            s += 1
+            continue
         if j > nTheta:
-            j = j - 1
+            s += 1
+            continue
         binned[i, j] += P_per_area[i]
+    # DataFrame size correct for header line
+    print("{0} of {1} tuples skipped.".format(s, df.x.size - 1))
 
     return binned
 
