@@ -14,6 +14,20 @@ import sys
 
 
 def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
+    """Bin x,y,z data
+
+    Args:
+        x, y, z: Carthesian coordinates
+        P_per_area: Flux density corresponding to one absorbed ray
+        nZ (int): Number of bins in z-direction
+        nTheta: Number of bins in Theta-direction
+        dZ: bin width in z-direction
+        dTheta: bin width in Theta direction
+        H: z_min, z_max
+
+    Returns:
+        binned (nZ * nTheta+1): binned flux data
+    """
     binned = np.zeros((nZ, nTheta + 1))
     for (X, Y, Z) in zip(x, y, z):
         theta = np.pi + np.arctan2(Y, X)   # theta 0..2pi to avoid negative j
@@ -30,14 +44,17 @@ def bin(x, y, z, P_per_area, nZ, nTheta, dZ, dThetai, H):
 
 
 def bin_cone(n_z, H, n_theta, r):
-    """
-    Read output of 'get_flux' from stdin.
-    Perform binning of the data on the grid 'n_z' by 'n_theta+1'.
+    """Bin flux data on cone
 
-        r: (radius_at_base,radius_at_top)
-        H: (0, height_of_cone)
+    Args:
+        n_z: Number of bins in z-direction
+        H: Minimum and Maximum z values
+        n_theta: number of bins in theta direction
+        r: Radius at base and at top of cone
 
-    return the binned data (flux density)
+    Returns:
+        binned: Binned flux data on a nZ * n_theta+1 grid
+        R_xy: Radius of cone as function of z-coordinate
     """
     (x, y, z) = np.loadtxt(sys.stdin, usecols=(0,1,2), unpack=True)
 
@@ -57,14 +74,16 @@ def bin_cone(n_z, H, n_theta, r):
 
 
 def bin_cylinder(n_z, H, n_theta):
-    """
-    Read output of 'get_flux' from stdin.
-    Perform binning of the data on the grid 'n_z' by 'n_theta+1'.
+    """Bin flux data on cylinder
 
-        H: (0, height_of_cylinder)
+    Args:
+        n_z: Number of bins in z-direction
+        H: Minimum and Maximum z values
+        n_theta: number of bins in theta direction
 
-    return the binned data (flux density) and
-    the scalar 'R' (radius of cylinder)
+    Returns:
+        binned: Binned flux data on a nZ * n_theta+1 grid
+        R: Radius of cylinder as function of z-coordinate
     """
     (x, y, z) = np.loadtxt(sys.stdin, usecols=(0,1,2), unpack=True)
 
@@ -105,9 +124,16 @@ def bin_sphere(n_z, H, n_theta):
 
 
 def R2xy(R, theta):
-    """
-    converts 'R', 'theta' to 'x','y'
-    'R' can be scalar or vector of the same size as axis0 of 'theta'
+    """Convert polar to carthesian coordinates
+
+    Args:
+        R: Radius
+        theta: Angle
+
+        Arguments can be scalars or vectors
+
+    Returns:
+        x, y: carthesian coordinates
     """
     x = R * np.sin(theta)
     y = R * np.cos(theta)
@@ -116,6 +142,20 @@ def R2xy(R, theta):
 
 
 def grid(R, nZ, H, nTheta):
+    """Calculate carthesian coordinates on grid (nZ * nTheta+1)
+
+    Calculates carthesian coordinates of rotationally symmetrical body
+    (rotated around z-axis) defined by R(z) between H[0] and H[1].
+
+    Args:
+        R (float[nZ]): Radius as function of z
+        nZ (int): Number of grid points in z direction
+        H (float,float): minimum and maximum z values
+        nTheta (int): Number of grid points in direction theta
+
+    Returns:
+        x, y, z: Carthesian coordinates on grid nz x ntheta+1)
+    """
     z = np.linspace(H[0], H[1], nZ)
     theta = np.linspace(0, 2 * np.pi, nTheta + 1)
     Ri = np.transpose(np.asarray([R for i in range(nTheta + 1)]))
@@ -127,6 +167,14 @@ def grid(R, nZ, H, nTheta):
 
 
 def axisEqual3D(ax):
+    """Sets aspect ratio between x,y,z to 1.0
+
+    Args:
+        ax: Axes instance
+
+    Returns:
+        None
+    """
     exts = np.array([getattr(ax, 'get_{}lim'.format(dim))() for dim in 'xyz'])
     sz = exts[:, 1] - exts[:, 0]
     centers = np.mean(exts, axis=1)
@@ -137,6 +185,22 @@ def axisEqual3D(ax):
 
 
 def plot_4D(flux, Limits, x, y, z):
+    """Plots flux distribution on 3D body
+
+    Plots (colored patches using Limits as minimum and maximum values) flux
+    distribution on body defined by the carthesian coordinates (x,y,z).
+    flux, x, y, z have to be on identical grid (nZ * nTheta+1). If Limits is
+    None autoscale is applied.
+
+    Args:
+        flux: flux values (on grid nZ * nTheta+1)
+        Limits (float,float): Minimum and maximum flux values to be used to
+                              set colorscale. If None autoscale is performed
+        x, y, z,: Carthesian coordinates (on grid nZ * nTheta+1)
+
+    Returns:
+        plt: Plot
+    """
     from mpl_toolkits.mplot3d import Axes3D
     from matplotlib import cm, colors
     import matplotlib.pyplot as plt
