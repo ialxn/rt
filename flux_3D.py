@@ -110,6 +110,38 @@ def bin_cylinder(n_z, H, n_theta):
     return binned, R
 
 
+def bin_paraboloid(n_z, H, n_theta, foc):
+    """Bin flux data on paraboloid
+
+    Args:
+        n_z: Number of bins in z-direction
+        H: Minimum and Maximum z values
+        n_theta: number of bins in theta direction
+        foc: focal length of paraboloid
+
+    Returns:
+        binned: Binned flux data on a nZ * n_theta+1 grid
+        R_xy: Radius of paraboloid as function of z-coordinate
+    """
+    df = pd.read_csv(sys.stdin, delimiter='\s+',
+                     header=None, names=['x','y','z'], usecols=(0,1,2))
+
+    Dz = (H[1] - H[0]) / n_z
+    Dtheta = 2 * np.pi / (n_theta + 1)
+
+    h = np.linspace(H[0], H[1], n_z + 1)
+    R_xy = np.sqrt(4 * foc * h[:n_z])
+
+    ap = 1.0 / (4 * foc)
+    A0 = np.sqrt(4 * h[:n_z] / ap + 1 / ap**2) * (1 + 4 * ap * h[:n_z])
+    A1 = np.sqrt(4 * h[1:] / ap + 1 / ap**2) * (1 + 4 * ap * h[1:])
+    area = np.pi / (6 * ap) * (A1 - A0) / n_theta
+
+    binned = bin(df, 1/area, n_z, n_theta, Dz, Dtheta, H)
+
+    return binned, R_xy
+
+
 def bin_sphere(n_z, H, n_theta):
     """
     Read output of 'get_flux' from stdin.
@@ -261,10 +293,13 @@ if __name__ == '__main__':
                         nargs=2,
                         help='Minimum and maximum of flux (for colorbar)')
     parser.add_argument('-t', '--type',
-                        choices=['cone', 'cylinder', 'sphere'], required=True,
+                        choices=['cone', 'cylinder', 'paraboloid', 'sphere'],
+                        required=True,
                         help='Type of body')
     parser.add_argument('-r', '--rlimits', metavar='R', nargs=2, type=float,
                         help='Minimum and maximum value of cone radius')
+    parser.add_argument('-f', '--foc', metavar='f', type=float,
+                        help='Focal length of paraboloid')
     parser.add_argument('-P', '--Pfactor', metavar='P', type=float,
                         default=1.0,
                         help='Scaling factor for flux "P_factor"')
@@ -282,8 +317,15 @@ if __name__ == '__main__':
             print("ERROR: please specify minimum and maximum of cone radius",
                   file=sys.stderr)
             exit()
-
         (flux, R) = bin_cone(args.nZ, args.Zlimits, args.nTheta, args.rlimits)
+        (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
+
+    elif args.type == 'paraboloid': ## PARABOLOID ####
+        if args.foc is None:
+            print("ERROR: please specify focal length of paraboloid",
+                  file=sys.stderr)
+            exit()
+        (flux, R) = bin_paraboloid(args.nZ, args.Zlimits, args.nTheta, args.foc)
         (x, y, z) = grid(R, args.nZ, args.Zlimits, args.nTheta)
 
     elif args.type == 'sphere': ###### SPHERE ########
