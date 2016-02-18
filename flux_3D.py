@@ -16,13 +16,12 @@ import matplotlib.pyplot as plt
 
 
 def bin(P_per_area, nZ, nTheta, dZ, dTheta, H):
-    """Bin x,y,z data in data frame df
+    """Bin x,y,z data
 
     Using numpy.histogram2d() does not provide any speed benefit but we
     loose the possibility to track the number of missed tuples.
 
     Args:
-        df: DataFrame holding carthesian coordinates
         P_per_area: Flux density corresponding to one absorbed ray
         nZ (int): Number of bins in z-direction
         nTheta: Number of bins in Theta-direction
@@ -33,25 +32,31 @@ def bin(P_per_area, nZ, nTheta, dZ, dTheta, H):
     Returns:
         binned (nZ * nTheta+1): binned flux data
     """
-    df = pd.read_csv(sys.stdin, delimiter='\s+',
-                     header=None, names=['x', 'y', 'z'], usecols=(0, 1, 2))
+    reader = pd.read_csv(sys.stdin, delimiter='\s+',
+                         header=None, names=['x', 'y', 'z'],
+                         usecols=(0, 1, 2),
+                         chunksize=10000)
 
     binned = np.zeros((nZ, nTheta + 1))
     s = 0
-    for (X, Y, Z) in zip(df.x, df.y, df.z):
-        theta = np.pi + np.arctan2(Y, X)   # theta 0..2pi to avoid negative j
-        i = int(np.trunc((Z - H[0]) / dZ))
-        j = int(np.trunc(theta / dTheta))
-        # precautions for round off errors
-        if i >= nZ:
-            s += 1
-            continue
-        if j > nTheta:
-            s += 1
-            continue
-        binned[i, j] += P_per_area[i]
-    # DataFrame size correct for header line
-    print("{0} of {1} tuples skipped.".format(s, df.x.size - 1))
+    size = 0
+    for batch in reader:
+        size += batch.x.size
+
+        for (X, Y, Z) in zip(batch.x, batch.y, batch.z):
+            theta = np.pi + np.arctan2(Y, X)   # theta 0..2pi to avoid negative j
+            i = int(np.trunc((Z - H[0]) / dZ))
+            j = int(np.trunc(theta / dTheta))
+            # precautions for round off errors
+            if i >= nZ:
+                s += 1
+                continue
+            if j > nTheta:
+                s += 1
+                continue
+            binned[i, j] += P_per_area[i]
+
+    print("{0} of {1} tuples skipped.".format(s, size))
 
     return binned
 
