@@ -15,7 +15,7 @@ import sys
 import matplotlib.pyplot as plt
 
 
-def bin(df, P_per_area, nZ, nTheta, dZ, dTheta, H):
+def bin(P_per_area, nZ, nTheta, dZ, dTheta, H):
     """Bin x,y,z data in data frame df
 
     Using numpy.histogram2d() does not provide any speed benefit but we
@@ -33,6 +33,9 @@ def bin(df, P_per_area, nZ, nTheta, dZ, dTheta, H):
     Returns:
         binned (nZ * nTheta+1): binned flux data
     """
+    df = pd.read_csv(sys.stdin, delimiter='\s+',
+                     header=None, names=['x', 'y', 'z'], usecols=(0, 1, 2))
+
     binned = np.zeros((nZ, nTheta + 1))
     s = 0
     for (X, Y, Z) in zip(df.x, df.y, df.z):
@@ -66,8 +69,6 @@ def bin_cone(n_z, H, n_theta, r):
         binned: Binned flux data on a nZ * n_theta+1 grid
         R_xy: Radius of cone as function of z-coordinate
     """
-    df = pd.read_csv(sys.stdin, delimiter='\s+',
-                     header=None, names=['x','y','z'], usecols=(0,1,2))
 
     L = H[1] - H[0]
     Dz = L / n_z    # intervall in z direction
@@ -79,7 +80,7 @@ def bin_cone(n_z, H, n_theta, r):
                        n_z)
 
     area = np.abs(R_xy * Dtheta * dl)
-    binned = bin(df, 1/area, n_z, n_theta, Dz, Dtheta, H)
+    binned = bin(1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R_xy
 
@@ -96,16 +97,17 @@ def bin_cylinder(n_z, H, n_theta):
         binned: Binned flux data on a nZ * n_theta+1 grid
         R: Radius of cylinder as function of z-coordinate
     """
-    df = pd.read_csv(sys.stdin, delimiter='\s+',
-                     header=None, names=['x','y','z'], usecols=(0,1,2))
+    l = sys.stdin.readline().strip().split()
+    x = float(l[0])
+    y = float(l[1])
+    r = np.sqrt(x**2 + y**2)
 
+    R = np.asarray([r for i in range(n_z)])
     Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
-    r = np.sqrt(df.x[0]**2 + df.y[0]**2)
-    R = np.asarray([r for i in range(n_z)])
-
     area = np.abs(R * Dtheta * Dz)
-    binned = bin(df, 1/area, n_z, n_theta, Dz, Dtheta, H)
+
+    binned = bin(1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R
 
@@ -123,9 +125,6 @@ def bin_paraboloid(n_z, H, n_theta, foc):
         binned: Binned flux data on a nZ * n_theta+1 grid
         R_xy: Radius of paraboloid as function of z-coordinate
     """
-    df = pd.read_csv(sys.stdin, delimiter='\s+',
-                     header=None, names=['x','y','z'], usecols=(0,1,2))
-
     Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
 
@@ -137,7 +136,7 @@ def bin_paraboloid(n_z, H, n_theta, foc):
     A1 = np.sqrt(4 * h[1:] / ap + 1 / ap**2) * (1 + 4 * ap * h[1:])
     area = np.pi / (6 * ap) * (A1 - A0) / n_theta
 
-    binned = bin(df, 1/area, n_z, n_theta, Dz, Dtheta, H)
+    binned = bin(1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R_xy
 
@@ -151,19 +150,21 @@ def bin_sphere(n_z, H, n_theta):
 
     return the binned data (flux density)
     """
-    df = pd.read_csv(sys.stdin, delimiter='\s+',
-                     header=None, names=['x','y','z'], usecols=(0,1,2))
+    l = sys.stdin.readline().strip().split()
+    x = float(l[0])
+    y = float(l[1])
+    z = float(l[2])
+    R = np.sqrt(x**2 + y**2 + z**2)
 
     Dz = (H[1] - H[0]) / n_z
     Dtheta = 2 * np.pi / (n_theta + 1)
-    R = np.sqrt(df.x[0]**2 + df.y[0]**2 + df.z[0]**2)
     h = np.linspace(H[0], H[1], n_z + 1) / R
     phi1 = np.arccos(h[:n_z])
     Dphi = np.arccos(h[1:]) - phi1
     R_xy = R * np.sin(phi1)
 
     area = np.abs(R**2 * Dphi * Dtheta)
-    binned = bin(df, 1/area, n_z, n_theta, Dz, Dtheta, H)
+    binned = bin(1/area, n_z, n_theta, Dz, Dtheta, H)
 
     return binned, R_xy
 
