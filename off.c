@@ -177,7 +177,7 @@ static void write_par_vertices(FILE * outf, const double s,
 
     for (i = 0; i < N_TRANS; i++) {
 	double l = z_min + i * delta_z;
-	double r = s * sqrt(4.0 * foc * l);
+	double r = s * sqrt(fabs(4.0 * foc * l));
 
 	write_ring_vertices(outf, l, r, origin, alpha, beta);
     }
@@ -907,6 +907,9 @@ static void output_targets(const config_t * cfg)
 
 	    config_setting_lookup_float(this_t, "z_min", &z_min);
 	    config_setting_lookup_float(this_t, "z_max", &z_max);
+
+	    if (z_max < z_min)	/* safety */
+		SWAP(z_max, z_min);
 
 	    config_setting_lookup_string(this_t, "reflecting_surface", &S);
 	    if (!strcmp(S, "inside"))
