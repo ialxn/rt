@@ -637,7 +637,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \end{list}
 
 \subsection{{\tt flux\_3D.py}}
-{\tt flux\_3D} outputs the distribution of the absorbed flux for non-planar targets (at present: {\tt cone}, {\tt cylinder}, and {\tt sphere}).
+{\tt flux\_3D}\footnote{Requires {\tt python3}, {\tt numpy}, {\tt pandas}, and {\tt matplotlib}} outputs the distribution of the absorbed flux for non-planar targets (at present: {\tt cone}, {\tt cylinder}, {\tt paraboloid}, and {\tt sphere}).
 
 {\bf Syntax:} {\tt flux\_3D.py} [options] {\tt <} input
 \vspace{1em}
@@ -651,8 +651,9 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 \item[{\tt [--nTheta|-a]}] Number of bins in $\Theta$ direction used [36].
 \item[{\tt [--Zlimits|-Z]}] {\tt z\_min} and {\tt z\_max} of body (same as in config file).
 \item[{\tt [--FLuxlimits|-F]}] Minimum and Maximum of flux scale.
-\item[{\tt [--type|-t]}] Type of body ['cone'$\mid$'cylinder'$\mid$'sphere'].
+\item[{\tt [--type|-t]}] Type of body ['cone'$\mid$'cylinder'$\mid$'paraboloid'$\mid$'sphere'].
 \item[{\tt [--rlimits|-r]}] Radius at base and at top of cone.
+\item[{\tt [--foc|-f}] Focal length of paraboloid.
 \item[{\tt [--Pfactor|-P]}] Scaling factor of flux values (from config file).
 \item[{\tt [--output|-o]}] Output to file. Format deduced from files extension.
 \item[{\tt [--help|-h]}] prints a help message.
