@@ -22,7 +22,9 @@
 
 
 void reflect_specular(ray_t * r, const double N[3], const double P[3],
-		      const gsl_rng * rng, void *model_params)
+		      const gsl_rng
+		      __attribute__ ((__unused__)) * rng, void
+		      __attribute__ ((__unused__)) * model_params)
 /*
  * return specularly reflected ray 'r'. surface normal of reflecting surface
  * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
@@ -41,12 +43,13 @@ void reflect_specular(ray_t * r, const double N[3], const double P[3],
 }
 
 void reflect_lambertian(ray_t * r, const double N[3], const double P[3],
-			const gsl_rng * rng, void *model_params)
- /*
-  * return diffusely reflected ray 'r'. surface normal of reflecting surface
-  * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
-  * origin or reflected ray will be 'P'.
-  */
+			const gsl_rng * rng, void
+			__attribute__ ((__unused__)) * model_params)
+    /*
+     * return diffusely reflected ray 'r'. surface normal of reflecting surface
+     * is 'N'. incoming ray has been determined before to intersect at 'P'. thus
+     * origin or reflected ray will be 'P'.
+     */
 {
     get_uniform_random_vector_hemisphere(r->dir, 1.0, N, rng);
     memcpy(r->orig, P, 3 * sizeof(double));

@@ -150,8 +150,12 @@ static void ssp_init_rays_remain(void *vstate)
 
 
 static int vtssp_init_state(void *vstate, config_setting_t * this_target,
-			    const int file_mode, const int keep_closed,
-			    const double P_factor)
+			    const int
+			    __attribute__ ((__unused__)) file_mode,
+			    const int
+			    __attribute__ ((__unused__)) keep_closed,
+			    const double
+			    __attribute__ ((__unused__)) P_factor)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;
 
@@ -217,7 +221,7 @@ static ray_t *vtssp_get_out_ray(void *vstate, ray_t * ray, double *hit,
     return ray;
 }
 
-static void vtssp_init_PTDT(void *vstate)
+static void vtssp_init_PTDT(void __attribute__ ((__unused__)) * vstate)
 {
     return;
 }

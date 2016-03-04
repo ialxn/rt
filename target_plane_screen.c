@@ -125,7 +125,8 @@ static double *ps_get_intercept(void *vstate, ray_t * ray)
 }
 
 static ray_t *ps_get_out_ray(void *vstate, ray_t * ray, double *hit,
-			     const gsl_rng * r)
+			     const gsl_rng
+			     __attribute__ ((__unused__)) * r)
 {
     ps_state_t *state = (ps_state_t *) vstate;
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
