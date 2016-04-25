@@ -47,7 +47,7 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
 
 	if ((n_float_items_read < idx_lambda + 1) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
-		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    "Incomplete data set read (%zu floats instead of %zu and %zu chars instead of 1)\n",
 		    n_float_items_read, idx_lambda + 1,
 		    n_uchar_items_read);
 	    return (ERR);
@@ -90,7 +90,7 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#   histogram definition\n");
     fprintf(f_out, "#      minimum x-value: %.0f\n", gsl_histogram_min(h));
     fprintf(f_out, "#      maximum x-value: %.0f\n", gsl_histogram_max(h));
-    fprintf(f_out, "#       number of bins: %d\n", gsl_histogram_bins(h));
+    fprintf(f_out, "#       number of bins: %zu\n", gsl_histogram_bins(h));
 
     fprintf(f_out, "#\n#   histogram statistics\n");
     fprintf(f_out, "#      number of data points not included: %d\n",
@@ -107,7 +107,7 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#        minimum y-value: %e\n",
 	    gsl_histogram_min_val(h));
     fprintf(f_out,
-	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    "#            at bin number (range): %zu (%.0f - %.0f)\n", i,
 	    min, max);
 
     i = gsl_histogram_max_bin(h);
@@ -115,7 +115,7 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#        maximum y-value: %e\n",
 	    gsl_histogram_max_val(h));
     fprintf(f_out,
-	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    "#            at bin number (range): %zu (%.0f - %.0f)\n", i,
 	    min, max);
 
     fprintf(f_out, "# mean y-value (+-sigma): %e (+-%e)\n",

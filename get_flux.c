@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
 	if ((n_float_items_read < idx_l) || !n_uchar_items_read) {	/* insufficient data read */
 	    fprintf(stderr,
-		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    "Incomplete data set read (%zu floats instead of %zu and %zu chars instead of 1)\n",
 		    n_float_items_read, idx_l, n_uchar_items_read);
 	    exit(EXIT_FAILURE);
 	}
