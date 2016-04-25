@@ -149,12 +149,9 @@ static void ssp_init_rays_remain(void *vstate)
 }
 
 
-static int vtssp_init_state(void *vstate, config_setting_t * this_target,
-			    const int
-			    __attribute__ ((__unused__)) file_mode,
-			    const int
-			    __attribute__ ((__unused__)) keep_closed,
-			    const double
+static int vtssp_init_state(void *vstate, config_setting_t * this_target, const int
+			    __attribute__ ((__unused__)) file_mode, const int
+			    __attribute__ ((__unused__)) keep_closed, const double
 			    __attribute__ ((__unused__)) P_factor)
 {
     vtssp_state_t *state = (vtssp_state_t *) vstate;

@@ -231,12 +231,9 @@ static void scylinder_init_rays_remain(void *vstate)
 
 
 static int vtscylinder_init_state(void *vstate,
-				  config_setting_t * this_target,
-				  const int
-				  __attribute__ ((__unused__)) file_mode,
-				  const int
-				  __attribute__ ((__unused__)) keep_closed,
-				  const double
+				  config_setting_t * this_target, const int
+				  __attribute__ ((__unused__)) file_mode, const int
+				  __attribute__ ((__unused__)) keep_closed, const double
 				  __attribute__ ((__unused__)) P_factor)
 {
     vtscylinder_state_t *state = (vtscylinder_state_t *) vstate;
