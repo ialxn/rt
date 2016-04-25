@@ -399,7 +399,7 @@ void read_transformation(FILE * f_in, double M[], double origin[])
 double *range(const double min, const double max, const size_t n)
 {
     size_t i;
-    const double width = (max - min) / n;
+    const double width = (max - min) / (double) n;
     double *r = (double *) malloc((n + 1) * sizeof(double));
 
     for (i = 1, r[0] = min; i <= n; i++)
