@@ -360,7 +360,7 @@ static void help(void)
 static int check_globals(config_t * cfg)
 {
     int status = NO_ERR;
-    int64_t i;
+    long long i;
     double p;
 
     if (config_lookup(cfg, "seed") == NULL) {
