@@ -129,9 +129,17 @@ int main(int argc, char **argv)
 
 
 	if ((n_float_items_read < idx_l) || !n_uchar_items_read) {	/* insufficient data read */
+#if __STDC_VERSION__ >= 199901L
 	    fprintf(stderr,
 		    "Incomplete data set read (%zu floats instead of %zu and %zu chars instead of 1)\n",
 		    n_float_items_read, idx_l, n_uchar_items_read);
+#else
+	    fprintf(stderr,
+		    "Incomplete data set read (%lu floats instead of %lu and %lu chars instead of 1)\n",
+		    (unsigned long) n_float_items_read,
+		    (unsigned long) idx_l,
+		    (unsigned long) n_uchar_items_read);
+#endif
 	    exit(EXIT_FAILURE);
 	}
 
