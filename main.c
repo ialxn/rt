@@ -50,7 +50,7 @@ static pthread_mutex_t mutex_print1 = PTHREAD_MUTEX_INITIALIZER;
 static int print1 = 0;
 
 static pthread_mutex_t mutex_print2 = PTHREAD_MUTEX_INITIALIZER;
-static int *print2;
+static source_t **print2;
 static int n_print2 = 0;
 
 static int n_threads = 1;	/* default single threaded */
@@ -106,7 +106,7 @@ static void print1_once(const char *rng_name)
 
 static void print2_once(source_t * current_source)
 {
-    int *p;
+    source_t **p;
     int n;
 
     pthread_mutex_lock(&mutex_print2);
@@ -114,7 +114,7 @@ static void print2_once(source_t * current_source)
     p = print2;
     n = 0;
     while (*p && n <= n_print2) {
-	if (*p == (int) current_source || n == n_print2) {
+	if (*p == current_source || n == n_print2) {
 	    /* current_source is already in array or end of array is reached */
 	    pthread_mutex_unlock(&mutex_print2);
 	    return;
@@ -132,7 +132,7 @@ static void print2_once(source_t * current_source)
 	    get_source_power(current_source));
     fflush(stdout);
 
-    *p = (int) current_source;	/* insert current_source into array */
+    *p = current_source;	/* insert current_source into array */
     pthread_mutex_unlock(&mutex_print2);
 }
 
@@ -591,7 +591,7 @@ int main(int argc, char **argv)
 	    }
 	}
 
-	print2 = (int *) calloc((size_t) n_sources, sizeof(int));
+	print2 = (source_t **) calloc((size_t) n_sources, sizeof(int));
 	n_print2 = n_sources - 1;
 
 	config_destroy(&cfg);
