@@ -46,10 +46,19 @@ static int read_hist(FILE * f_in, gsl_histogram * h, int *n_inc,
     while (n_float_items_read && n_uchar_items_read) {
 
 	if ((n_float_items_read < idx_lambda + 1) || !n_uchar_items_read) {	/* insufficient data read */
+
+#if __STDC_VERSION__ >= 199901L
 	    fprintf(stderr,
-		    "Incomplete data set read (%d floats instead of %d and %u chars instead of 1)\n",
+		    "Incomplete data set read (%zu floats instead of %zu and %zu chars instead of 1)\n",
 		    n_float_items_read, idx_lambda + 1,
 		    n_uchar_items_read);
+#else
+	    fprintf(stderr,
+		    "Incomplete data set read (%lu floats instead of %lu and %lu chars instead of 1)\n",
+		    (unsigned long) n_float_items_read,
+		    (unsigned long) idx_lambda + 1,
+		    (unsigned long) n_uchar_items_read);
+#endif
 	    return (ERR);
 	}
 
@@ -90,7 +99,12 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     fprintf(f_out, "#   histogram definition\n");
     fprintf(f_out, "#      minimum x-value: %.0f\n", gsl_histogram_min(h));
     fprintf(f_out, "#      maximum x-value: %.0f\n", gsl_histogram_max(h));
-    fprintf(f_out, "#       number of bins: %d\n", gsl_histogram_bins(h));
+#if __STDC_VERSION__ >= 199901L
+    fprintf(f_out, "#       number of bins: %zu\n", gsl_histogram_bins(h));
+#else
+    fprintf(f_out, "#       number of bins: %lu\n",
+	    (unsigned long) gsl_histogram_bins(h));
+#endif
 
     fprintf(f_out, "#\n#   histogram statistics\n");
     fprintf(f_out, "#      number of data points not included: %d\n",
@@ -106,17 +120,29 @@ static void output_hist(FILE * f_out, gsl_histogram * h, const int n_inc,
     gsl_histogram_get_range(h, i, &min, &max);
     fprintf(f_out, "#        minimum y-value: %e\n",
 	    gsl_histogram_min_val(h));
+#if __STDC_VERSION__ >= 199901L
     fprintf(f_out,
-	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    "#            at bin number (range): %zu (%.0f - %.0f)\n", i,
 	    min, max);
+#else
+    fprintf(f_out,
+	    "#            at bin number (range): %lu (%.0f - %.0f)\n",
+	    (unsigned long) i, min, max);
+#endif
 
     i = gsl_histogram_max_bin(h);
     gsl_histogram_get_range(h, i, &min, &max);
     fprintf(f_out, "#        maximum y-value: %e\n",
 	    gsl_histogram_max_val(h));
+#if __STDC_VERSION__ >= 199901L
     fprintf(f_out,
-	    "#            at bin number (range): %d (%.0f - %.0f)\n", i,
+	    "#            at bin number (range): %zu (%.0f - %.0f)\n", i,
 	    min, max);
+#else
+    fprintf(f_out,
+	    "#            at bin number (range): %lu (%.0f - %.0f)\n",
+	    (unsigned long) i, min, max);
+#endif
 
     fprintf(f_out, "# mean y-value (+-sigma): %e (+-%e)\n",
 	    gsl_histogram_mean(h), gsl_histogram_sigma(h));
