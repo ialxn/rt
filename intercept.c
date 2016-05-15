@@ -13,6 +13,7 @@
 #include <gsl/gsl_poly.h>
 
 #include "intercept.h"
+#include "likely.h"
 
 
 static int soln_in_range(const double s, const double min,
@@ -518,7 +519,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
 
     t1 = my_ddot(ray->dir, plane_normal);	/* l dot n */
 
-    if (fabs(t1) < GSL_SQRT_DBL_EPSILON)	/* line is parallel to target, no hit possible */
+    if (unlikely(fabs(t1) < GSL_SQRT_DBL_EPSILON))	/* line is parallel to target, no hit possible */
 	return NULL;
 
     if (t1 < 0.0)
@@ -529,7 +530,7 @@ double *intercept_plane(const ray_t * ray, const double *plane_normal,
     diff(t2, plane_point, ray->orig);	/* p_0 - l_0 */
     t3 = my_ddot(t2, plane_normal);	/* (p_0 - l_0) dot N */
 
-    if (fabs(t3) < GSL_SQRT_DBL_EPSILON)	/* line does start in target, conservative */
+    if (unlikely(fabs(t3) < GSL_SQRT_DBL_EPSILON))	/* line does start in target, conservative */
 	return NULL;
 
     /*
