@@ -591,7 +591,8 @@ int main(int argc, char **argv)
 	    }
 	}
 
-	print2 = (source_t **) calloc((size_t) n_sources, sizeof(int));
+	print2 =
+	    (source_t **) calloc((size_t) n_sources, sizeof(source_t *));
 	n_print2 = n_sources - 1;
 
 	config_destroy(&cfg);
