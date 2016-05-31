@@ -82,6 +82,7 @@ typedef struct target_t {
  */
 const target_type_t *target_annulus;
 const target_type_t *target_cone;
+const target_type_t *target_cpc;
 const target_type_t *target_cylinder;
 const target_type_t *target_disk;
 const target_type_t *target_ellipsoid;

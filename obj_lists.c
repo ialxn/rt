@@ -119,6 +119,10 @@ static void add_targets(target_list_t * t_list, config_t * cfg,
 	    new_target =
 		target_alloc(target_cone, this_target, file_mode,
 			     keep_closed, P_factor);
+	else if (!strcmp(type, "cpc"))
+	    new_target =
+		target_alloc(target_cpc, this_target, file_mode,
+			     keep_closed, P_factor);
 	else if (!strcmp(type, "cylinder"))
 	    new_target =
 		target_alloc(target_cylinder, this_target, file_mode,

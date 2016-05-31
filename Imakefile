@@ -21,6 +21,7 @@ SRCS= main.c \
       targets.c \
       target_annulus.c \
       target_cone.c \
+      target_cpc.c \
       target_cylinder.c \
       target_disk.c \
       target_ellipsoid.c \
@@ -49,6 +50,7 @@ OBJ= main.o \
      targets.o \
      target_annulus.o \
      target_cone.o \
+     target_cpc.o \
      target_cylinder.o \
      target_disk.o \
      target_ellipsoid.o \
