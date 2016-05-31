@@ -202,6 +202,37 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflecting_surface",
 				 i);
 	    } /* end 'cone' */
+	    else if (!strcmp(type, "cpc")) {
+		/*
+		 * cpc:
+		 * origin: center point of exit aperture
+		 *  - array 'origin' (center of exit aperture) [x,y,z] / double
+		 *  - array 'axis' (cpc axis / local z-axis) [x,y,z] / double
+		 *  - 'acceptance_angle' phi / double
+		 *  - 'truncation_angle' (smaller than phi) / double
+		 *  - 'exit_radius' / double
+		 *  - array 'x' (direction of local x-axis) [x,y,z] / double
+		 *  - string 'reflectivity' (file name of reflectivity spectrum)
+		 *  - string 'reflectivity_model' (name of reflectivity model)
+		 */
+		status += check_array("targets", this_t, "origin", i);
+		status += check_array("targets", this_t, "axis", i);
+		status +=
+		    check_float("targets", this_t, "acceptance_angle", i);
+		status +=
+		    check_float("targets", this_t, "truncation_angle", i);
+		status += check_float("targets", this_t, "exit_radius", i);
+		status += check_array("targets", this_t, "x", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity", i);
+		status += check_file("targets", this_t, "reflectivity", i);
+		status +=
+		    check_string("targets", this_t, "reflectivity_model",
+				 i);
+		status +=
+		    check_reflectivity_model("targets", this_t,
+					     "reflectivity_model", i);
+	    } /* end 'cpc' */
 	    else if (!strcmp(type, "cylinder")) {
 		/*
 		 * cylinder:
