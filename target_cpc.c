@@ -246,14 +246,14 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     r2 = residual(l2, (void *) &par);
 
 #ifdef DEBUG
-    printf("residual at start point 1: %e\n", r1);
-    printf("residual at start point 2: %e\n", r2);
+    fprintf(stderr, "residual at start point 1: %e\n", r1);
+    fprintf(stderr, "residual at start point 2: %e\n", r2);
 #endif
 
     if (r1 < 0) {
 
 #ifdef DEBUG
-	printf("* * * (a) this cannot happen, (p1 outside cpc) returning NULL\n");
+	fprintf(stderr, "* * * (a) this cannot happen, (p1 outside cpc) returning NULL\n");
 #endif
 
 	gsl_root_fsolver_free(s);
@@ -262,7 +262,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     if (r2 > 0) {
 
 #ifdef DEBUG
-	printf("* * * (b) this cannot happen, (p2 inside cpc) returning NULL\n");
+	fprintf(stderr, "* * * (b) this cannot happen, (p2 inside cpc) returning NULL\n");
 #endif
 
 	gsl_root_fsolver_free(s);
@@ -283,7 +283,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 	l2 = gsl_root_fsolver_x_upper(s);
 
 #ifdef DEBUG
-	printf("l1, l2, l_min: %e\t%e\t%e\n", l1, l2, l_min);
+	fprintf(stderr, "l1, l2, l_min: %e\t%e\t%e\n", l1, l2, l_min);
 #endif
 
 	status = gsl_root_test_interval(l1, l2, ABS_EPS_ROOT, REL_EPS_ROOT);
@@ -295,7 +295,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     r_min = residual(l_min, (void *) &par);
 
 #ifdef DEBUG
-    printf("number of iterations: %d, abs_error, residual: %e\t%e\n", iter,
+    fprintf(stderr, "number of iterations: %d, abs_error, residual: %e\t%e\n", iter,
 	   l2 - l1, r_min);
 #endif
 
@@ -306,7 +306,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
      * otherwise use l1 (x_lower)
      */
 #ifdef DEBUG
-    printf("r_min (%e) at l_min (%e) -> ", r_min, l_min);
+    fprintf(stderr, "r_min (%e) at l_min (%e) -> ", r_min, l_min);
 #endif
 
     intercept = (double *) malloc(3 * sizeof(double));
@@ -314,7 +314,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 	/* l_min is on inside */
 
 #ifdef DEBUG
-	printf("l_min is on inside\n(ok)\n");
+	fprintf(stderr, "l_min is on inside\n(ok)\n");
 #endif
 
 	a_plus_cb(intercept, p1, l_min, dir);
@@ -322,8 +322,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 	/* too far, use l1 */
 
 #ifdef DEBUG
-	printf("l_min is on outside\n");
-	printf("use l1 (%e): now r_min (%e)\n(ok)\n", l1,
+	fprintf(stderr, "l_min is on outside\n");
+	fprintf(stderr, "use l1 (%e): now r_min (%e)\n(ok)\n", l1,
 	       residual(l1, (void *) &par));
 #endif
 
@@ -459,7 +459,7 @@ static double *cpc_get_intercept(void *vstate, ray_t * ray)
 	/* do we intercept exit aperture too? */
 
 #ifdef DEBUG
-	printf("entering CPC by entrance aperture");
+	fprintf(stderr, "entering CPC by entrance aperture");
 #endif
 
 	far_intercept =
@@ -469,7 +469,7 @@ static double *cpc_get_intercept(void *vstate, ray_t * ray)
 	/* do we intercept entrance aperture too? */
 
 #ifdef DEBUG
-	printf("entering CPC by exit aperture");
+	fprintf(stderr, "entering CPC by exit aperture");
 #endif
 
 	far_intercept =
@@ -481,14 +481,14 @@ static double *cpc_get_intercept(void *vstate, ray_t * ray)
 	free(far_intercept);
 
 #ifdef DEBUG
-	printf(" ... and exiting again\n");
+	fprintf(stderr, " ... and exiting again\n");
 #endif
 
 	return NULL;
     }
 
 #ifdef DEBUG
-    printf("\n");
+    fprintf(stderr, "\n");
 #endif
 
     /*
@@ -565,7 +565,7 @@ static ray_t *cpc_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    free(ray);
 
 #ifdef DEBUG
-	    printf("absorbed in cpc\n");
+	    fprintf(stderr, "absorbed in cpc\n");
 #endif
 
 	    return NULL;
@@ -579,7 +579,7 @@ static ray_t *cpc_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	free(point);
 
 #ifdef DEBUG
-	printf("reflected in cpc\n");
+	fprintf(stderr, "reflected in cpc\n");
 #endif
 	/*
 	 * reflected ray originates at point but might now point in direction
@@ -605,7 +605,7 @@ static ray_t *cpc_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */
 
 #ifdef DEBUG
-	    printf("exits cpc\n");
+	    fprintf(stderr, "exits cpc\n");
 #endif
 
 	    return ray;
