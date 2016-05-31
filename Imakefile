@@ -2,6 +2,7 @@ GIT_VERSION := $(shell git describe --tag --abbrev=6 --dirty --always)
 GIT_VERSION_INFO := $(shell git log -1 --date=short --format=\"\(%ad\)\ released\ by\ \<%an\>\ %ae\")
 
 #CCOPTIONS= -g -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
+#CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\" -DDEBUG
 CCOPTIONS= -g -O0 -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums  -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
 #CCOPTIONS= -pg -pedantic -Wno-long-long -Wall -W -Wmissing-prototypes -Wstrict-prototypes -Wconversion -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -Wwrite-strings -fshort-enums -Wnested-externs -DRELEASE=\"$(GIT_VERSION)\" -DRELEASE_INFO=\"$(GIT_VERSION_INFO)\"
 
