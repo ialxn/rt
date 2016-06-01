@@ -37,7 +37,7 @@
 
 \section{Installation}
 
-To compile and install \rt you need a C-compiler\footnote{\rt is only tested with gcc} and, ideally, {\tt (I)make}. In addition, the following libraries are needed: {\tt GSL}\footnote{Gnu Scientific Library, \url{http://www.gnu.org/software/gsl/}}, a C-version of BLAS (Basic Linear Algebra System) such as {\tt gslcblas} or {\tt Atlas}\footnote{\url{http://math-atlas.sourceforge.net/}}, {\tt libconfig}\footnote{Version 1.4.6+, \url{http://www.hyperrealm.com/libconfig/}}, and {\tt libpthread}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably, you will make sure that {\tt -O2 -g} is set. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries.
+To compile and install \rt you need a C-compiler\footnote{\rt is only tested with gcc} and, ideally, {\tt (I)make}. In addition, the following libraries are needed: {\tt GSL}\footnote{Gnu Scientific Library, \url{http://www.gnu.org/software/gsl/}}, a C-version of BLAS (Basic Linear Algebra System) such as {\tt gslcblas} or {\tt Atlas}\footnote{\url{http://math-atlas.sourceforge.net/}}, {\tt libconfig}\footnote{Version 1.4.6+, \url{http://www.hyperrealm.com/libconfig/}}, and {\tt libpthread}. Please set (or modify) {\tt CCOPTIONS} in {\tt Imakefile}. Most probably, you will make sure that {\tt -O2 -g} is set. If you add {\tt -DDEBUG} to {\tt CCOPTIONS}, debug information is printed on {\tt stderr} for targets where the ray--target intercept cannot be found analytically. This is explicitly mentioned in the manual for all targets that fall into this category. Run {\tt xmkmf -a} to have {\tt imake} build a {\tt Makefile} from the {\tt Imakefile} provided. Run {\tt make} to compile and build the binaries.
 
 
 
@@ -462,6 +462,31 @@ The binary part of the output for screens consists of four single precision floa
 
 \vspace{0.25cm}
 Defines a reflecting cone of radius {\tt R} at its base and radius {\tt r} at height {\tt h}. The center of the base is at {\tt origin}. The orientation of the cone is define by its symmetry axis {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$.
+
+\subsubsection{(truncated) CPC}
+
+No analytical solution exists for ray--target intercept. If {\tt -DDEBUG} is set in {\tt CCOPTIONS} debug output is printed on {\tt stderr}.
+
+\noindent {\tt type="cpc";}
+
+\noindent {\tt origin=[X.x, Y.y, Z.z];}
+
+\noindent {\tt axis=[X.x, Y.y, Z.z];}
+
+\noindent {\tt acceptance\_angle=A.a;}
+
+\noindent {\tt truncation\_angle=T.t;}
+
+\noindent {\tt exit\_radius=R.r;}
+
+\noindent {\tt x=[X.x, Y.y, Z.z];}
+
+\noindent {\tt reflectivity="FILE\_NAME";}
+
+\noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
+
+\vspace{0.25cm}
+Defines a truncated CPC (compound parabolic concentrator) with an exit radius {\tt exit\_radius}. {\tt origin} defines the center of the exit aperture and the symmetry axis of the CPC is given by {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. {\tt acceptance\_angle} \footnote{degrees versus symmetry axis of CPC.} defines the maximum angle where ray entering the CPC still exit by the exit aperture. {\tt truncation\_angle}\footnote{degrees versus symmetry axis of CPC. Must be larger than{\tt acceptance\_angle}.}. The reflecting surface is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$. Note, that {\tt reflecting\_surface} is not needed for this target but that the user must ensure that no ray hits the CPC on its outside surface! Any ray that would be intercepted by the outside surface of the CPC passes through it.
 
 \subsubsection{Cylinder}
 

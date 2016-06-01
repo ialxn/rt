@@ -829,6 +829,37 @@ static void output_targets(const config_t * cfg)
 	    else
 		off_cone(name, O, Z, h, R, r, OUTSIDE);
 
+	} else if (!strcmp(type, "cpc")) {
+	    double O[3], X[3], Y[3], Z[3];
+	    double R, r;
+	    double phi_a, theta_t;
+	    double h;
+	    double foc2;
+
+	    read_vector(this_t, "origin", O);
+	    read_vector_normalize(this_t, "x", X);
+	    read_vector_normalize(this_t, "axis", Z);
+	    orthonormalize(X, Y, Z);
+
+	    off_axes(name, O, X, Y, Z);	/*local system */
+
+	    config_setting_lookup_float(this_t, "acceptance_angle",
+					&phi_a);
+	    phi_a *= M_PI / 180.0;
+	    config_setting_lookup_float(this_t, "truncation_angle",
+					&theta_t);
+	    theta_t *= M_PI / 180.0;
+	    config_setting_lookup_float(this_t, "exit_radius", &r);
+
+	    foc2 = 2.0 * r * (1.0 + sin(phi_a));
+	    R = foc2 * sin(theta_t) / (1 - cos(theta_t + phi_a)) - r;
+	    h = foc2 * cos(theta_t) / (1 - cos(theta_t + phi_a));
+
+	    /*
+	     * FIXME: use better surface such as paraboloid or ellipsoid
+	     */
+	    off_cone(name, O, Z, h, r, R, INSIDE);
+
 	} else if (!strcmp(type, "cylinder")) {
 	    double O[3], X[3], Y[3], Z[3];
 	    double r, l;
