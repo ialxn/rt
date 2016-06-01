@@ -1,0 +1,8 @@
+#
+# dummy spectrum
+#
+# wavelength [nm]	Intensity [A.U.]
+400	0.0
+1000	0.0
+1500	0.0
+2000	0.0
