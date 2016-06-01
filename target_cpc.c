@@ -252,7 +252,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     if (r1 < 0) {
 
 #ifdef DEBUG
-	fprintf(stderr, "* * * (a) this cannot happen, (p1 outside cpc) returning NULL\n");
+	fprintf(stderr,
+		"* * * (a) this cannot happen, (p1 outside cpc) returning NULL\n");
 #endif
 
 	gsl_root_fsolver_free(s);
@@ -261,7 +262,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     if (r2 > 0) {
 
 #ifdef DEBUG
-	fprintf(stderr, "* * * (b) this cannot happen, (p2 inside cpc) returning NULL\n");
+	fprintf(stderr,
+		"* * * (b) this cannot happen, (p2 inside cpc) returning NULL\n");
 #endif
 
 	gsl_root_fsolver_free(s);
@@ -285,7 +287,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 	fprintf(stderr, "l1, l2, l_min: %e\t%e\t%e\n", l1, l2, l_min);
 #endif
 
-	status = gsl_root_test_interval(l1, l2, ABS_EPS_ROOT, REL_EPS_ROOT);
+	status =
+	    gsl_root_test_interval(l1, l2, ABS_EPS_ROOT, REL_EPS_ROOT);
 	iter++;
 
     } while (status == GSL_CONTINUE && iter < max_iter);
@@ -294,8 +297,9 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     r_min = residual(l_min, (void *) &par);
 
 #ifdef DEBUG
-    fprintf(stderr, "number of iterations: %d, abs_error, residual: %e\t%e\n", iter,
-	   l2 - l1, r_min);
+    fprintf(stderr,
+	    "number of iterations: %d, abs_error, residual: %e\t%e\n",
+	    iter, l2 - l1, r_min);
 #endif
 
     /*
@@ -323,7 +327,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 #ifdef DEBUG
 	fprintf(stderr, "l_min is on outside\n");
 	fprintf(stderr, "use l1 (%e): now r_min (%e)\n(ok)\n", l1,
-	       residual(l1, (void *) &par));
+		residual(l1, (void *) &par));
 #endif
 
 	a_plus_cb(intercept, p1, l1, dir);
@@ -482,7 +486,6 @@ static double *cpc_get_intercept(void *vstate, ray_t * ray)
 
 	return NULL;
     }
-
 #ifdef DEBUG
     fprintf(stderr, "\n");
 #endif
