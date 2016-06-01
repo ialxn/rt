@@ -366,9 +366,6 @@ static int cpc_init_state(void *vstate, config_setting_t * this_target,
     state->f2 = 2.0 * state->r * (1.0 + sin(state->phi_a));
     state->Rt = r_cpc(state->theta_t, state);
     h = z_cpc(state->theta_t, state);
-    state->reflen =
-	sqrt(h * h + (state->Rt + state->r) * (state->Rt + state->r));
-
     state->M = init_M(this_target, "x", "axis");
     a_plus_cb(state->origin2, state->origin, h, &state->M[6]);
 
