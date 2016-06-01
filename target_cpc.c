@@ -35,7 +35,6 @@ typedef struct cpc_state_t {
     double r;			/* radius of exit aperture */
     double origin2[3];		/* center of entrance aperture */
     double f2;			/* 2* focal length of CPC */
-    double reflen;		/* sqrt((R+r)^2 + z_t^2) */
     double *M;
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
     refl_func_pointer_t refl_func;	/* reflection model */
@@ -194,7 +193,7 @@ static double residual(double l, void *params)
     phi_l = atan2(R + par->state->r, p_z);
     r_CPC = r_cpc(phi_l, par->state);
 
-    res = (r_CPC - R) / par->state->reflen;
+    res = (r_CPC - R);
 
     return res;
 }
