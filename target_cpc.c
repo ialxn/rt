@@ -543,6 +543,8 @@ static ray_t *cpc_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	     * sign change in the residual. these rays are counted
 	     * as lost.
 	     */
+	    fprintf(stderr,
+		    "INFO: ray discarded due to invalid solution in CPC\n");
 	    free(ray);
 	    return NULL;
 	}
