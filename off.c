@@ -834,7 +834,7 @@ static void output_targets(const config_t * cfg)
 	    double R, r;
 	    double phi_a, theta_t;
 	    double h;
-	    double foc2;
+	    double foc2, term;
 
 	    read_vector(this_t, "origin", O);
 	    read_vector_normalize(this_t, "x", X);
@@ -852,8 +852,10 @@ static void output_targets(const config_t * cfg)
 	    config_setting_lookup_float(this_t, "exit_radius", &r);
 
 	    foc2 = 2.0 * r * (1.0 + sin(phi_a));
-	    R = foc2 * sin(theta_t) / (1 - cos(theta_t + phi_a)) - r;
-	    h = foc2 * cos(theta_t) / (1 - cos(theta_t + phi_a));
+	    term = foc2 / (1 - cos(theta_t + phi_a));
+
+	    R = sin(theta_t) * term - r;
+	    h = cos(theta_t) * term;
 
 	    /*
 	     * FIXME: use better surface such as paraboloid or ellipsoid
