@@ -87,15 +87,6 @@ static inline double dr_dz(const double phi, cpc_state_t * state)
  *           = (cos(phi_a) - cos(phi - phi_a)) / (sin(phi_a) + sin(phi - phi_a))
  */
 {
-/*    double sin_phi, cos_phi;
-    const double term = phi - state->phi_a;
-    double sin_term, cos_term;
-
-    sincos(state->phi_a, &sin_phi, &cos_phi);
-    sincos(term, &sin_term, &cos_term);
-
-    return (cos_phi - cos_term) / (sin_phi + sin_term);
-*/
     const double tan_phi = tan(phi);
     const double term = phi + state->phi_a;
     double sin_term, cos_term;
