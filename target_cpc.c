@@ -204,7 +204,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
  *
  * we return the coordinates of the intercept but guarantee that the point
  * lies on the inside of the cpc (numerical error!) i.e there is no sign
- * change of the residula function.
+ * change of the residual function.
  */
     int status;
     int iter = 0, max_iter = MAX_ITER;
