@@ -262,7 +262,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	/*
 	 * rays can reflect off both faces of the window. if face1 is hit
 	 * the normal vector 'state->a' is parallel to 'ray->dir' and
-	 * anti.parallel if face2 is hit ('state->dir points from face1 to
+	 * anti-parallel if face2 is hit ('state->dir points from face1 to
 	 * face2). does not seem to matter for 'reflect()'.
 	 */
 	state->refl_func(ray, normal, hit, r, state->refl_func_pars);
