@@ -88,11 +88,12 @@ static void init_barriers(config_setting_t * this_s, double *barrier1,
     *barrier2 = (A_wall + A_base) / sum;
 }
 
-static void new_ray(ray_t * ray, const double Radius, const double radius,
-		    const double H, const double h, const double barrier1,
-		    const double barrier2, const double origin[3],
-		    const double tan2_a, const double *M,
-		    gsl_spline * spectrum, const gsl_rng * r)
+static void init_ray(ray_t * ray, const double Radius,
+		     const double radius, const double H, const double h,
+		     const double barrier1, const double barrier2,
+		     const double origin[3], const double tan2_a,
+		     const double *M, gsl_spline * spectrum,
+		     const gsl_rng * r)
 {
     double point[3];
     double normal[3];
@@ -151,7 +152,21 @@ static void new_ray(ray_t * ray, const double Radius, const double radius,
     l2g_rot(M, point, ray->dir);
 
     ray->lambda = gsl_spline_eval(spectrum, gsl_rng_uniform(r), NULL);
+}
 
+static ray_t *new_ray(const double Radius, const double radius,
+		      const double H, const double h,
+		      const double barrier1, const double barrier2,
+		      const double origin[3], const double tan2_a,
+		      const double *M, gsl_spline * spectrum,
+		      const gsl_rng * r)
+{
+    ray_t *ray = (ray_t *) malloc(sizeof(ray_t));
+
+    init_ray(ray, Radius, radius, H, h, barrier1, barrier2, origin,
+	     tan2_a, M, spectrum, r);
+    ray->n_refl = 0;
+    return ray;
 }
 
 
@@ -207,18 +222,14 @@ static ray_t *scone_emit_ray(void *vstate, const gsl_rng * r)
 	*rays_remain =
 	    per_thread_get_new_raygroup(&state->mutex_n_rays,
 					&state->n_rays);
-
     if (*rays_remain > 0) {	/* rays still available in group */
 
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
 
-	ray = (ray_t *) malloc(sizeof(ray_t));
-	new_ray(ray, state->R, state->r, state->H, state->h,
-		state->barrier1, state->barrier2, state->orig,
-		state->tan2_a, state->M, state->spectrum, r);
-
-	ray->n_refl = 0;
+	ray = new_ray(state->R, state->r, state->H, state->h,
+		      state->barrier1, state->barrier2, state->orig,
+		      state->tan2_a, state->M, state->spectrum, r);
     }
 
     return ray;
@@ -343,9 +354,9 @@ static ray_t *vtscone_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * ray is absorbed. we emit the same power from a random point on the
 	 * source but with the emissionspectrum of this source.
 	 */
-	new_ray(ray, state->R, state->r, state->H, state->h,
-		state->barrier1, state->barrier2, state->origin,
-		state->tan2_a, state->M, state->spectrum, r);
+	init_ray(ray, state->R, state->r, state->H, state->h,
+		 state->barrier1, state->barrier2, state->origin,
+		 state->tan2_a, state->M, state->spectrum, r);
     } else {			/* reflect 'ray' */
 	double normal[3];
 	double tmp[3];

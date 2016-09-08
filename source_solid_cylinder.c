@@ -82,10 +82,11 @@ static void init_barriers(config_setting_t * this_s, double *barrier1,
     *barrier2 = (A_wall + A_base) / sum;
 }
 
-static void new_ray(ray_t * ray, const double radius, const double length,
-		    const double barrier1, const double barrier2,
-		    const double origin[3], const double *M,
-		    gsl_spline * spectrum, const gsl_rng * r)
+static void init_ray(ray_t * ray, const double radius,
+		     const double length, const double barrier1,
+		     const double barrier2, const double origin[3],
+		     const double *M, gsl_spline * spectrum,
+		     const gsl_rng * r)
 {
     double point[3];
     double normal[3];
@@ -138,7 +139,19 @@ static void new_ray(ray_t * ray, const double radius, const double length,
     l2g_rot(M, point, ray->dir);
 
     ray->lambda = gsl_spline_eval(spectrum, gsl_rng_uniform(r), NULL);
+}
 
+static ray_t *new_ray(const double radius, const double length,
+		      const double barrier1, const double barrier2,
+		      const double origin[3], const double *M,
+		      gsl_spline * spectrum, const gsl_rng * r)
+{
+    ray_t *ray = (ray_t *) malloc(sizeof(ray_t));
+
+    init_ray(ray, radius, length, barrier1, barrier2, origin, M,
+	     spectrum, r);
+    ray->n_refl = 0;
+    return ray;
 }
 
 
@@ -194,12 +207,9 @@ static ray_t *scylinder_emit_ray(void *vstate, const gsl_rng * r)
 	(*rays_remain)--;
 	pthread_setspecific(state->rays_remain_key, rays_remain);
 
-	ray = (ray_t *) malloc(sizeof(ray_t));
-	new_ray(ray, state->radius, state->length, state->barrier1,
-		state->barrier2, state->orig, state->M, state->spectrum,
-		r);
-
-	ray->n_refl = 0;
+	ray = new_ray(state->radius, state->length, state->barrier1,
+		      state->barrier2, state->orig, state->M,
+		      state->spectrum, r);
     }
 
     return ray;
@@ -315,16 +325,15 @@ static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
 
     PTDT_t *data = pthread_getspecific(state->PTDT_key);
 
-
     if (gsl_rng_uniform(r) >
 	gsl_spline_eval(state->reflectivity, ray->lambda, NULL)) {
 	/*
 	 * ray is absorbed. we emit the same power from a random point on the
 	 * source but with the emissionspectrum of this source.
 	 */
-	new_ray(ray, state->radius, state->length, state->barrier1,
-		state->barrier2, state->origin, state->M, state->spectrum,
-		r);
+	init_ray(ray, state->radius, state->length, state->barrier1,
+		 state->barrier2, state->origin, state->M,
+		 state->spectrum, r);
     } else {			/* reflect 'ray' */
 	double normal[3];
 	double tmp[3];
