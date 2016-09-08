@@ -420,6 +420,8 @@ int get_idx(FILE * f_in, size_t * idx_lambda)
 	*idx_lambda = 3;
     } else if (strstr(line, "(cone)")) {
 	*idx_lambda = 4;
+    } else if (strstr(line, "(cpc)")) {
+	*idx_lambda = 4;
     } else if (strstr(line, "(cylinder)")) {
 	*idx_lambda = 4;
     } else if (strstr(line, "(disk)")) {
