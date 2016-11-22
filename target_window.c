@@ -8,6 +8,7 @@
  *
  */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 
@@ -49,7 +50,7 @@ static double R_fresnell(ray_t * ray, const double *normal,
     double R;
     double t1, t2;
 
-    const double cos_phi = my_ddot(ray->dir, normal);
+    const double cos_phi = cblas_ddot(3, ray->dir, 1, normal, 1);
     const double sin_sqr_phi = 1.0 - cos_phi * cos_phi;
     double a;
 
@@ -96,7 +97,7 @@ static int snell(ray_t * ray, const double *normal, const double n1,
     const double eta = n1 / n2;
     double c1, cs2;
 
-    c1 = my_ddot(ray->dir, normal);
+    c1 = cblas_ddot(3, ray->dir, 1, normal, 1);
     cs2 = 1.0 - eta * eta * (1.0 - c1 * c1);
 
     if (cs2 < 0.0)
@@ -185,7 +186,7 @@ static double *window_get_intercept(void *vstate, ray_t * ray)
      * face2 (center point is state->C + state->d*state->a), if
      * if state->a is anti-parallel to ray->dir
      */
-    if (my_ddot(&state->M[6], ray->dir) > 0)
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0)
 	intercept =
 	    intercept_disk(ray, state->C, state->M, state->r * state->r,
 			   &surf_hit);
@@ -246,7 +247,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
      * face2 (center point is state->C + state->d*state->a), if
      * if state->a is anti-parallel to ray->dir
      */
-    if (my_ddot(ray->dir, &state->M[6]) > 0) {
+    if (cblas_ddot(3, ray->dir, 1, &state->M[6], 1) > 0) {
 	origin_is_face1 = 1;
 	memcpy(center, state->C, 3 * sizeof(double));
 	memcpy(normal, &state->M[6], 3 * sizeof(double));

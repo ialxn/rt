@@ -13,7 +13,7 @@
 
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_spline.h>
-#include <gsl/gsl_cblas.h>
+#include <cblas.h>
 
 #include <libconfig.h>
 #include <pthread.h>

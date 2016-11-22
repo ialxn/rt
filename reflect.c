@@ -9,6 +9,7 @@
  */
 #define _GNU_SOURCE		/* for sincos() */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 #include <gsl/gsl_machine.h>
@@ -31,7 +32,7 @@ void reflect_specular(ray_t * r, const double N[3], const double P[3],
  * origin or reflected ray will be 'P'.
  */
 {
-    const double t = my_ddot(N, r->dir);	/* 'N' dot 'r' */
+    const double t = cblas_ddot(3, N, 1, r->dir, 1);	/* 'N' dot 'r' */
 
     my_daxpy(-2.0 * t, N, r->dir);	/* 'r' - 2 * 'N' dot 'r' * 'N' */
     memcpy(r->orig, P, 3 * sizeof(double));	/* update origin */
@@ -126,7 +127,7 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	reflect_specular(r, new_N, P, NULL, NULL);
 	--r->n_refl;		/* reflect_specular increases count */
 
-    } while (my_ddot(r->dir, N) < 0.0);	/* 'r' transmitted (not reflected) */
+    } while (cblas_ddot(3, r->dir, 1, N, 1) < 0.0);	/* 'r' transmitted (not reflected) */
 
     if (unlikely(r->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
 	fprintf(stderr,

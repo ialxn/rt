@@ -9,6 +9,7 @@
  */
 #define _GNU_SOURCE		/* for sincos() */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 #include <gsl/gsl_roots.h>
@@ -126,7 +127,7 @@ static void cpc_surf_normal(double const *p, cpc_state_t * state,
     double Pl[3], pz;
 
     diff(Pl, p, state->origin);
-    pz = my_ddot(Pl, &state->M[6]);
+    pz = cblas_ddot(3, Pl, 1, &state->M[6], 1);
 
     a_plus_cb(R, Pl, -pz, &state->M[6]);
     lenR = normalize(R);
@@ -177,7 +178,7 @@ static double residual(double l, void *params)
 
     a_plus_cb(p, par->p1, l, par->dir);
     diff(p_l, p, par->state->origin);
-    p_z = my_ddot(p_l, &par->state->M[6]);
+    p_z = cblas_ddot(3, p_l, 1, &par->state->M[6], 1);
     a_plus_cb(R_l, p_l, -p_z, &par->state->M[6]);
     R = normalize(R_l);
 
@@ -225,7 +226,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     l1 = 0;
 
     diff(P_ref, p1, state->origin);
-    a_plus_cb(R_ref, P_ref, -my_ddot(P_ref, &state->M[6]), &state->M[6]);
+    a_plus_cb(R_ref, P_ref, -cblas_ddot(3, P_ref, 1, &state->M[6], 1),
+	      &state->M[6]);
 
     par.p1 = p1;
     par.r1 = normalize(R_ref);
@@ -329,7 +331,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 static void determine_far_aperture(double **origin, double *radius,
 				   ray_t * ray, cpc_state_t * state)
 {
-    if (my_ddot(&state->M[6], ray->dir) > 0) {
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0) {
 	/* exit aperture hit. far aperture is entrance aperture */
 	*radius = state->Rt;
 	*origin = state->origin2;
@@ -422,7 +424,7 @@ static double *cpc_get_intercept(void *vstate, ray_t * ray)
      * entrance aperture: (center point is state->origin2), if state->M[6]
      * is anti-parallel to ray->dir
      */
-    if (my_ddot(&state->M[6], ray->dir) > 0) {
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0) {
 	aperture_hit = EXIT_APERTURE;
 
 	near_intercept =

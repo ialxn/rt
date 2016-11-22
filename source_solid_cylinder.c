@@ -10,6 +10,7 @@
 #define _ISOC99_SOURCE		/* because of llrint() */
 #define _GNU_SOURCE		/* for sincos() */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 
@@ -301,7 +302,7 @@ static double *vtscylinder_get_intercept(void *vstate, ray_t * ray)
     if (intercept)
 	free(intercept);
 
-    if (my_ddot(&state->M[6], ray->dir) > 0)
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0)
 	intercept =
 	    intercept_disk(ray, state->origin, state->M,
 			   state->radius * state->radius, &side);
@@ -360,7 +361,7 @@ static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
 	 */
 	normalize(tmp);
 
-	if (fabs(my_ddot(tmp, &state->M[6])) < GSL_SQRT_DBL_EPSILON) {	/* base */
+	if (fabs(cblas_ddot(3, tmp, 1, &state->M[6], 1)) < GSL_SQRT_DBL_EPSILON) {	/* base */
 
 	    normal[0] = -state->M[6];
 	    normal[1] = -state->M[7];
@@ -371,7 +372,7 @@ static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
 	    my_daxpy(-state->length, &state->M[6], tmp);
 	    normalize(tmp);
 
-	    if (fabs(my_ddot(tmp, &state->M[6])) < GSL_SQRT_DBL_EPSILON)	/* top */
+	    if (fabs(cblas_ddot(3, tmp, 1, &state->M[6], 1)) < GSL_SQRT_DBL_EPSILON)	/* top */
 		memcpy(normal, &state->M[6], 3 * sizeof(double));
 	    else		/* wall */
 		cyl_surf_normal(hit, state->origin, &state->M[6],

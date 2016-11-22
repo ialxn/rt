@@ -9,6 +9,7 @@
  */
 #define _GNU_SOURCE		/* for sincos() */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 
@@ -92,7 +93,7 @@ int orthonormalize(double x[3], double y[3], double z[3])
     cross_product(z, x, y);
     normalize(y);
 
-    if (my_ddot(x, z)) {	/* 'x' is not perpendicular to 'z' */
+    if (cblas_ddot(3, x, 1, z, 1)) {	/* 'x' is not perpendicular to 'z' */
 	cross_product(y, z, x);
 	status = ERR;
     }
@@ -114,11 +115,6 @@ inline void my_daxpy(const double a, const double x[3], double y[3])
     y[2] += a * x[2];
 }
 
-inline double my_ddot(const double a[3], const double b[3])
-{
-    return (a[0] * b[0] + a[1] * b[1] + a[2] * b[2]);
-}
-
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
@@ -130,9 +126,9 @@ void g2l(const double *mat, const double *origin, const double *g,
 
     diff(t, g, origin);
 
-    l[0] = my_ddot(t, &mat[0]);
-    l[1] = my_ddot(t, &mat[3]);
-    l[2] = my_ddot(t, &mat[6]);
+    l[0] = cblas_ddot(3, t, 1, &mat[0], 1);
+    l[1] = cblas_ddot(3, t, 1, &mat[3], 1);
+    l[2] = cblas_ddot(3, t, 1, &mat[6], 1);
 }
 
 void l2g(const double *mat, const double *origin, const double *l,
@@ -153,9 +149,9 @@ void g2l_rot(const double *mat, const double *g, double *l)
  *     l(x, y, z) = M (g(x, y, z))
  */
 {
-    l[0] = my_ddot(g, &mat[0]);
-    l[1] = my_ddot(g, &mat[3]);
-    l[2] = my_ddot(g, &mat[6]);
+    l[0] = cblas_ddot(3, g, 1, &mat[0], 1);
+    l[1] = cblas_ddot(3, g, 1, &mat[3], 1);
+    l[2] = cblas_ddot(3, g, 1, &mat[6], 1);
 }
 
 void l2g_rot(const double *mat, const double *l, double *g)
@@ -195,7 +191,7 @@ void get_uniform_random_vector_hemisphere(double *result,
 					  const gsl_rng * r)
 {
     get_uniform_random_vector(result, radius, r);
-    if (my_ddot(normal, result) < 0.0) {
+    if (cblas_ddot(3, normal, 1, result, 1) < 0.0) {
 	/*
 	 * 'normal' and 'result' point into opposite directions (are anti-
 	 * parallel). use inverted 'result'.

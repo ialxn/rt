@@ -10,6 +10,7 @@
 #define _ISOC99_SOURCE		/* because of llrint() */
 #define _GNU_SOURCE		/* for sincos() */
 
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 
@@ -324,7 +325,7 @@ static double *vtscone_get_intercept(void *vstate, ray_t * ray)
     if (intercept)		/* hit inside of cone, discard */
 	free(intercept);
 
-    if (my_ddot(&state->M[6], ray->dir) > 0)	/* hit base face possible */
+    if (cblas_ddot(3, &state->M[6], 1, ray->dir, 1) > 0)	/* hit base face possible */
 	intercept =
 	    intercept_disk(ray, state->origin, state->M,
 			   state->R * state->R, &side);
@@ -383,7 +384,7 @@ static ray_t *vtscone_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 */
 	normalize(tmp);
 
-	if (fabs(my_ddot(tmp, &state->M[6])) < GSL_SQRT_DBL_EPSILON) {	/* base */
+	if (fabs(cblas_ddot(3, tmp, 1, &state->M[6], 1)) < GSL_SQRT_DBL_EPSILON) {	/* base */
 
 	    normal[0] = -state->M[6];
 	    normal[1] = -state->M[7];
@@ -394,7 +395,7 @@ static ray_t *vtscone_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    my_daxpy(-state->h, &state->M[6], tmp);
 	    normalize(tmp);
 
-	    if (fabs(my_ddot(tmp, &state->M[6])) < GSL_SQRT_DBL_EPSILON)	/* top */
+	    if (fabs(cblas_ddot(3, tmp, 1, &state->M[6], 1)) < GSL_SQRT_DBL_EPSILON)	/* top */
 		memcpy(normal, &state->M[6], 3 * sizeof(double));
 	    else		/* wall */
 		cone_surf_normal(hit, state->tan2_a, state->H, normal);
