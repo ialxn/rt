@@ -137,7 +137,7 @@ static void cpc_surf_normal(double const *p, cpc_state_t * state,
 
     a_plus_cb(Nl, R, -drdz, &state->M[6]);
     normalize(Nl);
-    my_dscal(-1.0, Nl);		/* make point inwards */
+    cblas_dscal(3, -1.0, Nl, 1);	/* make point inwards */
 }
 
 typedef struct f_parameters_t {

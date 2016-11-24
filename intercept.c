@@ -157,7 +157,7 @@ void cyl_surf_normal(double *const intercept, const double *C,
     t = cblas_ddot(3, IC, 1, a, 1);
     a_plus_cb(normal, IC, -t, a);
 
-    my_dscal(1.0 / r, normal);
+    cblas_dscal(3, 1.0 / r, normal, 1);
 }
 
 void ell_surf_normal(const double *point, const double *axes,

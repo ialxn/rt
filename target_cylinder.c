@@ -151,7 +151,7 @@ static ray_t *cyl_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	cyl_surf_normal(hit, state->C, &state->M[6], state->r, N);
 
 	if (!(state->flags & OUTSIDE))
-	    my_dscal(-1.0, N);	/* make normal point inwards */
+	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
 	state->refl_func(ray, N, hit, r, state->refl_func_pars);
 

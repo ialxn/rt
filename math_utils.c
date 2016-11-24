@@ -101,13 +101,6 @@ int orthonormalize(double x[3], double y[3], double z[3])
     return status;
 }
 
-inline void my_dscal(const double c, double a[3])
-{
-    a[0] *= c;
-    a[1] *= c;
-    a[2] *= c;
-}
-
 inline void my_daxpy(const double a, const double x[3], double y[3])
 {
     y[0] += a * x[0];
