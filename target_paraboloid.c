@@ -7,7 +7,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  *
  */
-
+#include <cblas.h>
 #include <math.h>
 #include <string.h>
 

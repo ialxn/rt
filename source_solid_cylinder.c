@@ -369,7 +369,7 @@ static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
 
 	} else {
 	    diff(tmp, hit, state->origin);
-	    my_daxpy(-state->length, &state->M[6], tmp);
+	    cblas_daxpy(3, -state->length, &state->M[6], 1, tmp, 1);
 	    normalize(tmp);
 
 	    if (fabs(cblas_ddot(3, tmp, 1, &state->M[6], 1)) < GSL_SQRT_DBL_EPSILON)	/* top */

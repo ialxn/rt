@@ -101,13 +101,6 @@ int orthonormalize(double x[3], double y[3], double z[3])
     return status;
 }
 
-inline void my_daxpy(const double a, const double x[3], double y[3])
-{
-    y[0] += a * x[0];
-    y[1] += a * x[1];
-    y[2] += a * x[2];
-}
-
 void g2l(const double *mat, const double *origin, const double *g,
 	 double *l)
 /*
