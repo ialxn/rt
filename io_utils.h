@@ -27,6 +27,8 @@
 				   (x,y,z,lambda) */
 
 
+extern int is_present(const char *section, const config_setting_t * s,
+		      const char *name, const int nr);
 extern int check_array(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_string(const char *section, const config_setting_t * s,

@@ -16,7 +16,7 @@
 #include "io_utils.h"
 #include "math_utils.h"
 
-static int is_present(const char *section, const config_setting_t * s,
+int is_present(const char *section, const config_setting_t * s,
 		      const char *name, const int nr)
 {
 
