@@ -460,6 +460,8 @@ int check_targets(config_t * cfg)
 		 *  - string 'idx_refraction' (file name of dispersion curve)
 		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
+		const char *s;
+
 		status += check_array("targets", this_t, "C", i);
 		status += check_array("targets", this_t, "a", i);
 		status += check_float("targets", this_t, "d", i);
@@ -473,8 +475,17 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_file("targets", this_t, "idx_refraction", i);
 		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
+		    is_present("targets", this_t, "reflectivity_model", i);
+		/*
+		 * check that reflectivity model is 'specular'
+		 */
+		status +=
+		    check_return_string("targets", this_t,
+					"reflectivity_model", i, &s);
+		if (strcmp(s, "specular"))
+		    fprintf(stderr,
+			    "unsupported reflectivity model '%s' found in targets section %d\n",
+			    s, i + 1);
 	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */

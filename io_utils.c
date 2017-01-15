@@ -17,7 +17,7 @@
 #include "math_utils.h"
 
 int is_present(const char *section, const config_setting_t * s,
-		      const char *name, const int nr)
+	       const char *name, const int nr)
 {
 
     if (!config_setting_get_member(s, name)) {
