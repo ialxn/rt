@@ -657,16 +657,10 @@ refl_model_t *init_refl_model(config_setting_t * s)
     for (i = 0; i < models->n_models - 1; i++) {
 	int j;
 
-	for (j = i + 1; j < models->n_models; j++) {
+	for (j = i + 1; j < models->n_models; j++)
+	    if (models->defn[j]->threshold > models->defn[i]->threshold)
+		SWAP(models->defn[j], models->defn[i]);
 
-	    if (models->defn[j]->threshold > models->defn[i]->threshold) {
-		model_def_t *tmp;
-
-		tmp = models->defn[j];
-		models->defn[j] = models->defn[i];
-		models->defn[i] = tmp;
-	    }
-	}
     }
     /*
      * convert interval lengths into (upper) boundaries
