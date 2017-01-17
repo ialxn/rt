@@ -136,9 +136,9 @@ int check_int(const char *section, const config_setting_t * s,
     return status;
 }
 
-int check_reflectivity_model(const char *section,
-			     const config_setting_t * s, const char *name,
-			     const int nr)
+static int check_basic_reflectivity_model(const char *section,
+					  const config_setting_t * s,
+					  const char *name, const int nr)
 {
     int status = ERR;
     const char *S;
@@ -160,16 +160,40 @@ int check_reflectivity_model(const char *section,
 		status = ERR;
 	    } else
 		status = NO_ERR;
-
 	} else {
 	    fprintf(stderr,
 		    "unknow reflectivity model '%s' found in '%s' section %d\n",
 		    S, section, nr + 1);
 	    status = ERR;
-
 	}
     }
 
+    return status;
+}
+
+int check_reflectivity_model(const char *section, config_setting_t * s,
+			     const char *name, const int nr)
+{
+    int status = NO_ERR;
+    const char *S;
+
+    config_setting_t *refl_model = config_setting_lookup(s, name);
+
+    if (config_setting_is_scalar(refl_model) == CONFIG_TRUE)
+	status = check_basic_reflectivity_model(section, s, name, nr);
+    else {
+	int i;
+	const int n = config_setting_length(refl_model);
+
+	for (i = 0; i < n; ++i) {
+	    config_setting_t *this_s =
+		config_setting_get_elem(refl_model, (unsigned int) i);
+
+	    status +=
+		check_basic_reflectivity_model(section, this_s, name, nr);
+	    status += check_float(section, this_s, "weight", i);
+	}
+    }
     return status;
 }
 
