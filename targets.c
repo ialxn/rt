@@ -634,13 +634,12 @@ refl_model_t *init_refl_model(config_setting_t * s)
 				    sizeof(model_def_t *));
 
 	for (i = 0; i < models->n_models; ++i) {
-	    double w;
 	    config_setting_t *this_s =
 		config_setting_get_elem(refl_model_list, (unsigned int) i);
 
 	    models->defn[i] = init_specific_model(this_s);
-	    config_setting_lookup_float(this_s, "weight", &w);
-	    models->defn[i]->threshold = w;
+	    config_setting_lookup_float(this_s, "weight",
+					&models->defn[i]->threshold);
 	}
     }
 
