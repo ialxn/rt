@@ -27,8 +27,7 @@ typedef struct par_state_t {
     double z_min, z_max;	/* range of valid values of 'z' in local system */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection models */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -68,8 +67,7 @@ static int par_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     init_spectrum(this_target, "reflectivity", &state->refl_spectrum);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     state->flags |= init_reflecting_surface(this_target);
 
@@ -84,8 +82,7 @@ static void par_free_state(void *vstate)
     par_state_t *state = (par_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_func,
-	       state->refl_func_pars);
+	       state->refl_spectrum, state->refl_model);
 }
 
 static double *par_get_intercept(void *vstate, ray_t * ray)
@@ -166,7 +163,7 @@ static ray_t *par_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	if (!(state->flags & OUTSIDE))
 	    cblas_dscal(3, -1.0, N, 1);	/* make normal point inwards */
 
-	state->refl_func(ray, N, hit, r, state->refl_func_pars);
+	reflect_ray(ray, N, hit, r, state->refl_model);
 
 	if (data->flag & ICPT_ON_CONVEX_SIDE) {
 	    data->flag |= LAST_WAS_HIT;	/* mark as hit */

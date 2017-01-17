@@ -486,6 +486,10 @@ int check_targets(config_t * cfg)
 		    fprintf(stderr,
 			    "unsupported reflectivity model '%s' found in targets section %d\n",
 			    s, i + 1);
+		else
+		    status +=
+			check_reflectivity_model("targets", this_t,
+						 "reflectivity_model", i);
 	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */
@@ -582,30 +586,97 @@ void init_spectrum(config_setting_t * this_target, const char *kw,
     free(values);
 }
 
-void init_refl_model(const config_setting_t * s,
-		     refl_func_pointer_t * refl_func,
-		     void **refl_func_pars)
+static model_def_t *init_specific_model(const config_setting_t * s)
 {
     const char *S;
+    model_def_t *this_model = (model_def_t *) malloc(sizeof(model_def_t));
 
     config_setting_lookup_string(s, "reflectivity_model", &S);
 
     if (!strcmp(S, "specular")) {
-	*refl_func = (refl_func_pointer_t) reflect_specular;
-	refl_func_pars = NULL;
+	this_model->f = (refl_func_t) reflect_specular;
+	this_model->par = NULL;
     } else if (!strcmp(S, "lambertian")) {
-	*refl_func = (refl_func_pointer_t) reflect_lambertian;
-	refl_func_pars = NULL;
+	this_model->f = (refl_func_t) reflect_lambertian;
+	this_model->par = NULL;
     } else if (!strcmp(S, "microfacet_gaussian")) {
-	double *number;
+	double *number = (double *) malloc(sizeof(double));
 
-	*refl_func = (refl_func_pointer_t) reflect_microfacet_gaussian;
-	number = (double *) malloc(sizeof(double));
+	this_model->f = (refl_func_t) reflect_microfacet_gaussian;
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
 				    number);
 	*number /= (180.0 * M_PI);	/* degree to radian */
-	*refl_func_pars = number;
+	this_model->par = number;
     }
+
+    return this_model;
+}
+
+refl_model_t *init_refl_model(config_setting_t * s)
+{
+    int i;
+    double sum_threshold = 0.0;
+    config_setting_t *refl_model_list;
+    refl_model_t *models = (refl_model_t *) malloc(sizeof(refl_model_t));
+
+    refl_model_list = config_setting_lookup(s, "reflectivity_model");
+    models->n_models = config_setting_length(refl_model_list);
+
+    if (models->n_models == 0) {
+	/* no list specified, just one specific model */
+	models->n_models = 1;
+	models->defn = (model_def_t **) malloc(sizeof(model_def_t *));
+
+	models->defn[0] = init_specific_model(s);
+	models->defn[0]->threshold = 1.0;
+    } else {			/* iterate list */
+	models->defn =
+	    (model_def_t **) malloc((size_t) models->n_models *
+				    sizeof(model_def_t *));
+
+	for (i = 0; i < models->n_models; ++i) {
+	    double w;
+	    config_setting_t *this_s =
+		config_setting_get_elem(refl_model_list, (unsigned int) i);
+
+	    models->defn[i] = init_specific_model(this_s);
+	    config_setting_lookup_float(this_s, "weight", &w);
+	    models->defn[i]->threshold = w;
+	}
+    }
+
+    /*
+     * normalize threshold to ensure that they cover interval [0-1)
+     */
+    for (i = 0; i < models->n_models; i++)
+	sum_threshold += models->defn[i]->threshold;
+    for (i = 0; i < models->n_models; i++)
+	models->defn[i]->threshold /= sum_threshold;
+    /*
+     * sort intervals (large first) to quickly select correct model
+     * in reflect_ray()
+     */
+    for (i = 0; i < models->n_models - 1; i++) {
+	int j;
+
+	for (j = i + 1; j < models->n_models; j++) {
+
+	    if (models->defn[j]->threshold > models->defn[i]->threshold) {
+		model_def_t *tmp;
+
+		tmp = models->defn[j];
+		models->defn[j] = models->defn[i];
+		models->defn[i] = tmp;
+	    }
+	}
+    }
+    /*
+     * convert interval lengths into (upper) boundaries
+     */
+    for (i = 1; i < models->n_models; i++)
+	models->defn[i]->threshold += models->defn[i - 1]->threshold;
+
+    return models;
 }
 
 int init_reflecting_surface(config_setting_t * this_target)
@@ -618,7 +689,6 @@ int init_reflecting_surface(config_setting_t * this_target)
     else
 	return OUTSIDE;
 }
-
 
 double *init_M(config_setting_t * this_target, const char *x,
 	       const char *z)
@@ -682,8 +752,10 @@ void per_thread_flush(union fh_t output, const int flags,
 }
 
 void state_free(union fh_t output, int flags, double *M,
-		gsl_spline * s, refl_func_pointer_t refl_func, void *p)
+		gsl_spline * s, refl_model_t * list)
 {
+    int i;
+
     if (flags & OUTPUT_REQUIRED) {
 	if (flags & KEEP_CLOSED)
 	    free(output.fname);
@@ -696,12 +768,18 @@ void state_free(union fh_t output, int flags, double *M,
     if (s)
 	gsl_spline_free(s);
 
-    /*
-     * free's model specific parameters
-     */
-    if (refl_func == reflect_microfacet_gaussian)
-	free((double *) p);
+    if (list) {
 
+	for (i = 0; i < list->n_models; ++i) {
+	    if (list->defn[i]->f == reflect_microfacet_gaussian) {
+		free(list->defn[i]->par);
+	    }
+	    free(list->defn[i]);
+	}
+
+	free(list->defn);
+	free(list);
+    }
 }
 
 #define WRITE_UCHAR(VAR,BUF_PTR,BUF_IDX) do { \

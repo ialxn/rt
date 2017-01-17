@@ -52,8 +52,7 @@ typedef struct vtscylinder_state_t {
     double M[9];		/* convert local <-> global coordinates */
     gsl_spline *spectrum;	/* interpolated emission spectrum */
     gsl_spline *reflectivity;	/* interpolated reflectivity spectrum */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection model */
     pthread_key_t PTDT_key;	/* access to per thread flags */
 } vtscylinder_state_t;
 
@@ -261,8 +260,7 @@ static int vtscylinder_init_state(void *vstate,
     init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
     init_spectrum(this_target, "reflectivity", &state->reflectivity);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 
@@ -276,8 +274,7 @@ static void vtscylinder_free_state(void *vstate)
     gsl_spline_free(state->spectrum);
     gsl_spline_free(state->reflectivity);
 
-    if (state->refl_func == reflect_microfacet_gaussian)
-	free((double *) state->refl_func_pars);
+    free(state->refl_model);
 }
 
 static double *vtscylinder_get_intercept(void *vstate, ray_t * ray)
@@ -378,7 +375,7 @@ static ray_t *vtscylinder_get_out_ray(void *vstate, ray_t * ray,
 		cyl_surf_normal(hit, state->origin, &state->M[6],
 				state->radius, normal);
 	}
-	state->refl_func(ray, normal, hit, r, state->refl_func_pars);
+	reflect_ray(ray, normal, hit, r, state->refl_model);
     }
 
     if (unlikely(ray->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */
