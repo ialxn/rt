@@ -600,13 +600,12 @@ static model_def_t *init_specific_model(const config_setting_t * s)
 	this_model->f = (refl_func_t) reflect_lambertian;
 	this_model->par = NULL;
     } else if (!strcmp(S, "microfacet_gaussian")) {
-	double *number = (double *) malloc(sizeof(double));
-
 	this_model->f = (refl_func_t) reflect_microfacet_gaussian;
+
+	this_model->par = (double *) malloc(sizeof(double));
 	config_setting_lookup_float(s, "microfacet_gaussian_sigma",
-				    number);
-	*number /= (180.0 * M_PI);	/* degree to radian */
-	this_model->par = number;
+				    (double *) this_model->par);
+	*(double *) this_model->par /= (180.0 * M_PI);
     }
 
     return this_model;
