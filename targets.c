@@ -614,7 +614,7 @@ static model_def_t *init_specific_model(const config_setting_t * s)
 refl_model_t *init_refl_model(config_setting_t * s)
 {
     int i;
-    double sum_threshold = 0.0;
+    double sum_threshold;
     config_setting_t *refl_model_list;
     refl_model_t *models = (refl_model_t *) malloc(sizeof(refl_model_t));
 
@@ -646,7 +646,7 @@ refl_model_t *init_refl_model(config_setting_t * s)
     /*
      * normalize threshold to ensure that they cover interval [0-1)
      */
-    for (i = 0; i < models->n_models; i++)
+    for (i = 0, sum_threshold = 0.0; i < models->n_models; i++)
 	sum_threshold += models->defn[i]->threshold;
     for (i = 0; i < models->n_models; i++)
 	models->defn[i]->threshold /= sum_threshold;
