@@ -125,7 +125,7 @@ All sources define the keywords {\tt origin} (doubles), {\tt power} (double), an
 
 \subsection{Transparent (non-interacting) Sources}
 
-Rays that intercect these sources pass through them without being changed in any way.
+Rays that intercept these sources pass through them without being changed in any way.
 
 \subsubsection{Arc}
 
@@ -231,7 +231,7 @@ Solid sources must have their reflectivity spectrum ({\tt reflectivity="FILE\_NA
 
 
 \vspace{0.25cm}
-Defines a solid cone of height {\tt h} with its axis defined by {\tt z}. The center of its base face with radius {\tt R} is located at {\tt origin}. The radius of the top face is {\tt r}. Depending on the settings for {\tt base\_face\_emits} and {\tt base\_face\_emits}, rays start at a random position on the conical wall only or also on one or two of its covering faces. Both, origin and direction of the rays are uniformly distributed. Faces that do not emit may be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
+Defines a solid cone of height {\tt h} with its axis defined by {\tt z}. The center of its base face with radius {\tt R} is located at {\tt origin}. The radius of the top face is {\tt r}. Depending on the settings for {\tt base\_face\_emits} and {\tt top\_face\_emits}, rays start at a random position on the conical wall only or also on one or two of its covering faces. Both, origin and direction of the rays are uniformly distributed. Faces that do not emit should be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
 
 \subsubsection{Solid Cylinder}
 
@@ -257,7 +257,7 @@ Defines a solid cone of height {\tt h} with its axis defined by {\tt z}. The cen
 
 
 \vspace{0.25cm}
-Defines a solid cylinder of radius {\tt radius} and length {\tt length} with the center of its base face located at {\tt origin}. Depending on settings for {\tt base\_face\_emits} and {\tt base\_face\_emits}, rays start at a random position on the cylinder wall only or also on one or two of its covering faces. Both, origin and direction of the ray are uniformly distributed. Faces that do not emit should be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
+Defines a solid cylinder of radius {\tt radius} and length {\tt length} with the center of its base face located at {\tt origin}. Depending on settings for {\tt base\_face\_emits} and {\tt top\_face\_emits}, rays start at a random position on the cylinder wall only or also on one or two of its covering faces. Both, origin and direction of the ray are uniformly distributed. Faces that do not emit should be covered\footnote{Use a tiny offset} by a separate target of type disk with properly chosen optical properties to account for rays intercepted by the non-emitting surface(s).
 
 \subsubsection{Solid Sphere}
 
@@ -324,7 +324,7 @@ Defines a transparent and non-absorbing infinite plane. The plane is defined by 
 
 \subsection{Planar targets}
 
-The binary part of the output for screens consists of three single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, power, $n_{\mathrm{refl}}$ with $x$ and $y$ given in the local system i.e.\ $z$ is always zero and not logged.
+The binary part of the output for screens consists of three single precision floats and one unsigned character per registered ray. The data represents $x, y, \lambda$, $n_{\mathrm{refl}}$ with $x$ and $y$ given in the local system i.e.\ $z$ is always zero and not logged.
 
 
 \subsubsection{Annulus}
@@ -438,7 +438,7 @@ Defines a transparent, round window of radius {\tt r} and thickness {\tt d}. The
 
 \subsection{Non-planar targets}
 
-The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, and $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{can be {\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
+The binary part of the output for screens consists of four single precision floats and one unsigned character per registered ray. The data represents $x, y, z, \lambda$, and $n_{\mathrm{refl}}$ with $x, y,$ and $z$ given in the local system. All non-planar targets have to have the keyword {\tt reflecting\_surface}\footnote{{\tt INSIDE} (concave side) or {\tt OUTSIDE} (convex side)} defined to identifiy the reflecting surface.
 
 \subsubsection{Cone}
 
@@ -460,14 +460,12 @@ The binary part of the output for screens consists of four single precision floa
 
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflecting\_surface=["inside"|"outside"];}
 
 \vspace{0.25cm}
 Defines a reflecting cone of radius {\tt R} at its base and radius {\tt r} at height {\tt h}. The center of the base is at {\tt origin}. The orientation of the cone is define by its symmetry axis {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$.
 
 \subsubsection{(truncated) CPC}
-
-No analytical solution exists for ray--target intercept. If {\tt -DDEBUG} is set in {\tt CCOPTIONS} debug output is printed on {\tt stderr}.
 
 \noindent {\tt type="cpc";}
 
@@ -488,7 +486,10 @@ No analytical solution exists for ray--target intercept. If {\tt -DDEBUG} is set
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
 \vspace{0.25cm}
-Defines a truncated CPC (compound parabolic concentrator) with an exit radius {\tt exit\_radius}. {\tt origin} defines the center of the exit aperture and the symmetry axis of the CPC is given by {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. {\tt acceptance\_angle} \footnote{degrees versus symmetry axis of CPC.} defines the maximum angle where ray entering the CPC still exit by the exit aperture. {\tt truncation\_angle}\footnote{degrees versus symmetry axis of CPC. Must be larger than{\tt acceptance\_angle}.}. The reflecting surface is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$. Note, that {\tt reflecting\_surface} is not needed for this target but that the user must ensure that no ray hits the CPC on its outside surface! Any ray that would be intercepted by the outside surface of the CPC passes through it. Also note, that no other target may reach into the CPC. Both restrictions are due to an efficient implementation.
+Defines a truncated CPC (compound parabolic concentrator) with an exit radius {\tt exit\_radius}. {\tt origin} defines the center of the exit aperture and the symmetry axis of the CPC is given by {\tt axis}\footnote{not necessarily normalized} that also serves as local $z$ axis. {\tt acceptance\_angle} \footnote{degrees versus symmetry axis of CPC.} defines the maximum angle where ray entering the CPC still exit by the exit aperture. {\tt truncation\_angle}\footnote{degrees versus symmetry axis of CPC. Must be larger than {\tt acceptance\_angle}.}. The reflecting surface is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. {\tt x} defines the $x$ axis of the local coordinate system of the cone. The local $y$ axis is calculated from $y = N \times x$. Note, that {\tt reflecting\_surface} is not needed for this target but that the user must ensure that no ray hits the CPC on its outside surface! Any ray that would be intercepted by the outside surface of the CPC passes through it. Also note, that no other target may reach into the CPC. Both restrictions are due to an efficient implementation.
+
+No analytical solution exists for ray--target intercept. If {\tt -DDEBUG} is set in {\tt CCOPTIONS} debug output is printed on {\tt stderr}.
+
 
 \subsubsection{Cylinder}
 
@@ -508,7 +509,7 @@ Defines a truncated CPC (compound parabolic concentrator) with an exit radius {\
 
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflecting\_surface=["inside"|"outside"];}
 
 \vspace{0.25cm}
 Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center of the first face is at {\tt C}. The orientation of the cylinder is define by its axis vector {\tt a}\footnote{not necessarily normalized} pointing towards its second face. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0. {\tt x} defines the $x$ axis and {\tt a} the $z$ axis of the local coordinate system of the cylinder. The local $y$ axis is calculated from $y = N \times x$.
@@ -535,7 +536,7 @@ Defines a reflecting cylinder of radius {\tt r} and length {\tt l}. The center o
 
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflecting\_surface=["inside"|"outside"];}
 
 \vspace{0.25cm}
 Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the local system with origin at {\tt origin}. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The semi axes of the ellipsoid are given as {\tt axes}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
@@ -562,7 +563,7 @@ Defines an ellipsoid\footnote{${x^2}/{a^2}+{y^2}/{b^2}+{z^2}/{c^2}=1$} in the lo
 
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflecting\_surface=["inside"|"outside"];}
 
 \vspace{0.25cm}
 Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system with origin at the vertex {\tt vertex} of the paraboloid. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The focal length $f$ is given as {\tt focal\_length}. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
@@ -589,7 +590,7 @@ Defines an paraboloid\footnote{${x^2}/{4f}+{y^2}/{4f}-z=0$} in the local system 
 
 \noindent {\tt reflectivity\_model="MODEL";}\footnote{see Sec.~\ref{sec:refl_models}}
 
-\noindent {\tt reflecting\_surface="SURFACE";}
+\noindent {\tt reflecting\_surface=["inside"|"outside"];}
 
 \vspace{0.25cm}
 Defines an sphere\footnote{${x^2}+{y^2}+{z^2}={r^2}$} with radius {\tt radius} centered at {\tt origin}. {\tt x} and {\tt z} are the directions of the local $x$ and $z$ axes, respectively. The surface is only defined for $z_\mathrm{min} \leq z \leq z_\mathrm{max}$ allowing to define spherical mirrors. The reflecting surface identified by {\tt reflecting\_surface} is characterized by the reflectivity spectrum given by the file {\tt reflectivity} and the reflectivity model {\tt reflectivity\_model}. The other surface has implicit absorptivity of 1.0.
@@ -621,7 +622,7 @@ reflectivity_model = (
 
 \subsection{Microfacetted Surface}
 
-\noindent {\tt reflectivity\_model="microfacet\_gaussian";} defines a surface consisting of randomly oriented micro facets. The normal vectors of the individual micro facets are gaussian (with width {\tt microfacet\_gaussian\_sigma} as degree) distributed around the macroscopic surface normal.
+\noindent {\tt reflectivity\_model="microfacet\_gaussian";} defines a surface consisting of randomly oriented micro facets. The normal vectors of the individual micro facets are gaussian (with width {\tt microfacet\_gaussian\_sigma} as degree) distriSbuted around the macroscopic surface normal.
 
 
 
@@ -723,7 +724,7 @@ The structure of all output files (one for each target unless {\tt no\_output=Tr
 
 
 
-\section{Bugs} Please send any bug report or fix or enhancement to the author. They probably will be include in a future version. However, {\bf no} actual support will be available from the author.
+\section{Bugs} Please send any bug report or fix or enhancement to the author. They probably will be included in a future version. However, {\bf no} actual support will be available from the author.
 
 \end{document}
 
