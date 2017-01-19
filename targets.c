@@ -1,6 +1,6 @@
 /*	targets.c
  *
- * Copyright (C) 2010,2011,2012,2013,2014,2015,2016 Ivo Alxneit
+ * Copyright (C) 2010,2011,2012,2013,2014,2015,2016,2017 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -164,8 +164,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -193,8 +192,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -227,8 +225,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -258,8 +255,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -282,8 +278,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -314,8 +309,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -344,8 +338,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -395,8 +388,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -424,8 +416,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -452,8 +443,7 @@ int check_targets(config_t * cfg)
 		    check_string("targets", this_t, "reflectivity", i);
 		status += check_file("targets", this_t, "reflectivity", i);
 		status +=
-		    check_string("targets", this_t, "reflectivity_model",
-				 i);
+		    is_present("targets", this_t, "reflectivity_model", i);
 		status +=
 		    check_reflectivity_model("targets", this_t,
 					     "reflectivity_model", i);
@@ -470,6 +460,8 @@ int check_targets(config_t * cfg)
 		 *  - string 'idx_refraction' (file name of dispersion curve)
 		 *  - string 'reflectivity_model' (name of reflectivity model)
 		 */
+		const char *s;
+
 		status += check_array("targets", this_t, "C", i);
 		status += check_array("targets", this_t, "a", i);
 		status += check_float("targets", this_t, "d", i);
@@ -483,8 +475,17 @@ int check_targets(config_t * cfg)
 		status +=
 		    check_file("targets", this_t, "idx_refraction", i);
 		status +=
-		    check_reflectivity_model("targets", this_t,
-					     "reflectivity_model", i);
+		    is_present("targets", this_t, "reflectivity_model", i);
+		/*
+		 * check that reflectivity model is 'specular'
+		 */
+		status +=
+		    check_return_string("targets", this_t,
+					"reflectivity_model", i, &s);
+		if (strcmp(s, "specular"))
+		    fprintf(stderr,
+			    "unsupported reflectivity model '%s' found in targets section %d\n",
+			    s, i + 1);
 	    }			/* end 'window' */
 	}			/* end 'this_t', check next target */
     }				/* end 'targets' section present */

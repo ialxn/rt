@@ -1,6 +1,6 @@
 /*	io_utils.h
  *
- * Copyright (C) 2011,2012,2013,2014,2015,2016 Ivo Alxneit
+ * Copyright (C) 2011,2012,2013,2014,2015,2016,2017 Ivo Alxneit
  *
  * This program is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -27,6 +27,8 @@
 				   (x,y,z,lambda) */
 
 
+extern int is_present(const char *section, const config_setting_t * s,
+		      const char *name, const int nr);
 extern int check_array(const char *section, const config_setting_t * s,
 		       const char *name, const int nr);
 extern int check_string(const char *section, const config_setting_t * s,
