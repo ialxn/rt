@@ -237,8 +237,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
     r2 = residual(l2, (void *) &par);
 
 #ifdef DEBUG
-    fprintf(stderr, "residual at start point 1: %e\n", r1);
-    fprintf(stderr, "residual at start point 2: %e\n", r2);
+    fprintf(stderr, "residual at start point 1: %12.6e\n", r1);
+    fprintf(stderr, "residual at start point 2: %12.6e\n", r2);
 #endif
 
     if (r1 < 0) {
@@ -276,7 +276,8 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 	l2 = gsl_root_fsolver_x_upper(s);
 
 #ifdef DEBUG
-	fprintf(stderr, "l1, l2, l_min: %e\t%e\t%e\n", l1, l2, l_min);
+	fprintf(stderr, "l1, l2, l_min: %12.6e\t%12.6e\t%12.6e\n", l1, l2,
+		l_min);
 #endif
 
 	status =
@@ -290,7 +291,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 
 #ifdef DEBUG
     fprintf(stderr,
-	    "number of iterations: %d, abs_error, residual: %e\t%e\n",
+	    "number of iterations: %d, abs_error, residual: %12.6e\t%12.6e\n",
 	    iter, l2 - l1, r_min);
 #endif
 
@@ -301,7 +302,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
      * otherwise use l1 (x_lower)
      */
 #ifdef DEBUG
-    fprintf(stderr, "r_min (%e) at l_min (%e) -> ", r_min, l_min);
+    fprintf(stderr, "r_min (%12.6e) at l_min (%12.6e) -> ", r_min, l_min);
 #endif
 
     intercept = (double *) malloc(3 * sizeof(double));
@@ -318,7 +319,7 @@ static double *find_intercept(double *p1, double *p2, cpc_state_t * state,
 
 #ifdef DEBUG
 	fprintf(stderr, "l_min is on outside\n");
-	fprintf(stderr, "use l1 (%e): now r_min (%e)\n(ok)\n", l1,
+	fprintf(stderr, "use l1 (%12.6e): now r_min (%12.6e)\n(ok)\n", l1,
 		residual(l1, (void *) &par));
 #endif
 
