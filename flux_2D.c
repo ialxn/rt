@@ -172,11 +172,12 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
     gsl_histogram2d_scale(h, 1.0 / A);
 
     fprintf(f_out, "#   histogram definition (local system)\n");
-    fprintf(f_out, "#      wavelength interval: % e <= lambda <= % e\n",
+    fprintf(f_out,
+	    "#      wavelength interval: %12.6g <= lambda <= %12.6g\n",
 	    l_min, l_max);
-    fprintf(f_out, "#          minimum x-value: % e\n",
+    fprintf(f_out, "#          minimum x-value: %12.6g\n",
 	    gsl_histogram2d_xmin(h));
-    fprintf(f_out, "#          maximum x-value: % e\n",
+    fprintf(f_out, "#          maximum x-value: %12.6g\n",
 	    gsl_histogram2d_xmax(h));
     nx = gsl_histogram2d_nx(h);
 #if __STDC_VERSION__ >= 199901L
@@ -185,9 +186,9 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
     fprintf(f_out, "#         number of x-bins: %lu\n",
 	    (unsigned long) nx);
 #endif
-    fprintf(f_out, "#          minimum y-value: % e\n",
+    fprintf(f_out, "#          minimum y-value: %12.6g\n",
 	    gsl_histogram2d_ymin(h));
-    fprintf(f_out, "#          maximum y-value: % e\n",
+    fprintf(f_out, "#          maximum y-value: %12.6g\n",
 	    gsl_histogram2d_ymax(h));
     ny = gsl_histogram2d_ny(h);
 #if __STDC_VERSION__ >= 199901L
@@ -200,29 +201,30 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
     fprintf(f_out, "#\n#   histogram statistics\n");
     fprintf(f_out, "#        number of data point not included: %d\n",
 	    n_missed);
-    fprintf(f_out, "#                       total power missed: %e\n",
+    fprintf(f_out, "#                       total power missed: %12.6g\n",
 	    p_missed);
     fprintf(f_out, "#           number of data points included: %d\n",
 	    n_inc);
-    fprintf(f_out, "#                total power accounted for: %e\n#\n",
+    fprintf(f_out,
+	    "#                total power accounted for: %12.6g\n#\n",
 	    p_inc);
 
-    fprintf(f_out, "#        area represented by one bin: %e\n#\n", A);
+    fprintf(f_out, "#        area represented by one bin: %12.6g\n#\n", A);
 
     gsl_histogram2d_min_bin(h, &i, &j);
     gsl_histogram2d_get_xrange(h, i, &xmin, &xmax);
     gsl_histogram2d_get_yrange(h, j, &ymin, &ymax);
-    fprintf(f_out, "#        minimum value: %e\n",
+    fprintf(f_out, "#        minimum value: %12.6g\n",
 	    gsl_histogram2d_min_val(h));
 #if __STDC_VERSION__ >= 199901L
-    fprintf(f_out, "#            at bin (xrange): %zu (% e - % e)\n", i,
-	    xmin, xmax);
-    fprintf(f_out, "#            at bin (yrange): %zu (% e - % e)\n", j,
-	    ymin, ymax);
+    fprintf(f_out, "#            at bin (xrange): %zu (%12.6g - %12.6g)\n",
+	    i, xmin, xmax);
+    fprintf(f_out, "#            at bin (yrange): %zu (%12.6g - %12.6g)\n",
+	    j, ymin, ymax);
 #else
-    fprintf(f_out, "#            at bin (xrange): %lu (% e - % e)\n",
+    fprintf(f_out, "#            at bin (xrange): %lu (%12.6g - %12.6g)\n",
 	    (unsigned long) i, xmin, xmax);
-    fprintf(f_out, "#            at bin (yrange): %lu (% e - % e)\n",
+    fprintf(f_out, "#            at bin (yrange): %lu (%12.6g - %12.6g)\n",
 	    (unsigned long) j, ymin, ymax);
 #endif
     fprintf(f_out, "#\n");
@@ -230,26 +232,26 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
     gsl_histogram2d_max_bin(h, &i, &j);
     gsl_histogram2d_get_xrange(h, i, &xmin, &xmax);
     gsl_histogram2d_get_yrange(h, j, &ymin, &ymax);
-    fprintf(f_out, "#        maximum value: %e\n",
+    fprintf(f_out, "#        maximum value: %12.6g\n",
 	    gsl_histogram2d_max_val(h));
 #if __STDC_VERSION__ >= 199901L
-    fprintf(f_out, "#            at bin (xrange): %zu (% e - % e)\n", i,
-	    xmin, xmax);
-    fprintf(f_out, "#            at bin (yrange): %zu (% e - % e)\n", j,
-	    ymin, ymax);
+    fprintf(f_out, "#            at bin (xrange): %zu (%12.6g - %12.6g)\n",
+	    i, xmin, xmax);
+    fprintf(f_out, "#            at bin (yrange): %zu (%12.6g - %12.6g)\n",
+	    j, ymin, ymax);
 #else
-    fprintf(f_out, "#            at bin (xrange): %lu (% e - % e)\n",
+    fprintf(f_out, "#            at bin (xrange): %lu (%12.6g - %12.6g)\n",
 	    (unsigned long) i, xmin, xmax);
-    fprintf(f_out, "#            at bin (yrange): %lu (% e - % e)\n",
+    fprintf(f_out, "#            at bin (yrange): %lu (%12.6g - %12.6g)\n",
 	    (unsigned long) j, ymin, ymax);
 #endif
     fprintf(f_out, "#\n");
 
-    fprintf(f_out, "# x mean value (+-sigma): % e (+-%e)\n",
+    fprintf(f_out, "# x mean value (+-sigma): %12.6g (+-%12.6g)\n",
 	    gsl_histogram2d_xmean(h), gsl_histogram2d_xsigma(h));
-    fprintf(f_out, "# y mean value (+-sigma): % e (+-%e)\n",
+    fprintf(f_out, "# y mean value (+-sigma): %12.6g (+-%12.6g)\n",
 	    gsl_histogram2d_ymean(h), gsl_histogram2d_ysigma(h));
-    fprintf(f_out, "#             covariance: % e\n",
+    fprintf(f_out, "#             covariance: %12.6g\n",
 	    gsl_histogram2d_cov(h));
 
     fprintf(f_out, "#\n");
@@ -288,12 +290,13 @@ static void output_hist(FILE * f_out, gsl_histogram2d * h,
 		l_xyz[2] = 0.0;
 
 		l2g(M, origin, l_xyz, g_xyz);
-		fprintf(f_out, "% e\t% e\t%e\t% e\n", g_xyz[0], g_xyz[1],
-			g_xyz[2], val);
+		fprintf(f_out, "%12.6g\t%12.6g\t%12.6g\t%12.6g\n",
+			g_xyz[0], g_xyz[1], g_xyz[2], val);
 
 	    } else
-		fprintf(f_out, "% e\t% e\t%e\t% e\t% e\t% e\t% e\n", x, y,
-			val, x_lo, x_hi, y_lo, y_hi);
+		fprintf(f_out,
+			"%12.6g\t%12.6g\t%12.6g\t%12.6g\t%12.6g\t%12.6g\t%12.6g\n",
+			x, y, val, x_lo, x_hi, y_lo, y_hi);
 	}
     }
 }

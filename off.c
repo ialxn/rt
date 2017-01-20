@@ -68,7 +68,7 @@
         _L[1] = _Y; \
         _L[2] = _Z; \
         l2g_off(_P, _L, _G, _ALPHA, _BETA); \
-        fprintf(_F, "%f\t%f\t%f\n", _G[0], _G[1], _G[2]); \
+        fprintf(_F, "%12.6g\t%12.6g\t%12.6g\n", _G[0], _G[1], _G[2]); \
 } while(0);
 
 static void write_ring_vertices(FILE * outf, const double l2,
@@ -89,7 +89,7 @@ static void write_ring_vertices(FILE * outf, const double l2,
 
 	l2g_off(origin, l, g, alpha, beta);
 
-	fprintf(outf, "%f\t%f\t%f\n", g[0], g[1], g[2]);
+	fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", g[0], g[1], g[2]);
     }
 }
 
@@ -109,11 +109,11 @@ static void write_ann_vertices(FILE * outf, const double R, const double r,
 	P[0] = R * sa;
 	P[1] = R * ca;
 	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+	fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", g_P[0], g_P[1], g_P[2]);
 	P[0] = r * sa;
 	P[1] = r * ca;
 	l2g_off(origin, P, g_P, alpha, beta);
-	fprintf(outf, "%f\t%f\t%f\n", g_P[0], g_P[1], g_P[2]);
+	fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", g_P[0], g_P[1], g_P[2]);
     }
 }
 
@@ -191,12 +191,12 @@ static void write_par_vertices(FILE * outf, const double s,
     int _I, _BASE; \
     for (_I = _OFFSET; _I < _OFFSET + N_ROT - 1; _I++) { \
 	_BASE = 2 * _I; \
-	fprintf(_F, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", \
+	fprintf(_F, "5 %d %d %d %d %d %12.6g\t%12.6g\t%12.6g 1.0\n", \
 	              _BASE, _BASE + 1, _BASE + 3, _BASE + 2, _BASE, \
 	              _R, _G, _B); \
     } \
     _BASE += 2; \
-    fprintf(_F, "5 %d %d %d %d %d %f\t%f\t%f 1.0\n", \
+    fprintf(_F, "5 %d %d %d %d %d %12.6g\t%12.6g\t%12.6g 1.0\n", \
                    _BASE, _BASE + 1, 2 * _OFFSET + 1, 2 * _OFFSET, _BASE, \
                    _R, _G, _B); \
 } while(0);
@@ -204,9 +204,9 @@ static void write_par_vertices(FILE * outf, const double s,
 #define WRITE_C_WALL(_F, _OFFSET, _R, _G, _B) do { \
     int _I; \
     for (_I = _OFFSET; _I < N_ROT - 1 + _OFFSET; _I++) \
-	fprintf(_F, "5 %d %d %d %d %d %f %f %f 1.0\n", \
+	fprintf(_F, "5 %d %d %d %d %d %12.6g %12.6g %12.6g 1.0\n", \
 	        _I, _I + 1, _I + N_ROT + 1, _I + N_ROT, _I, _R, _G, _B); \
-    fprintf(_F, "5 %d %d %d %d %d %f %f %f 1.0\n", \
+    fprintf(_F, "5 %d %d %d %d %d %12.6g %12.6g %12.6g 1.0\n", \
             _OFFSET + N_ROT - 1, _OFFSET, _OFFSET + N_ROT, \
             _OFFSET + 2 * N_ROT - 1, _OFFSET + N_ROT - 1, _R, _G, _B); \
 } while(0);
@@ -216,7 +216,7 @@ static void write_par_vertices(FILE * outf, const double s,
     fprintf(_F, "%d ", N_ROT + 1); \
     for (_I = _OFFSET; _I < N_ROT + _OFFSET; _I++) \
 	fprintf(_F, "%d ", _I); \
-    fprintf(_F, "%d %f\t%f\t%f\t 1.0\n", _OFFSET, _R, _G, _B); \
+    fprintf(_F, "%d %12.6g\t%12.6g\t%12.6g\t 1.0\n", _OFFSET, _R, _G, _B); \
 } while(0);
 
 static void block_faces(FILE * f, const int i, const double r,
@@ -228,18 +228,18 @@ static void block_faces(FILE * f, const int i, const double r,
  *       in the correct order! (use 'block_vertices()'
  */
 {
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 1, i + 2, i + 3,
-	    i, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 1, i + 5, i + 4,
-	    i, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i, i + 3, i + 7, i + 4,
-	    i, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 2, i + 1, i + 5,
-	    i + 6, i + 2, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 2, i + 3, i + 7,
-	    i + 6, i + 2, r, g, b);
-    fprintf(f, "5 %d %d %d %d %d\t%g %g %g 1.0\n", i + 4, i + 5, i + 6,
-	    i + 7, i + 4, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i, i + 1,
+	    i + 2, i + 3, i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i, i + 1,
+	    i + 5, i + 4, i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i, i + 3,
+	    i + 7, i + 4, i, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i + 2,
+	    i + 1, i + 5, i + 6, i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i + 2,
+	    i + 3, i + 7, i + 6, i + 2, r, g, b);
+    fprintf(f, "5 %d %d %d %d %d\t%12.6g %12.6g %12.6g 1.0\n", i + 4,
+	    i + 5, i + 6, i + 7, i + 4, r, g, b);
 }
 
 static void write_ell_faces(FILE * outf, const int offset,
@@ -475,28 +475,32 @@ static void off_rectangle(const char *name, const double *P,
     fprintf(outf, "8 2 0\n");	/* 8 vertices, 2 faces */
 
     /* back side */
-    fprintf(outf, "%f\t%f\t%f\n", P[0], P[1], P[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0], P[1] + X[1], P[2] + X[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + X[0] + Y[0], P[1] + X[1] + Y[1],
-	    P[2] + X[2] + Y[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + Y[0], P[1] + Y[1], P[2] + Y[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0], P[1], P[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + X[0], P[1] + X[1],
+	    P[2] + X[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + X[0] + Y[0],
+	    P[1] + X[1] + Y[1], P[2] + X[2] + Y[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + Y[0], P[1] + Y[1],
+	    P[2] + Y[2]);
 
     /* front side: offset by 'DZ' times 'N' */
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0], P[1] + DZ * N[1],
-	    P[2] + DZ * N[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + X[0],
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + DZ * N[0],
+	    P[1] + DZ * N[1], P[2] + DZ * N[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + DZ * N[0] + X[0],
 	    P[1] + DZ * N[1] + X[1], P[2] + DZ * N[2] + X[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + X[0] + Y[0],
-	    P[1] + DZ * N[1] + X[1] + Y[1],
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n",
+	    P[0] + DZ * N[0] + X[0] + Y[0], P[1] + DZ * N[1] + X[1] + Y[1],
 	    P[2] + DZ * N[2] + X[2] + Y[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P[0] + DZ * N[0] + Y[0],
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P[0] + DZ * N[0] + Y[0],
 	    P[1] + DZ * N[1] + Y[1], P[2] + DZ * N[2] + Y[2]);
 
     /*
      * output faces (back, front)
      */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", R_ABS, G_ABS, B_ABS);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", R_REFL, G_REFL, B_REFL);
+    fprintf(outf, "5 0 1 2 3 0 %12.6g\t%12.6g\t%12.6g 1.0\n", R_ABS, G_ABS,
+	    B_ABS);
+    fprintf(outf, "5 4 5 6 7 4 %12.6g\t%12.6g\t%12.6g 1.0\n", R_REFL,
+	    G_REFL, B_REFL);
 
     fclose(outf);
 
@@ -525,8 +529,8 @@ static void off_screen(const char *name, const double *P, const double *N,
     /*
      * print back face ('rb', 'gb', 'bb'), front face ('rf', 'gf', 'bf') 
      */
-    fprintf(outf, "5 0 1 2 3 0 %f\t%f\t%f 1.0\n", rb, gb, bb);
-    fprintf(outf, "5 4 5 6 7 4 %f\t%f\t%f 1.0\n", rf, gf, bf);
+    fprintf(outf, "5 0 1 2 3 0 %12.6g\t%12.6g\t%12.6g 1.0\n", rb, gb, bb);
+    fprintf(outf, "5 4 5 6 7 4 %12.6g\t%12.6g\t%12.6g 1.0\n", rf, gf, bf);
 
     fclose(outf);
 }
@@ -547,22 +551,25 @@ static void off_triangle(const char *name, const double *P1,
     fprintf(outf, "OFF\n");
     fprintf(outf, "6 2 0\n");	/* 6 vertices, 2 faces */
 
-    fprintf(outf, "%f\t%f\t%f\n", P1[0], P1[1], P1[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P2[0] + P1[0], P2[1] + P1[1],
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P1[0], P1[1], P1[2]);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P2[0] + P1[0], P2[1] + P1[1],
 	    P2[2] + P1[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P3[0] + P1[0], P3[1] + P1[1],
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P3[0] + P1[0], P3[1] + P1[1],
 	    P3[2] + P1[2]);
-    fprintf(outf, "%f\t%f\t%f\n", P1[0] + dx, P1[1] + dy, P1[2] + dz);
-    fprintf(outf, "%f\t%f\t%f\n", P2[0] + P1[0] + dx, P2[1] + P1[1] + dy,
-	    P2[2] + P1[2] + dz);
-    fprintf(outf, "%f\t%f\t%f\n", P3[0] + P1[0] + dx, P3[1] + P1[1] + dy,
-	    P3[2] + P1[2] + dz);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P1[0] + dx, P1[1] + dy,
+	    P1[2] + dz);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P2[0] + P1[0] + dx,
+	    P2[1] + P1[1] + dy, P2[2] + P1[2] + dz);
+    fprintf(outf, "%12.6g\t%12.6g\t%12.6g\n", P3[0] + P1[0] + dx,
+	    P3[1] + P1[1] + dy, P3[2] + P1[2] + dz);
 
     /*
      * output faces (back, front)
      */
-    fprintf(outf, "4 0 1 2 0 %f\t%f\t%f 1.0\n", R_ABS, G_ABS, B_ABS);
-    fprintf(outf, "4 3 4 5 0 %f\t%f\t%f 1.0\n", R_REFL, G_REFL, B_REFL);
+    fprintf(outf, "4 0 1 2 0 %12.6g\t%12.6g\t%12.6g 1.0\n", R_ABS, G_ABS,
+	    B_ABS);
+    fprintf(outf, "4 3 4 5 0 %12.6g\t%12.6g\t%12.6g 1.0\n", R_REFL, G_REFL,
+	    B_REFL);
 
     fclose(outf);
 }
