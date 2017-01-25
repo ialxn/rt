@@ -128,7 +128,7 @@ static void print2_once(source_t * current_source)
 	    get_source_type(current_source));
     fprintf(stdout, "            %" PRId64 " rays to trace\n",
 	    get_source_n_rays(current_source));
-    fprintf(stdout, "            with total power of %e\n",
+    fprintf(stdout, "            with total power of %12.6g\n",
 	    get_source_power(current_source));
     fflush(stdout);
 
@@ -275,7 +275,7 @@ static void *run_simulation(void *args)
 if(FLAG) \
     write_ray(FILE,O,P,R,G,B); \
 else \
-    fprintf(FILE,"%e\t%e\t%e\t%e\t%e\t%e\n",O[0],O[1],O[2],P[0],P[1],P[2]); \
+    fprintf(FILE,"%12.6g\t%12.6g\t%12.6g\t%12.6g\t%12.6g\t%12.6g\n",O[0],O[1],O[2],P[0],P[1],P[2]); \
 } while(0);
 		    if (unlikely(n_log))	/* log ray path enabled */
 			LOG_RAY(log_OFF, log_file, ray->orig, closest_icpt,
@@ -576,7 +576,7 @@ int main(int argc, char **argv)
 		    seed);
 	}
 
-	fprintf(stdout, "    one absorbed ray represents %f W\n",
+	fprintf(stdout, "    one absorbed ray represents %12.6g W\n",
 		P_factor);
 
 	if (n_threads > 1) {
@@ -625,15 +625,15 @@ int main(int argc, char **argv)
 
 	fprintf(stdout, "\n  total number of rays traced: %" PRId64 "\n",
 		n_total);
-	fprintf(stdout, "   total power of all sources: %e\n",
+	fprintf(stdout, "   total power of all sources: %12.6g\n",
 		(double) n_total * P_factor);
 	fprintf(stdout, "    total number of rays lost: %" PRId64 "\n",
 		n_lost);
-	fprintf(stdout, "             total power lost: %e\n",
+	fprintf(stdout, "             total power lost: %12.6g\n",
 		(double) n_lost * P_factor);
 	fprintf(stdout, "total number of rays absorbed: %" PRId64 "\n",
 		n_total - n_lost);
-	fprintf(stdout, "         total power absorbed: %e\n",
+	fprintf(stdout, "         total power absorbed: %12.6g\n",
 		(double) (n_total - n_lost) * P_factor);
 
 	free(tids);

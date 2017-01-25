@@ -203,7 +203,7 @@ int check_file(const char *section, const config_setting_t * s,
 		int n_read;
 		double tx, ty;
 
-		if ((n_read = sscanf(line, "%lg%lg", &tx, &ty)) > 0) {	/* not a blank line */
+		if ((n_read = sscanf(line, "%lf%lf", &tx, &ty)) > 0) {	/* not a blank line */
 		    if (n_read != 2) {	/* insufficient data on line */
 			fprintf(stderr,
 				"insufficient data (%d items instead of 2) read on line %d of file '%s'\n",
@@ -309,7 +309,7 @@ int read_data(FILE * f, double **x, double **y, size_t * n)
 	    int n_read;
 	    double tx, ty;
 
-	    if ((n_read = sscanf(line, "%lg%lg", &tx, &ty)) > 0) {	/* not a blank line */
+	    if ((n_read = sscanf(line, "%lf%lf", &tx, &ty)) > 0) {	/* not a blank line */
 
 		if (n_read != 2) {	/* insufficient data */
 		    fprintf(stderr,

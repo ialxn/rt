@@ -154,12 +154,13 @@ int main(int argc, char **argv)
 		    l_xyz[2] = t[2];
 
 		    l2g(M, origin, l_xyz, g_xyz);
-		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
-			    g_xyz[1], g_xyz[2], t[idx_l - 1], tmp_8);
+		    fprintf(stdout, "%12.6g\t%12.6g\t%12.6g\t%12.6g\t%u\n",
+			    g_xyz[0], g_xyz[1], g_xyz[2], t[idx_l - 1],
+			    tmp_8);
 
 		} else
-		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", t[0], t[1],
-			    t[2], t[idx_l - 1], tmp_8);
+		    fprintf(stdout, "%12.6g\t%12.6g\t%12.6g\t%12.6g\t%u\n",
+			    t[0], t[1], t[2], t[idx_l - 1], tmp_8);
 
 	    } else {		/* planar target */
 		if (coordinates == GLOBAL) {
@@ -168,12 +169,13 @@ int main(int argc, char **argv)
 		    l_xyz[2] = 0.0;
 
 		    l2g(M, origin, l_xyz, g_xyz);
-		    fprintf(stdout, "%e\t%e\t%e\t%e\t%u\n", g_xyz[0],
-			    g_xyz[1], g_xyz[2], t[idx_l - 1], tmp_8);
+		    fprintf(stdout, "%12.6g\t%12.6g\t%12.6g\t%12.6g\t%u\n",
+			    g_xyz[0], g_xyz[1], g_xyz[2], t[idx_l - 1],
+			    tmp_8);
 
 		} else
-		    fprintf(stdout, "%e\t%e\t%e\t%u\n", t[0], t[1],
-			    t[idx_l - 1], tmp_8);
+		    fprintf(stdout, "%12.6g\t%12.6g\t%12.6g\t%u\n", t[0],
+			    t[1], t[idx_l - 1], tmp_8);
 	    }
 	}
 
