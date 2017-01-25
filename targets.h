@@ -122,12 +122,6 @@ extern void free_PTDT(void *p);
 /*
  * utility functions
  */
-typedef void (*refl_func_pointer_t) (ray_t * r, const double N[3],
-				     const double
-				     P[3],
-				     const gsl_rng *
-				     rng, void *model_params);
-
 extern int check_targets(config_t * cfg);
 extern int init_output(const char *target_type,
 		       config_setting_t * this_target, const int file_mode,
@@ -135,9 +129,7 @@ extern int init_output(const char *target_type,
 		       int *out_flag, double point[], double M[]);
 extern void init_spectrum(config_setting_t * this_target, const char *kw,
 			  gsl_spline ** spectrum);
-extern void init_refl_model(const struct config_setting_t *s,
-			    refl_func_pointer_t * refl_func,
-			    void **refl_model_params);
+extern refl_model_t *init_refl_model(config_setting_t * s);
 extern int init_reflecting_surface(config_setting_t * this_target);
 extern double *init_M(config_setting_t * this_target, const char *x,
 		      const char *z);
@@ -145,8 +137,7 @@ extern void per_thread_init(pthread_key_t key, size_t n);
 extern void per_thread_flush(union fh_t output, const int out_flag,
 			     pthread_key_t key, pthread_mutex_t * mutex);
 extern void state_free(union fh_t output, const int out_flag, double *M,
-		       gsl_spline * s, refl_func_pointer_t refl_func,
-		       void *p);
+		       gsl_spline * s, refl_model_t * model);
 extern void store_xy(union fh_t output, const int out_flag, ray_t * ray,
 		     const double *hit, const double *m,
 		     const double *point, PTDT_t * data,

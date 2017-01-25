@@ -26,8 +26,7 @@ typedef struct tr_state_t {
     double E3[3];		/* edge 'P3' - 'P1' */
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection models */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -87,8 +86,7 @@ static int tr_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize reflectivity spectrum */
     init_spectrum(this_target, "reflectivity", &state->refl_spectrum);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -101,8 +99,7 @@ static void tr_free_state(void *vstate)
     tr_state_t *state = (tr_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M,
-	       state->refl_spectrum, state->refl_func,
-	       state->refl_func_pars);
+	       state->refl_spectrum, state->refl_model);
 }
 
 static double *tr_get_intercept(void *vstate, ray_t * ray)
@@ -192,7 +189,7 @@ static ray_t *tr_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	return NULL;
 
     } else {			/* reflect 'ray' */
-	state->refl_func(ray, &state->M[6], hit, r, state->refl_func_pars);
+	reflect_ray(ray, &state->M[6], hit, r, state->refl_model);
 
 	data->flag |= LAST_WAS_HIT;	/* mark as hit */
 

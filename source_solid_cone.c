@@ -54,8 +54,7 @@ typedef struct vtscone_state_t {
     double M[9];		/* transform matrix local -> global coordinates */
     gsl_spline *spectrum;	/* interpolated emission spectrum */
     gsl_spline *reflectivity;	/* interpolated reflectivity spectrum */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection models */
     pthread_key_t PTDT_key;	/* access to per thread flags */
 } vtscone_state_t;
 
@@ -284,8 +283,7 @@ static int vtscone_init_state(void *vstate, config_setting_t * this_target, cons
     init_source_spectrum(this_target, "spectrum", &state->spectrum);
 
     init_spectrum(this_target, "reflectivity", &state->reflectivity);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
 
@@ -299,8 +297,7 @@ static void vtscone_free_state(void *vstate)
     gsl_spline_free(state->spectrum);
     gsl_spline_free(state->reflectivity);
 
-    if (state->refl_func == reflect_microfacet_gaussian)
-	free((double *) state->refl_func_pars);
+    free(state->refl_model);
 }
 
 static double *vtscone_get_intercept(void *vstate, ray_t * ray)
@@ -400,7 +397,7 @@ static ray_t *vtscone_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	    else		/* wall */
 		cone_surf_normal(hit, state->tan2_a, state->H, normal);
 	}
-	state->refl_func(ray, normal, hit, r, state->refl_func_pars);
+	reflect_ray(ray, normal, hit, r, state->refl_model);
     }
 
     if (unlikely(ray->n_refl == UCHAR_MAX))	/* too many reflections is unlikely */

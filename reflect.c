@@ -22,8 +22,8 @@
 #include "reflect.h"
 
 
-void reflect_specular(ray_t * r, const double N[3], const double P[3],
-		      const gsl_rng
+void reflect_specular(ray_t * r, const double N[3],
+		      const double P[3], const gsl_rng
 		      __attribute__ ((__unused__)) * rng, void
 		      __attribute__ ((__unused__)) * model_params)
 /*
@@ -133,4 +133,19 @@ void reflect_microfacet_gaussian(ray_t * r, const double N[3],
 	fprintf(stderr,
 		"                INFO: maximum path length exceeded (wrap around of counter occurs)\n");
     ++r->n_refl;
+}
+
+void reflect_ray(ray_t * r, const double N[3], const double P[3],
+		 const gsl_rng * rng, const refl_model_t * model)
+{
+    int i = 0;
+    const double threshold = gsl_rng_uniform(rng);
+
+    /*
+     * find out which model to apply.
+     */
+    while (threshold > model->defn[i]->threshold)
+	++i;
+
+    (model->defn[i]->f) (r, N, P, rng, model->defn[i]->par);
 }

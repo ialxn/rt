@@ -599,7 +599,18 @@ Defines an sphere\footnote{${x^2}+{y^2}+{z^2}={r^2}$} with radius {\tt radius} c
 
 \section{Reflectivity Models} \label{sec:refl_models}
 
-Additional, model specific parameters might be defined by the different models.
+Either a basic reflectivity model as discussed below or a list of basic models
+
+\begin{verbatim}
+reflectivity_model = (
+{definition of basic model 1}, 
+{definition of basic model 2}, 
+.
+{definition of basic model n}
+);
+\end{verbatim}
+
+\noindent is provided. In the latter case {\tt weight}, the relative weight of the specific model has to be included in its definition. Additional, model specific parameters might be defined by the different models.
 
 \subsection{Specular Reflection}
 

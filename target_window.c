@@ -27,8 +27,7 @@ typedef struct window_state_t {
     double *M;			/* transform matrix local -> global coordinates */
     gsl_spline *abs_spectrum;	/* for interpolated absorptivity spectrum */
     gsl_spline *dispersion;	/* for interpolated dispersion curve */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection models */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -137,8 +136,7 @@ static int window_init_state(void *vstate, config_setting_t * this_target,
 
     /* initialize dispersion curve */
     init_spectrum(this_target, "idx_refraction", &state->dispersion);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     config_setting_lookup_float(this_target, "r", &state->r);
     config_setting_lookup_float(this_target, "d", &state->d);
@@ -154,7 +152,7 @@ static void window_free_state(void *vstate)
     window_state_t *state = (window_state_t *) vstate;
 
     state_free(state->output, state->flags, state->M, NULL,
-	       state->refl_func, state->refl_func_pars);
+	       state->refl_model);
     gsl_spline_free(state->abs_spectrum);
     gsl_spline_free(state->dispersion);
 }
@@ -266,7 +264,7 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * anti-parallel if face2 is hit ('state->dir points from face1 to
 	 * face2). does not seem to matter for 'reflect()'.
 	 */
-	state->refl_func(ray, normal, hit, r, state->refl_func_pars);
+	reflect_ray(ray, normal, hit, r, state->refl_model);
 
 	data->flag |= LAST_WAS_HIT;
 	return ray;
@@ -391,8 +389,8 @@ static ray_t *window_get_out_ray(void *vstate, ray_t * ray, double *hit,
 		 * anti.parallel if face2 is hit ('state->dir points from face1 to
 		 * face2). does not seem to matter for 'reflect()'.
 		 */
-		state->refl_func(ray, normal_other_face, intercept, r,
-				 state->refl_func_pars);
+		reflect_ray(ray, normal_other_face, intercept, r,
+			    state->refl_model);
 
 		origin_is_face1++;
 		free(intercept);

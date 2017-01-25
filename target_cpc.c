@@ -38,8 +38,7 @@ typedef struct cpc_state_t {
     double f2;			/* 2* focal length of CPC */
     double *M;
     gsl_spline *refl_spectrum;	/* for interpolated reflectivity spectrum */
-    refl_func_pointer_t refl_func;	/* reflection model */
-    void *refl_func_pars;	/* model specific parameters */
+    refl_model_t *refl_model;	/* reflection models */
     union fh_t output;		/* output file handle or name */
     int flags;
     pthread_key_t PTDT_key;	/* access to output buffer and flags for each target */
@@ -379,8 +378,7 @@ static int cpc_init_state(void *vstate, config_setting_t * this_target,
     }
 
     init_spectrum(this_target, "reflectivity", &state->refl_spectrum);
-    init_refl_model(this_target, &state->refl_func,
-		    &state->refl_func_pars);
+    state->refl_model = init_refl_model(this_target);
 
     pthread_key_create(&state->PTDT_key, free_PTDT);
     pthread_mutex_init(&state->mutex_writefd, NULL);
@@ -392,9 +390,8 @@ static void cpc_free_state(void *vstate)
 {
     cpc_state_t *state = (cpc_state_t *) vstate;
 
-    state_free(state->output, state->flags, state->M, NULL,
-	       state->refl_func, state->refl_func_pars);
-    gsl_spline_free(state->refl_spectrum);
+    state_free(state->output, state->flags, state->M,
+	       state->refl_spectrum, state->refl_model);
 }
 
 static double *cpc_get_intercept(void *vstate, ray_t * ray)
@@ -570,7 +567,7 @@ static ray_t *cpc_get_out_ray(void *vstate, ray_t * ray, double *hit,
 	 * reflect ray at point.
 	 */
 	cpc_surf_normal(point, state, normal);
-	state->refl_func(ray, normal, point, r, state->refl_func_pars);
+	reflect_ray(ray, normal, point, r, state->refl_model);
 	free(point);
 
 #ifdef DEBUG
