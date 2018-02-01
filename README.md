@@ -2,10 +2,6 @@
 
 A multi-threaded Monte-Carlo geometric ray tracer to calculate the spectrally resolved flux density distribution on targets. This is __not__ about nicely rendering scenes like does POV-Ray. Details see the supplied (sparse) documentation and the examples given.
 
-
-## Features
-
-
 ## Installation
 
 ### Requirements
@@ -48,9 +44,11 @@ Usage: rt
 
 ```
 
-or with one of the provided tests
+Or with one of the provided tests.
 
-```
+Validate input:
+
+```bash
 $ rt < test_screen.cfg
 seed = 1234;
 P_factor = 0.0001;
@@ -99,6 +97,31 @@ targets = (
     x = [ 1.0, 0.0, 0.0 ];
   } );
 ```
-$ rt < input_file
+
+Run it:
+```bash
+$ rt -m2 < test_screen.cfg
+rt version v3.0 running ...
+    2 sources initialized
+    4 targets initialized
+    using 1234 as seed for random number generator from config file
+    one absorbed ray represents       0.0001 W
+    using random number generator mt19937 from Gnu Scientific Library
+
+        s_1 (uniform point source) started
+            100000 rays to trace
+            with total power of           10
+
+        s_2 (uniform point source) started
+            500000 rays to trace
+            with total power of           50
+
+  total number of rays traced: 600000
+   total power of all sources:           60
+    total number of rays lost: 600000
+             total power lost:           60
+total number of rays absorbed: 0
+         total power absorbed:            0
+
 ```
 
